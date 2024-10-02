@@ -16,35 +16,6 @@ function stickyNavbar() {
   }
 }
 
-// Automatic Slideshow with Pause on Hover
-var slideIndex = 0;
-var slideInterval;
-var slides = document.getElementsByClassName("mySlides");
-
-function showSlides() {
-  for (var i = 0; i < slides.length; i++) {
-    slides[i].style.display = "none";
-  }
-  slideIndex++;
-  if (slideIndex > slides.length) {slideIndex = 1}
-  slides[slideIndex - 1].style.display = "block";
-  slideInterval = setTimeout(showSlides, 4000); // Change image every 4 seconds
-}
-
-// Initialize slideshow
-showSlides();
-
-// Pause slideshow when hovering
-for (var i = 0; i < slides.length; i++) {
-  slides[i].addEventListener('mouseenter', function() {
-    clearTimeout(slideInterval);
-  });
-  
-  slides[i].addEventListener('mouseleave', function() {
-    slideInterval = setTimeout(showSlides, 4000);
-  });
-}
-
 // Responsive Navbar Toggle for Small Screens
 function toggleNavbar() {
   var x = document.getElementById("navDemo");
@@ -67,23 +38,3 @@ links.forEach(link => {
     });
   });
 });
-
-// Dynamic Responsive Elements
-function adjustElementSizes() {
-  var contentSections = document.querySelectorAll('.w3-container');
-  var windowWidth = window.innerWidth;
-
-  contentSections.forEach(section => {
-    if (windowWidth < 600) {
-      section.style.padding = '10px';
-    } else if (windowWidth < 900) {
-      section.style.padding = '20px';
-    } else {
-      section.style.padding = '40px';
-    }
-  });
-}
-
-// Initialize and Update on Resize
-adjustElementSizes();
-window.onresize = adjustElementSizes;

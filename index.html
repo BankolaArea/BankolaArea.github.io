@@ -10,6 +10,12 @@
     <style>
         body {font-family: "Lato", sans-serif}
         .mySlides {display: none}
+        .sticky {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
@@ -22,7 +28,18 @@
     <a href="#safety" class="w3-bar-item w3-button w3-padding-large w3-hide-small">SAFETY</a>
     <a href="#training" class="w3-bar-item w3-button w3-padding-large w3-hide-small">TRAINING</a>
     <a href="#contact" class="w3-bar-item w3-button w3-padding-large w3-hide-small">CONTACT</a>
+    <!-- Navbar Toggle Button (for small screens) -->
+    <a href="javascript:void(0)" class="w3-bar-item w3-button w3-padding-large w3-right w3-hide-large w3-hide-medium" onclick="toggleNavbar()"><i class="fa fa-bars"></i></a>
   </div>
+</div>
+
+<!-- Navbar for Small Screens -->
+<div id="navDemo" class="w3-bar-block w3-black w3-hide w3-hide-large w3-hide-medium">
+    <a href="#home" class="w3-bar-item w3-button w3-padding-large">HOME</a>
+    <a href="#innovation" class="w3-bar-item w3-button w3-padding-large">INNOVATIONS</a>
+    <a href="#safety" class="w3-bar-item w3-button w3-padding-large">SAFETY</a>
+    <a href="#training" class="w3-bar-item w3-button w3-padding-large">TRAINING</a>
+    <a href="#contact" class="w3-bar-item w3-button w3-padding-large">CONTACT</a>
 </div>
 
 <!-- Page content -->
@@ -34,24 +51,25 @@
     <p>The Bankola Area, a cornerstone of the local coal mining industry, is dedicated to fostering community well-being and skill development. Through its Safety and Training Departments, it aims to provide a safe and thriving environment for all workers and visitors alike.</p>
   </div>
 
-<div class="w3-container w3-content w3-center w3-padding-64" id="innovation">
+  <!-- Second Section: Innovations -->
+  <div class="w3-container w3-content w3-center w3-padding-64" id="innovation">
     <h2 class="w3-wide">Digital Portals</h2>
     <p>iFrame</p>
   </div>
 
-  <!-- Second Section: Safety Department -->
+  <!-- Third Section: Safety Department -->
   <div class="w3-container w3-content w3-center w3-padding-64" id="safety">
     <h2 class="w3-wide">Safety Department</h2>
     <p class="w3-justify">The Safety Department at Bankola ensures that all operational practices adhere to the highest safety standards. The department coordinates regular inspections, organizes safety drills, and is always prepared for emergency response scenarios.</p>
   </div>
 
-  <!-- Third Section: Training Department & Group Vocational Center -->
+  <!-- Fourth Section: Training Department & Group Vocational Center -->
   <div class="w3-container w3-content w3-center w3-padding-64" id="training">
     <h2 class="w3-wide">Training Department & Group Vocational Training Center</h2>
     <p class="w3-justify">The Training Department, along with the Group Vocational Training Center, offers structured courses aimed at improving the skills of both employees and community members. From technical training to vocational certifications, Bankola's facilities are equipped to enhance productivity and career growth.</p>
   </div>
 
-  <!-- The Contact Section -->
+  <!-- Fifth Section: Contact -->
   <div class="w3-container w3-content w3-padding-64" style="max-width:800px" id="contact">
     <h2 class="w3-wide w3-center">CONTACT</h2>
     <p class="w3-opacity w3-center"><i>Get in touch with us for more information</i></p>
@@ -61,7 +79,6 @@
         <i class="fa fa-phone" style="width:30px"></i> Phone: +91 1234567890<br>
         <i class="fa fa-envelope" style="width:30px"> </i> Email: info@bankolaarea.com<br>
       </div>
-      
     </div>
   </div>
 
@@ -73,7 +90,7 @@
   <i class="fa fa-facebook-official w3-hover-opacity"></i>
   <i class="fa fa-instagram w3-hover-opacity"></i>
   <i class="fa fa-twitter w3-hover-opacity"></i>
-  <p class="w3-medium">Powered by Bankola Area Safety &amp; Training Department</p>
+  <p class="w3-medium">Powered by Bankola Area Safety & Training Department</p>
 </footer>
 
 <script src="js/script.js"></script>
