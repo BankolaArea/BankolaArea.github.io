@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embedded Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            height: 100vh; /* Full height of the viewport */
+            overflow: hidden;
+        }
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none; /* Remove border from iframe */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="iframe-container">
+        <!-- iFrame to display the external URL -->
+        <iframe src="http://cil.infinityfreeapp.com/welcome.php" title="Embedded Page">
+            Your browser does not support iframes.
+        </iframe>
+    </div>
+
+</body>
+</html>
