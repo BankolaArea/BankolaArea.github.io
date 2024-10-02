@@ -38,3 +38,32 @@ links.forEach(link => {
     });
   });
 });
+
+
+// Function to add fade-in animation when elements are in the viewport
+function fadeInOnScroll() {
+    const faders = document.querySelectorAll('.fade-in');
+
+    const appearOptions = {
+        threshold: 0.1,  // Trigger when 10% of the element is visible
+        rootMargin: "0px 0px -50px 0px" // Add some margin at the bottom of the viewport
+    };
+
+    const appearOnScroll = new IntersectionObserver(function(entries, appearOnScroll) {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) {
+                return; // If not visible, do nothing
+            } else {
+                entry.target.classList.add('visible'); // Add the 'visible' class when the element comes into view
+                appearOnScroll.unobserve(entry.target); // Stop observing once it has appeared
+            }
+        });
+    }, appearOptions);
+
+    faders.forEach(fader => {
+        appearOnScroll.observe(fader);
+    });
+}
+
+// Call the fade-in function
+fadeInOnScroll();
