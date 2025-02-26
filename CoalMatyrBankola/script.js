@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             rows.forEach(row => {
                 const cols = row.split(",");
-                if (cols.length === 3) {
+                if (cols.length === 5) {
                     let tr = document.createElement("tr");
 
                     cols.forEach(col => {
