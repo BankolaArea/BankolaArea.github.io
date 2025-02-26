@@ -13,10 +13,18 @@
     </header>
 
     <div class="container">
-        <input type="text" id="searchInput" placeholder="Search by name or year..." onkeyup="filterMartyrs()">
-        <ul id="martyrsList">
-            <!-- Martyrs list will be added dynamically -->
-        </ul>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Colliery</th>
+                    <th>Year</th>
+                </tr>
+            </thead>
+            <tbody id="martyrsTable">
+                <!-- Data will be inserted here dynamically -->
+            </tbody>
+        </table>
     </div>
 
     <footer>
