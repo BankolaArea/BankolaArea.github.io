@@ -9,10 +9,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
             rows.forEach(row => {
                 const cols = row.split(",");
-                if (cols.length === 4) {
+                if (cols.length === 5) {
                     let tr = document.createElement("tr");
 
-                    // Removed Sl No logic here
+                    
                     cols.forEach(col => {
                         let td = document.createElement("td");
                         td.textContent = col.trim();
