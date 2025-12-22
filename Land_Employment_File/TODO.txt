@@ -4,3 +4,4 @@ two separate html Pages approved.html & under_process.html
 
 two separate CSV for Approved and under Process
 
+Looks like better to go for two scripts to keep things simple
