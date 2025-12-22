@@ -3,163 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Data Portal</title>
-    <style>
-        /* Your Original CSS */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 960px;
-            margin: auto;
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 5px;
-        }
-
-        p {
-            text-align: center;
-            color: #555;
-            margin-bottom: 20px;
-        }
-
-        /* NEW: Professional Link/Button Styles */
-        .link-container {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .nav-button {
-            text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background-color: #2c3e50;
-            color: white;
-            border: 1px solid #2c3e50;
-        }
-
-        .btn-primary:hover {
-            background-color: #34495e;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .btn-secondary {
-            background-color: white;
-            color: #2c3e50;
-            border: 1px solid #d1d5db;
-        }
-
-        .btn-secondary:hover {
-            background-color: #f9fafb;
-            border-color: #2c3e50;
-            transform: translateY(-2px);
-        }
-
-        /* Your Table and Input CSS */
-        #searchInput {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 16px;
-        }
-
-        thead {
-            background-color: #2c3e50;
-            color: #ffffff;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-        }
-
-        tbody tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-
-        tbody tr:hover {
-            background-color: #eaf4ff;
-        }
-
-        @media (max-width: 600px) {
-            .link-container {
-                flex-direction: column;
-            }
-        }
-    </style>
+    <title>Welcome | Navigation</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <div class="container">
-        <h1>Management Dashboard</h1>
-        <p>Overview of system records and data metrics</p>
+        <header>
+            <h1>Resource Portal</h1>
+            <p>Please select a destination to continue</p>
+        </header>
 
-        <nav class="link-container">
-            <a href="page1.html" class="nav-button btn-primary">
-                <span>📁</span> View Main Archive
+        <nav class="link-grid">
+            <a href="page1.html" class="nav-card">
+                <div class="icon">📊</div>
+                <div class="content">
+                    <h3>Analytics Dashboard</h3>
+                    <p>View detailed reports and data metrics.</p>
+                </div>
             </a>
-            <a href="page2.html" class="nav-button btn-secondary">
-                <span>📊</span> Detailed Analytics
+
+            <a href="page2.html" class="nav-card">
+                <div class="icon">⚙️</div>
+                <div class="content">
+                    <h3>Account Settings</h3>
+                    <p>Manage your profile and preferences.</p>
+                </div>
             </a>
         </nav>
-
-        <input type="text" id="searchInput" placeholder="Search records...">
-
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>#1001</td>
-                    <td>Internal Audit</td>
-                    <td>Completed</td>
-                    <td>2024-05-12</td>
-                </tr>
-                <tr>
-                    <td>#1002</td>
-                    <td>System Sync</td>
-                    <td>Pending</td>
-                    <td>2024-05-13</td>
-                </tr>
-            </tbody>
-        </table>
+        
+        <footer>
+            &copy; 2024 Your Company Name
+        </footer>
     </div>
 
 </body>
