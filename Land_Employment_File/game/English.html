@@ -308,7 +308,7 @@
 <body>
 
     <div id="app">
-        <header>Start -> Survey -> Mutation -> Notice -> Verify -> Job</header>
+        <header>Start -> Survey -> Mutation -> Notice -> Job</header>
 
         <!-- INTRO -->
         <div id="screen-intro" class="screen active">
@@ -372,20 +372,7 @@
             <button class="btn btn-green" onclick="level3.wait()">⏳ Wait 21 Days (Be Safe)</button>
         </div>
 
-        <!-- LEVEL 4: TWIN SON -->
-        <div id="screen-l4" class="screen">
-            <h2>Level 4: The Twin Defense</h2>
-            <p>Someone wants your job. Who is it?</p>
 
-            <div style="display:flex; justify-content:center; gap:20px; margin-bottom:20px;">
-                <div style="font-size:4rem;">👤</div>
-                <div style="font-size:4rem; filter:grayscale(100%); opacity:0.5;">👤</div>
-            </div>
-            <p>Double check identity?</p>
-
-            <button class="btn btn-red" onclick="level4.skip()">Skip Police Verification</button>
-            <button class="btn btn-green" onclick="level4.verify()">Verify Identity (1 Month)</button>
-        </div>
 
         <!-- CONCLUSION -->
         <div id="screen-end" class="screen">
@@ -537,36 +524,14 @@
                             "Legal Shield Activated",
                             "We publish the list for 21 days and announce it by beat of drum. This is your shield. If your jealous neighbor doesn't complain now, they can never complain later. This wait makes your claim legally bulletproof.",
                             "🛡️",
-                            () => game.next('screen-l3', 'screen-l4')
+                            () => game.next('screen-l3', 'screen-end')
                         );
                     }, 1000);
                 }, 1000);
             }
         };
 
-        // --- LEVEL 4: TWIN DEFENSE ---
-        const level4 = {
-            skip: () => {
-                const btn = document.querySelector('#screen-l4 .btn-red');
-                btn.classList.add('shake-anim');
-                setTimeout(() => btn.classList.remove('shake-anim'), 500);
 
-                modal.show(
-                    "IMPOSTER ALERT!",
-                    "You skipped verification! An imposter (looking just like your nominee) walked in with fake papers. The court cancelled the job appointment.",
-                    "👯‍♂️❌",
-                    null
-                );
-            },
-            verify: () => {
-                modal.show(
-                    "Twin Defense Successful",
-                    "Police Verification and Witness Signatures (Form VI) take time, but they ensure no imposter can steal your family's job. A skipped step today is a lost job tomorrow.",
-                    "👮‍♂️✅",
-                    () => game.next('screen-l4', 'screen-end')
-                );
-            }
-        };
 
     </script>
 </body>
