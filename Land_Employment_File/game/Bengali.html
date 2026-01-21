@@ -4,18 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>সুরক্ষিত পথ: আপনার জমির দাবি বুঝুন</title>
+    <title>আপনার ভবিষ্যৎ সুরক্ষিত করুন: জমি অধিগ্রহণের যাত্রা</title>
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --secondary: #10b981;
+            --primary: #4f46e5;
+            --success: #22c55e;
             --danger: #ef4444;
             --warning: #f59e0b;
-            --dark: #1f2937;
-            --light: #f3f4f6;
+            --dark: #1e293b;
+            --light: #f8fafc;
             --white: #ffffff;
-            --glass: rgba(255, 255, 255, 0.95);
         }
 
         * {
@@ -25,282 +23,267 @@
         }
 
         body {
-            font-family: 'Kalpurush', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #1e293b, #0f172a);
+            font-family: 'Kalpurush', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0f172a;
             color: var(--dark);
             margin: 0;
             padding: 0;
             height: 100vh;
             display: flex;
+            justify-content: center;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 500px;
+            background: var(--light);
+            height: 100%;
+            display: flex;
             flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
             overflow: hidden;
         }
 
-        /* UI Containers */
-        #game-container {
-            flex: 1;
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            background: var(--light);
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            font-size: 0.9rem;
         }
 
         .screen {
             flex: 1;
             display: none;
+            /* flexible display toggled via JS */
             flex-direction: column;
-            padding: 20px;
             align-items: center;
             justify-content: center;
+            padding: 20px;
             text-align: center;
-            animation: fadeIn 0.5s ease-out;
+            overflow-y: auto;
+            position: relative;
         }
 
         .screen.active {
             display: flex;
+            animation: fadeIn 0.4s ease-out;
         }
 
-        /* Typography */
+        /* Elements */
+        .emoji-icon {
+            font-size: 5rem;
+            margin: 20px;
+            display: inline-block;
+        }
+
         h1 {
-            color: var(--primary-dark);
             font-size: 1.8rem;
-            margin-bottom: 1rem;
-            line-height: 1.2;
+            color: var(--primary);
+            margin: 0.5rem 0;
         }
 
         h2 {
             font-size: 1.4rem;
-            margin-bottom: 0.5rem;
             color: var(--dark);
+            margin: 0.5rem 0;
         }
 
         p {
-            font-size: 1rem;
+            font-size: 1.1rem;
+            color: #475569;
             line-height: 1.5;
-            color: #4b5563;
-            margin-bottom: 1.5rem;
+            margin: 10px 0 20px 0;
         }
 
-        /* Buttons */
         .btn {
             background: var(--primary);
-            color: var(--white);
+            color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 18px 30px;
             font-size: 1.1rem;
             font-weight: bold;
             border-radius: 12px;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.1s, background 0.2s;
-            width: 80%;
-            max-width: 300px;
+            width: 90%;
             margin: 10px 0;
+            box-shadow: 0 4px 0 #3730a3;
+            /* pressed effect style */
+            transition: transform 0.1s;
         }
 
         .btn:active {
-            transform: scale(0.98);
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #3730a3;
         }
 
         .btn-green {
-            background: var(--secondary);
+            background: var(--success);
+            box-shadow: 0 4px 0 #15803d;
+        }
+
+        .btn-green:active {
+            box-shadow: 0 0 0 #15803d;
         }
 
         .btn-red {
             background: var(--danger);
+            box-shadow: 0 4px 0 #b91c1c;
         }
 
-        /* Progress Bar */
-        #progress-bar-container {
-            background: #e5e7eb;
-            height: 8px;
-            width: 100%;
-            position: fixed;
-            /* Keep it visible at top inside container if needed, but simple linear flow usually works */
-            top: 0;
-            max-width: 600px;
-            z-index: 100;
+        .btn-red:active {
+            box-shadow: 0 0 0 #b91c1c;
         }
 
-        #progress-bar {
-            height: 100%;
-            background: var(--secondary);
-            width: 0%;
-            transition: width 0.5s ease;
-        }
-
-        /* Steps Indicator */
-        .steps-indicator {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            padding: 10px 20px;
-            background: var(--white);
-            font-size: 0.75rem;
-            color: #6b7280;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .step {
-            opacity: 0.5;
-        }
-
-        .step.active {
-            opacity: 1;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        /* Level Specifics */
-        .calendar-icon {
-            font-size: 4rem;
-            margin: 20px;
-            color: var(--dark);
-            border: 3px solid var(--dark);
-            padding: 20px;
+        /* Level 1: Map */
+        .map-container {
+            width: 250px;
+            height: 250px;
+            background: #cbd5e1;
+            border: 4px solid #334155;
             border-radius: 10px;
-            background: white;
-        }
-
-        .shake {
-            animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
-            background: var(--danger) !important;
-        }
-
-        .doc-container {
+            position: relative;
+            margin: 20px;
+            overflow: hidden;
             display: flex;
-            gap: 10px;
-            margin: 20px 0;
-            width: 100%;
+            align-items: center;
             justify-content: center;
         }
 
-        .document {
-            background: white;
-            border: 2px solid #cbd5e1;
+        .map-blur {
+            filter: blur(8px);
+            transition: filter 1s;
+        }
+
+        .map-sharp {
+            filter: blur(0);
+        }
+
+        .map-obj {
+            font-size: 2rem;
+            position: absolute;
+            transition: opacity 0.5s;
+            opacity: 0;
+        }
+
+        .padlock {
+            font-size: 1.5rem;
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            opacity: 0;
+            transition: opacity 0.5s 1s;
+        }
+
+        /* delayed */
+
+        /* Level 2: Docs */
+        .doc-area {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .doc-card {
+            border: 2px solid #94a3b8;
             padding: 15px;
             border-radius: 8px;
-            width: 120px;
+            background: white;
+            width: 140px;
             position: relative;
         }
 
-        .document.target {
-            border-style: dashed;
-            border-color: var(--primary);
+        .doc-card.correct {
+            border-color: var(--success);
+            background: #dcfce7;
         }
 
-        .pen-tool {
-            font-size: 2rem;
-            cursor: grab;
-            margin-bottom: 20px;
-            padding: 10px;
-            background: var(--white);
-            border-radius: 50%;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            user-select: none;
-            touch-action: none;
-            /* Critical for custom drag */
+        .doc-card.wrong {
+            border-color: var(--danger);
+            background: #fee2e2;
+        }
+
+        /* Level 3: Calendar */
+        .calendar-box {
+            font-size: 4rem;
+            border: 3px solid var(--dark);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px;
+            background: white;
             position: relative;
-            z-index: 50;
         }
 
-        .pen-tool.dragging {
+        .shield-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 5rem;
             opacity: 0.8;
-            transform: scale(1.1);
+            transition: transform 0.5s;
         }
 
-        .choice-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            align-items: center;
-        }
-
-        /* Modal/Popup */
-        #popup-overlay {
+        /* Modal */
+        #modal-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.8);
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(4px);
+            z-index: 100;
         }
 
-        .popup-content {
-            background: var(--white);
+        .modal-content {
+            background: white;
             padding: 30px;
-            border-radius: 20px;
+            border-radius: 15px;
             width: 90%;
             max-width: 400px;
             text-align: center;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            animation: popUp 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .popup-title {
-            color: var(--primary-dark);
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            font-weight: 800;
-        }
-
-        .popup-body {
-            font-size: 1rem;
-            color: var(--dark);
-            margin-bottom: 25px;
-            text-align: left;
-        }
-
-        .close-btn {
-            background: var(--dark);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
+        .lesson-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
         }
 
         /* Animations */
         @keyframes shake {
 
-            10%,
-            90% {
-                transform: translate3d(-1px, 0, 0);
+            0%,
+            100% {
+                transform: translateX(0);
             }
 
             20%,
-            80% {
-                transform: translate3d(2px, 0, 0);
-            }
-
-            30%,
-            50%,
-            70% {
-                transform: translate3d(-4px, 0, 0);
+            60% {
+                transform: translateX(-10px);
             }
 
             40%,
-            60% {
-                transform: translate3d(4px, 0, 0);
+            80% {
+                transform: translateX(10px);
             }
+        }
+
+        .shake-anim {
+            animation: shake 0.5s;
         }
 
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(20px);
             }
 
             to {
@@ -311,349 +294,287 @@
 
         @keyframes popUp {
             from {
+                transform: scale(0.5);
                 opacity: 0;
-                transform: scale(0.8);
             }
 
             to {
-                opacity: 1;
                 transform: scale(1);
+                opacity: 1;
             }
-        }
-
-        /* Feedback visual elements */
-        .visual-feedback {
-            font-size: 3rem;
-            margin: 20px;
-            height: 60px;
         }
     </style>
 </head>
 
 <body>
 
-    <div id="game-container">
-        <div id="progress-bar-container">
-            <div id="progress-bar"></div>
-        </div>
-        <div class="steps-indicator">
-            <span id="label-notification" class="step">বিজ্ঞপ্তি</span>
-            <span id="label-verification" class="step">যাচাইকরণ</span>
-            <span id="label-possession" class="step">দখল</span>
-            <span id="label-job" class="step">চাকরি</span>
-        </div>
+    <div id="app">
+        <header>শুরু -> সমীক্ষা -> মিউটেশন -> বিজ্ঞপ্তি -> যাচাই -> চাকরি</header>
 
-        <!-- Intro -->
-        <div id="intro-screen" class="screen active">
-            <div style="font-size: 4rem; margin-bottom: 20px;">🛡️</div>
-            <h1>কেন এই অপেক্ষা?</h1>
-            <p style="font-size: 1.2rem; font-weight: 500;">আপনার ভবিষ্যৎ সুরক্ষিত করুন</p>
-            <p>জানুন কেন জমি অধিগ্রহণ প্রক্রিয়ায় সময় লাগে এবং কীভাবে এই ধাপগুলো আপনাকে ভবিষ্যতের আইনি বিপদ থেকে রক্ষা
-                করে।</p>
-            <button class="btn" onclick="game.start()">যাত্রা শুরু করুন</button>
+        <!-- INTRO -->
+        <div id="screen-intro" class="screen active">
+            <h1>দেরি কেন?</h1>
+            <div class="emoji-icon">👨‍🌾🏡</div>
+            <h2>আপনার ভবিষ্যৎ সুরক্ষিত করুন</h2>
+            <p>কথায় আছে "সময়ই টাকা"। কিন্তু এখানে "সময়ই সুরক্ষা"।<br>জানুন কীভাবে দেরি আপনাকে রক্ষা করে।</p>
+            <button class="btn btn-green" onclick="game.start()">প্রক্রিয়া শুরু করুন</button>
         </div>
 
-        <!-- Level 1: Website Waiting Room -->
-        <div id="level-1" class="screen">
-            <h2>ধাপ ১: অপেক্ষার পালা</h2>
-            <p>আপনার জমির তফসিল প্রকাশিত হয়েছে। এতে ২১ দিন সময় লাগে।</p>
+        <!-- LEVEL 1: DRONE -->
+        <div id="screen-l1" class="screen">
+            <h2>ধাপ ১: আকাশের নজর</h2>
+            <p>আপনার সম্পত্তির রেকর্ড কি সঠিক?</p>
 
-            <div class="calendar-icon">
-                📅 <span id="days-counter">দিন ১</span>
+            <div class="map-container" id="l1-map">
+                <div style="font-size:5rem; opacity:0.3; filter:blur(5px);" id="l1-blur-layer">🗺️</div>
+                <!-- Hidden objects -->
+                <div class="map-obj" style="top:40px; left:40px;">🏠<span class="padlock">🔒</span></div>
+                <div class="map-obj" style="bottom:40px; right:40px;">🌳<span class="padlock">🔒</span></div>
+                <div class="map-obj" style="top:40px; right:50px;">🛖<span class="padlock">🔒</span></div>
             </div>
 
-            <p class="hint">আপনি কি করতে চান?</p>
-
-            <button id="btn-wait" class="btn btn-green" onclick="level1.wait()" style="display:none;">ধৈর্য ধরে অপেক্ষা
-                করুন</button> <!-- Hidden simplified flow -->
-            <button id="btn-fast-forward" class="btn" onclick="level1.trySkip()">⏩ দ্রুত এগিয়ে যান (অপেক্ষা এড়িয়ে
-                যান)</button>
+            <button class="btn" onclick="level1.launchDrone()">🚀 ড্রোন চালু করুন (১৫ দিন)</button>
         </div>
 
-        <!-- Level 2: Mutation Match -->
-        <div id="level-2" class="screen">
-            <h2>ধাপ ২: মিউটেশন মিলকরণ</h2>
-            <p>সম্পূর্ণ দাবি নিশ্চিত করতে আপনার দলিলের সাথে পরচা (ROR) মিলিয়ে নিন।</p>
+        <!-- LEVEL 2: MUTATION -->
+        <div id="screen-l2" class="screen">
+            <h2>ধাপ ২: মিশন সঞ্জীবনী</h2>
+            <p>আমরা সরকারি রেকর্ড (RoR) অনুযায়ী টাকা দেই।</p>
 
-            <div class="doc-container">
-                <div class="document">
-                    <strong>দলিল</strong><br>
-                    <small>মালিক: আপনি</small><br>
-                    <span style="color:var(--secondary); font-weight:bold;">১.৫ একর</span>
+            <div class="doc-area">
+                <div class="doc-card">
+                    <strong>আপনার দলিল</strong><br>
+                    <div style="font-size:2rem;">📜</div>
+                    <span style="color:blue; font-weight:bold;">৫ একর</span>
                 </div>
-                <div class="document target" id="ror-doc">
-                    <strong>পরচা (ROR)</strong><br>
-                    <small>মালিক: ???</small><br>
-                    <span id="ror-value" style="color:var(--danger); font-weight:bold;">১.০ একর</span>
+                <div class="doc-card" id="l2-ror">
+                    <strong>RoR রেকর্ড</strong><br>
+                    <div style="font-size:2rem;">🏛️</div>
+                    <span id="l2-ror-text" style="color:red; font-weight:bold;">৩ একর</span>
                 </div>
             </div>
 
-            <p>পরচা ঠিক করতে কলমটি টেনে আনুন!</p>
-            <div id="pen-tool" class="pen-tool" draggable="true">🖊️</div>
-
+            <button class="btn btn-warning" onclick="level2.tryClaim()">💰 এখনই টাকা দাবি করুন</button>
+            <button class="btn btn-green" onclick="level2.mutate()">🖊️ রেকর্ড আপডেট করার আবেদন করুন (রেকর্ড ঠিক
+                করুন)</button>
         </div>
 
-        <!-- Level 3: The Twin Son Trap -->
-        <div id="level-3" class="screen">
-            <h2>ধাপ ৩: পরিচয় সঙ্কট</h2>
-            <p>পুলিশ ভেরিফিকেশনে ১ মাস সময় লাগে। আপনার কাছে একটি সুযোগ আছে।</p>
+        <!-- LEVEL 3: PUBLIC SHIELD -->
+        <div id="screen-l3" class="screen">
+            <h2>ধাপ ৩: পাবলিক শিল্ড</h2>
+            <p>ওয়েবসাইট নোটিশ ২১ দিন সময় নেয়। এটি ধীর মনে হয়।</p>
 
-            <div class="visual-feedback" id="l3-visual">👮‍♂️</div>
-
-            <div class="choice-container">
-                <button class="btn btn-red" onclick="level3.choose('skip')">যাচাইকরণ এড়িয়ে যান (এখনই চাকরি শুরু
-                    করুন)</button>
-                <button class="btn btn-green" onclick="level3.choose('wait')">যাচাইকরণ করুন (১ মাস অপেক্ষা)</button>
+            <div class="calendar-box">
+                📅
+                <div id="l3-shield" class="shield-overlay">🛡️</div>
             </div>
+            <div id="l3-anim-area" style="font-size:2rem; height:50px;"></div>
+
+            <button class="btn btn-red" onclick="level3.fastForward()">⏩ দ্রুত এগিয়ে যান (বাদ দিন)</button>
+            <button class="btn btn-green" onclick="level3.wait()">⏳ ২১ দিন অপেক্ষা করুন (নিরাপদ থাকুন)</button>
         </div>
 
-        <!-- Conclusion -->
-        <div id="conclusion-screen" class="screen">
-            <div style="font-size: 4rem; margin-bottom: 20px;">🎉</div>
-            <h1>মিশন সফল!</h1>
-            <p>আপনি সফলভাবে SOP প্রক্রিয়া সম্পন্ন করেছেন।</p>
-            <div style="text-align: left; background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                <p>✅ <strong>কোনো বিবাদ নেই:</strong> প্রতিবেশীরা চুপ ছিল।</p>
-                <p>✅ <strong>পূর্ণ অর্থপ্রদান:</strong> দলিলের জমির সাথে পরচা মিলেছে।</p>
-                <p>✅ <strong>সুরক্ষিত চাকরি:</strong> পরিচয় চিরতরে যাচাই করা হয়েছে।</p>
+        <!-- LEVEL 4: TWIN SON -->
+        <div id="screen-l4" class="screen">
+            <h2>ধাপ ৪: যমজ প্রতিরক্ষা</h2>
+            <p>কেউ আপনার চাকরি চায়। সে কে?</p>
+
+            <div style="display:flex; justify-content:center; gap:20px; margin-bottom:20px;">
+                <div style="font-size:4rem;">👤</div>
+                <div style="font-size:4rem; filter:grayscale(100%); opacity:0.5;">👤</div>
             </div>
-            <button class="btn" onclick="location.reload()">আবার শুরু করুন</button>
+            <p>পরিচয় পুনরায় যাচাই করবেন?</p>
+
+            <button class="btn btn-red" onclick="level4.skip()">পুলিশ ভেরিফিকেশন বাদ দিন</button>
+            <button class="btn btn-green" onclick="level4.verify()">পরিচয় যাচাই করুন (১ মাস)</button>
+        </div>
+
+        <!-- CONCLUSION -->
+        <div id="screen-end" class="screen">
+            <div class="emoji-icon">🎉💼💰</div>
+            <h1>অভিনন্দন!</h1>
+            <p>SOP অনুসরণ করে, আপনি নিশ্চিত করেছেন:</p>
+            <ul style="text-align:left; color:#334155; margin-bottom:30px;">
+                <li>✅ সম্পদ লক এবং সুরক্ষিত</li>
+                <li>✅ মিউটেশনের মাধ্যমে সম্পূর্ণ অর্থপ্রদান</li>
+                <li>✅ বিজ্ঞপ্তির মাধ্যমে আইনি সুরক্ষা</li>
+                <li>✅ প্রতারকদের থেকে চাকরি সুরক্ষিত</li>
+            </ul>
+            <button class="btn" onclick="location.reload()">🔄 আবার খেলুন</button>
         </div>
 
     </div>
 
-    <!-- Popup Overlay -->
-    <div id="popup-overlay">
-        <div class="popup-content">
-            <div class="popup-title" id="popup-title">Title</div>
-            <div class="popup-body" id="popup-body">Body text goes here.</div>
-            <button class="btn close-btn" onclick="popup.close()">বুঝেছি!</button>
+    <!-- MODAL -->
+    <div id="modal-overlay">
+        <div class="modal-content">
+            <div class="lesson-icon" id="modal-icon">💡</div>
+            <h2 id="modal-title">শিক্ষণীয় মুহূর্ত</h2>
+            <p id="modal-text">বিষয়বস্তু এখানে যাবে...</p>
+            <button class="btn" onclick="modal.close()">বুঝেছি!</button>
         </div>
     </div>
 
     <script>
-        // Game State
+        // --- AUDIO SYSTEM ---
+        const speak = (text) => {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'bn-IN'; // Bengali India
+            utterance.rate = 1.0;
+
+            // Attempt to set specific voice
+            const voices = window.speechSynthesis.getVoices();
+            const bnVoice = voices.find(v => v.lang.includes('bn'));
+            if (bnVoice) utterance.voice = bnVoice;
+
+            window.speechSynthesis.speak(utterance);
+        };
+
+        // --- GAME STATE ---
         const game = {
-            currentLevel: 0,
-            init: function () {
-                // Setup dragging for mobile/desktop
-                level2.setupDrag();
-            },
-            start: function () {
-                this.showScreen('level-1');
-                this.updateProgress(1);
-            },
-            showScreen: function (id) {
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                document.getElementById(id).classList.add('active');
-            },
-            nextLevel: function () {
-                this.currentLevel++;
-                if (this.currentLevel === 1) {
-                    this.showScreen('level-2');
-                    this.updateProgress(2);
-                } else if (this.currentLevel === 2) {
-                    this.showScreen('level-3');
-                    this.updateProgress(3);
-                } else {
-                    this.showScreen('conclusion-screen');
-                    this.updateProgress(4);
-                }
-            },
-            updateProgress: function (step) {
-                const width = (step / 4) * 100;
-                document.getElementById('progress-bar').style.width = width + '%';
-
-                const labels = ['notification', 'verification', 'possession', 'job'];
-                labels.forEach((label, index) => {
-                    const el = document.getElementById('label-' + label);
-                    if (index < step) el.classList.add('active');
-                });
-            }
+            screen: 'intro',
+            start: () => switchScreen('screen-l1'),
+            next: (currentId, nextId) => switchScreen(nextId)
         };
 
-        // Popup & Audio System
-        const popup = {
-            overlay: document.getElementById('popup-overlay'),
-            title: document.getElementById('popup-title'),
-            body: document.getElementById('popup-body'),
-            onClose: null,
+        function switchScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
 
-            show: function (title, text, callback) {
-                this.title.innerText = title;
-                this.body.innerText = text;
-                this.overlay.style.display = 'flex';
-                this.onClose = callback;
+        // --- MODAL SYSTEM ---
+        const modal = {
+            show: (title, text, icon, callback) => {
+                document.getElementById('modal-title').innerText = title;
+                document.getElementById('modal-text').innerText = text;
+                if (icon) document.getElementById('modal-icon').innerText = icon;
 
-                // Speak Logic
-                this.speak(text);
+                document.getElementById('modal-overlay').style.display = 'flex';
+                speak(text); // AUTO AUDIO
+
+                modal.callback = callback;
             },
-
-            close: function () {
+            close: () => {
                 window.speechSynthesis.cancel();
-                this.overlay.style.display = 'none';
-                if (this.onClose) {
-                    this.onClose();
-                    this.onClose = null;
-                }
-            },
-
-            speak: function (text) {
-                if ('speechSynthesis' in window) {
-                    window.speechSynthesis.cancel(); // Stop previous
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = 'bn-IN'; // Bengali (India)
-                    utterance.rate = 1.0;
-
-                    // Fallback attempt to find a bengali voice specifically if default doesn't auto-switch
-                    const voices = window.speechSynthesis.getVoices();
-                    const bnVoice = voices.find(v => v.lang.includes('bn'));
-                    if (bnVoice) {
-                        utterance.voice = bnVoice;
-                    }
-
-                    window.speechSynthesis.speak(utterance);
-                }
+                document.getElementById('modal-overlay').style.display = 'none';
+                if (modal.callback) modal.callback();
             }
         };
 
-        // Level 1 Logic
+        // --- LEVEL 1: DRONE ---
         const level1 = {
-            trySkip: function () {
-                const btn = document.getElementById('btn-fast-forward');
-                btn.classList.add('shake');
+            launchDrone: () => {
+                const map = document.getElementById('l1-map');
+                const blur = document.getElementById('l1-blur-layer');
+                const objs = document.querySelectorAll('.map-obj');
+                const locks = document.querySelectorAll('.padlock');
 
-                // Visual feedback
-                setTimeout(() => {
-                    btn.classList.remove('shake');
-                    popup.show(
-                        "কেন ৩ সপ্তাহ অপেক্ষা?",
-                        "আমরা ECL ওয়েবসাইট এবং স্থানীয় সংবাদপত্রে ২১ দিনের জন্য নোটিশ দিই যাতে সাধারণ জনগণ কোনো অভিযোগ থাকলে জানাতে পারে। এটি আপনার জন্য কেন ভালো? যদি কোনো হিংসুটে আত্মীয় বা প্রতিবেশী আপনার জমির দাবি করতে চায়, তবে এখনই তাদের বলতে হবে। এই সময় পার হয়ে গেলে, আপনার দাবি আরও শক্তিশালী হবে। এই অপেক্ষা ভবিষ্যতের মামলা-মোকদ্দমা থেকে আপনার রক্ষা কবচ।",
-                        () => game.nextLevel()
-                    );
-                }, 600);
-            }
-        };
-
-        // Level 2 Logic
-        const level2 = {
-            setupDrag: function () {
-                const pen = document.getElementById('pen-tool');
-                const target = document.getElementById('ror-doc');
-
-                // Touch events for mobile dragging
-                let isDragging = false;
-                let startPos = { x: 0, y: 0 };
-                let currentTranslate = { x: 0, y: 0 };
-
-                // Basic Mouse API (Desktop)
-                pen.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', 'pen');
-                });
-
-                target.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    target.classList.add('target-active');
-                });
-
-                target.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    this.success();
-                });
-
-                // Touch API (Mobile)
-                pen.addEventListener('touchstart', (e) => {
-                    isDragging = true;
-                    const touch = e.touches[0];
-                    startPos = { x: touch.clientX, y: touch.clientY };
-                    pen.style.position = 'fixed';
-                    pen.style.zIndex = 1000;
-                    // Move to touch point visually
-                    this.movePen(touch.clientX, touch.clientY, pen);
-                }, { passive: false });
-
-                pen.addEventListener('touchmove', (e) => {
-                    if (!isDragging) return;
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    this.movePen(touch.clientX, touch.clientY, pen);
-                }, { passive: false });
-
-                pen.addEventListener('touchend', (e) => {
-                    isDragging = false;
-                    const touch = e.changedTouches[0];
-
-                    // Check collision
-                    const targetRect = target.getBoundingClientRect();
-                    if (touch.clientX >= targetRect.left && touch.clientX <= targetRect.right &&
-                        touch.clientY >= targetRect.top && touch.clientY <= targetRect.bottom) {
-                        this.success();
-                    }
-
-                    // Reset pen
-                    pen.style.position = 'relative';
-                    pen.style.transform = 'none';
-                    pen.style.left = 'auto';
-                    pen.style.top = 'auto';
-                });
-            },
-            movePen: function (x, y, el) {
-                el.style.left = (x - 25) + 'px'; // Center offset
-                el.style.top = (y - 25) + 'px';
-            },
-            success: function () {
-                const rorVal = document.getElementById('ror-value');
-                rorVal.innerText = "১.৫ একর";
-                rorVal.style.color = "var(--secondary)";
+                // Anim
+                blur.style.opacity = '0';
+                map.style.background = '#86efac'; // clearer green
+                objs.forEach(o => o.style.opacity = '1');
 
                 setTimeout(() => {
-                    popup.show(
-                        "কেন মিউটেশন প্রয়োজন?",
-                        "আমরা 'মিশন সঞ্জীবনী' অনুসরণ করি—আমরা শুধুমাত্র পরচায় (ROR) থাকা মালিকদের থেকেই জমি কিনি। যদি আপনার দলিলে পরচার চেয়ে বেশি জমি থাকে, তবে পরচা ঠিক না করা পর্যন্ত আমরা আপনাকে অতিরিক্ত জমির দাম বা চাকরির পূর্ণ সুবিধা দিতে পারব না। মিউটেশন নিশ্চিত করে যে ক্ষতিপূরণ এবং চাকরি আপনিই পাবেন, পুরনো মালিক বা বর্গাদার নয়।",
-                        () => game.nextLevel()
-                    );
-                }, 500);
-            }
-        };
-
-        // Level 3 Logic
-        const level3 = {
-            choose: function (choice) {
-                const visual = document.getElementById('l3-visual');
-
-                if (choice === 'skip') {
-                    // Scenario A
-                    visual.innerText = "👯‍♂️❓"; // Imposter
-                    visual.style.animation = "shake 0.5s";
-
+                    locks.forEach(l => l.style.opacity = '1');
                     setTimeout(() => {
-                        popup.show(
-                            "চাকরি বাতিল!",
-                            "সম্পর্ক যাচাই না করার কারণে, আদালত আপনার নিয়োগ বাতিল করেছে। আপনি চাকরিটি হারিয়েছেন। একজন ছদ্মবেশী (আপনার কাজিন) আপনার জায়গা দখল করেছে।",
-                            () => {
-                                // Reset visual
-                                visual.style.animation = "";
-                                visual.innerText = "👮‍♂️";
-                                // User must try again or move on? The prompt implies failure. 
-                                // Let's force them to retry the choice for education.
-                                // But for flow, let's just let them click the other button now.
-                            }
+                        modal.show(
+                            "ডিটেলস লক করা হয়েছে!",
+                            "আমরা ১৫ দিনের মধ্যে ড্রোন অথবা স্যাটেলাইট ব্যবহার করে ছবি তুলে রাখি। কেন? আপনার সম্পদের ডিটেলস স্থির করতে। যাতে কোনো বহিরাগত রাতারাতি নকল কুঁড়েঘর বানিয়ে আপনার সম্পত্তির পুরোনো দখলদার হিসাবে আপনার ক্ষতিপূরণ থেকে নিজের অংশ দাবি না করতে পারে। আপনার সম্পদ লক এবং নিরাপদ।",
+                            "🛰️🔒",
+                            () => game.next('screen-l1', 'screen-l2')
                         );
-                    }, 500);
-                } else {
-                    // Scenario B
-                    visual.innerText = "🛡️✅";
-                    popup.show(
-                        "যাচাইকরণ আপনার চাকরি রক্ষা করে",
-                        "আমরা 'সম্পর্ক শংসাপত্র' (ফর্ম-VI) এবং পুলিশ ভেরিফিকেশন চাই যাতে কোনো প্রতারক আপনার পরিবারের চাকরি চুরি করতে না পারে। এটি বাদ দিলে, আপনার নিয়োগ আইনত দুর্বল হবে এবং পরে বাতিল হতে পারে। চাকরি সুরক্ষিত!",
-                        () => game.nextLevel()
-                    );
-                }
+                    }, 1000);
+                }, 1000);
             }
         };
 
-        // Start
-        game.init();
+        // --- LEVEL 2: MUTATION ---
+        const level2 = {
+            tryClaim: () => {
+                const btn = document.querySelector('#screen-l2 .btn-warning');
+                btn.classList.add('shake-anim');
+                setTimeout(() => btn.classList.remove('shake-anim'), 500);
+
+                modal.show(
+                    "RoR অমিল!",
+                    "থামুন! সরকারি রেকর্ড (RoR) আপনার দলিলের চেয়ে কম জমি দেখাচ্ছে। যদি আমরা এখন টাকা দি, তাহলে পরবর্তী কালে আপনার ও কোম্পানির উভয়েরই অসুবিধা হবে। আপনাকে আগে রেকর্ড ঠিক করতে হবে।",
+                    "⚠️",
+                    null // stay on level
+                );
+            },
+            mutate: () => {
+                document.getElementById('l2-ror-text').innerText = "৫ একর";
+                document.getElementById('l2-ror-text').style.color = "green";
+                document.getElementById('l2-ror').classList.add('correct');
+
+                setTimeout(() => {
+                    modal.show(
+                        "মিশন সঞ্জীবনী সফল!",
+                        "আমরা 'মিশন সঞ্জীবনী' অনুসরণ করি। আমরা শুধুমাত্র RoR-এ যা রেকর্ড করা আছে তার জন্যই টাকা দিতে পারি। মিউটেশন রেকর্ড ঠিক করে যাতে আপনি ১০০% টাকা পান, শুধু একটি অংশ নয়।",
+                        "✅📝",
+                        () => game.next('screen-l2', 'screen-l3')
+                    );
+                }, 800);
+            }
+        };
+
+        // --- LEVEL 3: PUBLIC NOTICE ---
+        const level3 = {
+            fastForward: () => {
+                const btn = document.querySelector('#screen-l3 .btn-red');
+                btn.classList.add('shake-anim');
+                setTimeout(() => btn.classList.remove('shake-anim'), 500);
+
+                modal.show(
+                    "ঝুঁকি সতর্কতা!",
+                    "আপনি তাড়াহুড়ো করেছেন! একজন হিংসুটে প্রতিবেশী উপস্থিত হয়ে মামলা দায়ের করেছে কারণ তারা কথা বলার সুযোগ পায়নি। এখন সবকিছু আদালতে আটকে আছে।",
+                    "⚖️🚫",
+                    null
+                );
+            },
+            wait: () => {
+                // Animation of Drum beat
+                const anim = document.getElementById('l3-anim-area');
+                anim.innerHTML = "🥁 📢 🥁 📢";
+
+                setTimeout(() => {
+                    document.getElementById('l3-shield').style.transform = "translate(-50%, -50%) scale(1)";
+                    setTimeout(() => {
+                        modal.show(
+                            "আইনি শিল্ড সক্রিয়",
+                            "আমরা তালিকাটি ২১ দিনের জন্য প্রকাশ করি এবং আপনার মৌজায় জনসমক্ষে ঘোষণা করি। এটি আপনার রক্ষা কবচ। যদি আপনার হিংসুটে প্রতিবেশী এখন অভিযোগ না করে, তবে তারা পরে আর অভিযোগ করতে পারবে না। এই নোটিশ পিরিয়ড আপনার দাবিকে আইনত মজবুত করে।",
+                            "🛡️",
+                            () => game.next('screen-l3', 'screen-l4')
+                        );
+                    }, 1000);
+                }, 1000);
+            }
+        };
+
+        // --- LEVEL 4: TWIN DEFENSE ---
+        const level4 = {
+            skip: () => {
+                const btn = document.querySelector('#screen-l4 .btn-red');
+                btn.classList.add('shake-anim');
+                setTimeout(() => btn.classList.remove('shake-anim'), 500);
+
+                modal.show(
+                    "প্রতারক সতর্কতা!",
+                    "আপনি যাচাইকরণ বাদ দিয়েছেন! একজন প্রতারক (আপনার মনোনীত ব্যক্তির মতো দেখতে) নকল কাগজপত্র নিয়ে হাজির হয়েছে। আদালত চাকরির নিয়োগ বাতিল করেছে।",
+                    "👯‍♂️❌",
+                    null
+                );
+            },
+            verify: () => {
+                modal.show(
+                    "যমজ প্রতিরক্ষা সফল",
+                    "পুলিশ ভেরিফিকেশন এবং সাক্ষী স্বাক্ষর (ফর্ম VI) সময় নেয়, কিন্তু তারা নিশ্চিত করে যে কোনো প্রতারক আপনার পরিবারের চাকরি চুরি করতে পারবে না। আজ একটি ধাপ বাদ দেওয়া মানে কাল চাকরি হারানো।",
+                    "👮‍♂️✅",
+                    () => game.next('screen-l4', 'screen-end')
+                );
+            }
+        };
 
     </script>
 </body>

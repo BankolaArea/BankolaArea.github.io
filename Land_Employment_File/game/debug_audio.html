@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Debugger</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .box {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #log {
+            background: #f0f0f0;
+            padding: 10px;
+            white-space: pre-wrap;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+
+        .valid {
+            color: green;
+            font-weight: bold;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Audio Debugger</h1>
+
+    <div class="box">
+        <h3>1. Check Voices</h3>
+        <p>Click below to list all voices available in your browser.</p>
+        <button onclick="checkVoices()">List Voices</button>
+    </div>
+
+    <div class="box">
+        <h3>2. Test Bengali Speech</h3>
+        <p>Type something or use default text to test.</p>
+        <input type="text" id="testText" value="নমস্কার, আপনি কেমন আছেন?"
+            style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <button onclick="testSpeech()">Speak</button>
+    </div>
+
+    <div class="box">
+        <h3>Log Output</h3>
+        <div id="log">Logs will appear here...</div>
+    </div>
+
+    <script>
+        function log(msg, type = '') {
+            const logDiv = document.getElementById('log');
+            const color = type === 'error' ? 'red' : (type === 'success' ? 'green' : 'black');
+            logDiv.innerHTML += `<div style="color:${color}">> ${msg}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        function checkVoices() {
+            log('Loading voices...');
+            const voices = window.speechSynthesis.getVoices();
+
+            if (voices.length === 0) {
+                log('No voices found yet. Browser might be loading them asynchronously. Retring in 1s...', 'error');
+                // Some browsers load voices async
+                setTimeout(checkVoices, 1000);
+                return;
+            }
+
+            log(`Found ${voices.length} voices.`);
+            let bengaliFound = false;
+
+            voices.forEach(v => {
+                const isBengali = v.lang.includes('bn');
+                if (isBengali) {
+                    log(`[FOUND] ${v.name} (${v.lang})`, 'success');
+                    bengaliFound = true;
+                } else {
+                    // console.log(`- ${v.name} (${v.lang})`); // Don't spam UI log
+                }
+            });
+
+            if (!bengaliFound) {
+                log('❌ No Bengali (bn) voice found. Please install Bengali language pack in your OS settings.', 'error');
+            } else {
+                log('✅ Bengali voice is available!', 'success');
+            }
+        }
+
+        function testSpeech() {
+            const text = document.getElementById('testText').value;
+            if (!text) return;
+
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            // Try to set voice
+            const voices = window.speechSynthesis.getVoices();
+            const bnVoice = voices.find(v => v.lang.includes('bn'));
+
+            if (bnVoice) {
+                utterance.voice = bnVoice;
+                log(`Speaking using: ${bnVoice.name}`, 'success');
+            } else {
+                log('No Bengali voice found, trying default voice (might sound wrong)...', 'warning');
+                utterance.lang = 'bn-IN';
+            }
+
+            utterance.onstart = () => log('Audio started...');
+            utterance.onend = () => log('Audio finished.');
+            utterance.onerror = (e) => log(`Audio Error: ${e.error}`, 'error');
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Init checks on load
+        window.speechSynthesis.onvoiceschanged = () => {
+            log('Browser updated voices list.');
+        };
+    </script>
+</body>
+
+</html>

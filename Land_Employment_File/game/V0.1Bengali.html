@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>সুরক্ষিত পথ: আপনার জমির দাবি বুঝুন</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --white: #ffffff;
+            --glass: rgba(255, 255, 255, 0.95);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Kalpurush', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* UI Containers */
+        #game-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--light);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .screen {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Typography */
+        h1 {
+            color: var(--primary-dark);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        p {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #4b5563;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.1s, background 0.2s;
+            width: 80%;
+            max-width: 300px;
+            margin: 10px 0;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-green {
+            background: var(--secondary);
+        }
+
+        .btn-red {
+            background: var(--danger);
+        }
+
+        /* Progress Bar */
+        #progress-bar-container {
+            background: #e5e7eb;
+            height: 8px;
+            width: 100%;
+            position: fixed;
+            /* Keep it visible at top inside container if needed, but simple linear flow usually works */
+            top: 0;
+            max-width: 600px;
+            z-index: 100;
+        }
+
+        #progress-bar {
+            height: 100%;
+            background: var(--secondary);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Steps Indicator */
+        .steps-indicator {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px 20px;
+            background: var(--white);
+            font-size: 0.75rem;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .step {
+            opacity: 0.5;
+        }
+
+        .step.active {
+            opacity: 1;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Level Specifics */
+        .calendar-icon {
+            font-size: 4rem;
+            margin: 20px;
+            color: var(--dark);
+            border: 3px solid var(--dark);
+            padding: 20px;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+            background: var(--danger) !important;
+        }
+
+        .doc-container {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .document {
+            background: white;
+            border: 2px solid #cbd5e1;
+            padding: 15px;
+            border-radius: 8px;
+            width: 120px;
+            position: relative;
+        }
+
+        .document.target {
+            border-style: dashed;
+            border-color: var(--primary);
+        }
+
+        .pen-tool {
+            font-size: 2rem;
+            cursor: grab;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: var(--white);
+            border-radius: 50%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            user-select: none;
+            touch-action: none;
+            /* Critical for custom drag */
+            position: relative;
+            z-index: 50;
+        }
+
+        .pen-tool.dragging {
+            opacity: 0.8;
+            transform: scale(1.1);
+        }
+
+        .choice-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            align-items: center;
+        }
+
+        /* Modal/Popup */
+        #popup-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .popup-content {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: popUp 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .popup-title {
+            color: var(--primary-dark);
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+
+        .popup-body {
+            font-size: 1rem;
+            color: var(--dark);
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .close-btn {
+            background: var(--dark);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Animations */
+        @keyframes shake {
+
+            10%,
+            90% {
+                transform: translate3d(-1px, 0, 0);
+            }
+
+            20%,
+            80% {
+                transform: translate3d(2px, 0, 0);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: translate3d(-4px, 0, 0);
+            }
+
+            40%,
+            60% {
+                transform: translate3d(4px, 0, 0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes popUp {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Feedback visual elements */
+        .visual-feedback {
+            font-size: 3rem;
+            margin: 20px;
+            height: 60px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-container">
+        <div id="progress-bar-container">
+            <div id="progress-bar"></div>
+        </div>
+        <div class="steps-indicator">
+            <span id="label-notification" class="step">বিজ্ঞপ্তি</span>
+            <span id="label-verification" class="step">যাচাইকরণ</span>
+            <span id="label-possession" class="step">দখল</span>
+            <span id="label-job" class="step">চাকরি</span>
+        </div>
+
+        <!-- Intro -->
+        <div id="intro-screen" class="screen active">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🛡️</div>
+            <h1>কেন এই অপেক্ষা?</h1>
+            <p style="font-size: 1.2rem; font-weight: 500;">আপনার ভবিষ্যৎ সুরক্ষিত করুন</p>
+            <p>জানুন কেন জমি অধিগ্রহণ প্রক্রিয়ায় সময় লাগে এবং কীভাবে এই ধাপগুলো আপনাকে ভবিষ্যতের আইনি বিপদ থেকে রক্ষা
+                করে।</p>
+            <button class="btn" onclick="game.start()">যাত্রা শুরু করুন</button>
+        </div>
+
+        <!-- Level 1: Website Waiting Room -->
+        <div id="level-1" class="screen">
+            <h2>ধাপ ১: অপেক্ষার পালা</h2>
+            <p>আপনার জমির তফসিল প্রকাশিত হয়েছে। এতে ২১ দিন সময় লাগে।</p>
+
+            <div class="calendar-icon">
+                📅 <span id="days-counter">দিন ১</span>
+            </div>
+
+            <p class="hint">আপনি কি করতে চান?</p>
+
+            <button id="btn-wait" class="btn btn-green" onclick="level1.wait()" style="display:none;">ধৈর্য ধরে অপেক্ষা
+                করুন</button> <!-- Hidden simplified flow -->
+            <button id="btn-fast-forward" class="btn" onclick="level1.trySkip()">⏩ দ্রুত এগিয়ে যান (অপেক্ষা এড়িয়ে
+                যান)</button>
+        </div>
+
+        <!-- Level 2: Mutation Match -->
+        <div id="level-2" class="screen">
+            <h2>ধাপ ২: মিউটেশন মিলকরণ</h2>
+            <p>সম্পূর্ণ দাবি নিশ্চিত করতে আপনার দলিলের সাথে পরচা (ROR) মিলিয়ে নিন।</p>
+
+            <div class="doc-container">
+                <div class="document">
+                    <strong>দলিল</strong><br>
+                    <small>মালিক: আপনি</small><br>
+                    <span style="color:var(--secondary); font-weight:bold;">১.৫ একর</span>
+                </div>
+                <div class="document target" id="ror-doc">
+                    <strong>পরচা (ROR)</strong><br>
+                    <small>মালিক: ???</small><br>
+                    <span id="ror-value" style="color:var(--danger); font-weight:bold;">১.০ একর</span>
+                </div>
+            </div>
+
+            <p>পরচা ঠিক করতে কলমটি টেনে আনুন!</p>
+            <div id="pen-tool" class="pen-tool" draggable="true">🖊️</div>
+
+        </div>
+
+        <!-- Level 3: The Twin Son Trap -->
+        <div id="level-3" class="screen">
+            <h2>ধাপ ৩: পরিচয় সঙ্কট</h2>
+            <p>পুলিশ ভেরিফিকেশনে ১ মাস সময় লাগে। আপনার কাছে একটি সুযোগ আছে।</p>
+
+            <div class="visual-feedback" id="l3-visual">👮‍♂️</div>
+
+            <div class="choice-container">
+                <button class="btn btn-red" onclick="level3.choose('skip')">যাচাইকরণ এড়িয়ে যান (এখনই চাকরি শুরু
+                    করুন)</button>
+                <button class="btn btn-green" onclick="level3.choose('wait')">যাচাইকরণ করুন (১ মাস অপেক্ষা)</button>
+            </div>
+        </div>
+
+        <!-- Conclusion -->
+        <div id="conclusion-screen" class="screen">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🎉</div>
+            <h1>মিশন সফল!</h1>
+            <p>আপনি সফলভাবে SOP প্রক্রিয়া সম্পন্ন করেছেন।</p>
+            <div style="text-align: left; background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <p>✅ <strong>কোনো বিবাদ নেই:</strong> প্রতিবেশীরা চুপ ছিল।</p>
+                <p>✅ <strong>পূর্ণ অর্থপ্রদান:</strong> দলিলের জমির সাথে পরচা মিলেছে।</p>
+                <p>✅ <strong>সুরক্ষিত চাকরি:</strong> পরিচয় চিরতরে যাচাই করা হয়েছে।</p>
+            </div>
+            <button class="btn" onclick="location.reload()">আবার শুরু করুন</button>
+        </div>
+
+    </div>
+
+    <!-- Popup Overlay -->
+    <div id="popup-overlay">
+        <div class="popup-content">
+            <div class="popup-title" id="popup-title">Title</div>
+            <div class="popup-body" id="popup-body">Body text goes here.</div>
+            <button class="btn close-btn" onclick="popup.close()">বুঝেছি!</button>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const game = {
+            currentLevel: 0,
+            init: function () {
+                // Setup dragging for mobile/desktop
+                level2.setupDrag();
+            },
+            start: function () {
+                this.showScreen('level-1');
+                this.updateProgress(1);
+            },
+            showScreen: function (id) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+            },
+            nextLevel: function () {
+                this.currentLevel++;
+                if (this.currentLevel === 1) {
+                    this.showScreen('level-2');
+                    this.updateProgress(2);
+                } else if (this.currentLevel === 2) {
+                    this.showScreen('level-3');
+                    this.updateProgress(3);
+                } else {
+                    this.showScreen('conclusion-screen');
+                    this.updateProgress(4);
+                }
+            },
+            updateProgress: function (step) {
+                const width = (step / 4) * 100;
+                document.getElementById('progress-bar').style.width = width + '%';
+
+                const labels = ['notification', 'verification', 'possession', 'job'];
+                labels.forEach((label, index) => {
+                    const el = document.getElementById('label-' + label);
+                    if (index < step) el.classList.add('active');
+                });
+            }
+        };
+
+        // Popup & Audio System
+        const popup = {
+            overlay: document.getElementById('popup-overlay'),
+            title: document.getElementById('popup-title'),
+            body: document.getElementById('popup-body'),
+            onClose: null,
+
+            show: function (title, text, callback) {
+                this.title.innerText = title;
+                this.body.innerText = text;
+                this.overlay.style.display = 'flex';
+                this.onClose = callback;
+
+                // Speak Logic
+                this.speak(text);
+            },
+
+            close: function () {
+                window.speechSynthesis.cancel();
+                this.overlay.style.display = 'none';
+                if (this.onClose) {
+                    this.onClose();
+                    this.onClose = null;
+                }
+            },
+
+            speak: function (text) {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel(); // Stop previous
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'bn-IN'; // Bengali (India)
+                    utterance.rate = 1.0;
+
+                    // Fallback attempt to find a bengali voice specifically if default doesn't auto-switch
+                    const voices = window.speechSynthesis.getVoices();
+                    const bnVoice = voices.find(v => v.lang.includes('bn'));
+                    if (bnVoice) {
+                        utterance.voice = bnVoice;
+                    }
+
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+        };
+
+        // Level 1 Logic
+        const level1 = {
+            trySkip: function () {
+                const btn = document.getElementById('btn-fast-forward');
+                btn.classList.add('shake');
+
+                // Visual feedback
+                setTimeout(() => {
+                    btn.classList.remove('shake');
+                    popup.show(
+                        "কেন ৩ সপ্তাহ অপেক্ষা?",
+                        "আমরা ECL ওয়েবসাইট এবং স্থানীয় সংবাদপত্রে ২১ দিনের জন্য নোটিশ দিই যাতে সাধারণ জনগণ কোনো অভিযোগ থাকলে জানাতে পারে। এটি আপনার জন্য কেন ভালো? যদি কোনো হিংসুটে আত্মীয় বা প্রতিবেশী আপনার জমির দাবি করতে চায়, তবে এখনই তাদের বলতে হবে। এই সময় পার হয়ে গেলে, আপনার দাবি আরও শক্তিশালী হবে। এই অপেক্ষা ভবিষ্যতের মামলা-মোকদ্দমা থেকে আপনার রক্ষা কবচ।",
+                        () => game.nextLevel()
+                    );
+                }, 600);
+            }
+        };
+
+        // Level 2 Logic
+        const level2 = {
+            setupDrag: function () {
+                const pen = document.getElementById('pen-tool');
+                const target = document.getElementById('ror-doc');
+
+                // Touch events for mobile dragging
+                let isDragging = false;
+                let startPos = { x: 0, y: 0 };
+                let currentTranslate = { x: 0, y: 0 };
+
+                // Basic Mouse API (Desktop)
+                pen.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', 'pen');
+                });
+
+                target.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    target.classList.add('target-active');
+                });
+
+                target.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    this.success();
+                });
+
+                // Touch API (Mobile)
+                pen.addEventListener('touchstart', (e) => {
+                    isDragging = true;
+                    const touch = e.touches[0];
+                    startPos = { x: touch.clientX, y: touch.clientY };
+                    pen.style.position = 'fixed';
+                    pen.style.zIndex = 1000;
+                    // Move to touch point visually
+                    this.movePen(touch.clientX, touch.clientY, pen);
+                }, { passive: false });
+
+                pen.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    this.movePen(touch.clientX, touch.clientY, pen);
+                }, { passive: false });
+
+                pen.addEventListener('touchend', (e) => {
+                    isDragging = false;
+                    const touch = e.changedTouches[0];
+
+                    // Check collision
+                    const targetRect = target.getBoundingClientRect();
+                    if (touch.clientX >= targetRect.left && touch.clientX <= targetRect.right &&
+                        touch.clientY >= targetRect.top && touch.clientY <= targetRect.bottom) {
+                        this.success();
+                    }
+
+                    // Reset pen
+                    pen.style.position = 'relative';
+                    pen.style.transform = 'none';
+                    pen.style.left = 'auto';
+                    pen.style.top = 'auto';
+                });
+            },
+            movePen: function (x, y, el) {
+                el.style.left = (x - 25) + 'px'; // Center offset
+                el.style.top = (y - 25) + 'px';
+            },
+            success: function () {
+                const rorVal = document.getElementById('ror-value');
+                rorVal.innerText = "১.৫ একর";
+                rorVal.style.color = "var(--secondary)";
+
+                setTimeout(() => {
+                    popup.show(
+                        "কেন মিউটেশন প্রয়োজন?",
+                        "আমরা 'মিশন সঞ্জীবনী' অনুসরণ করি—আমরা শুধুমাত্র পরচায় (ROR) থাকা মালিকদের থেকেই জমি কিনি। যদি আপনার দলিলে পরচার চেয়ে বেশি জমি থাকে, তবে পরচা ঠিক না করা পর্যন্ত আমরা আপনাকে অতিরিক্ত জমির দাম বা চাকরির পূর্ণ সুবিধা দিতে পারব না। মিউটেশন নিশ্চিত করে যে ক্ষতিপূরণ এবং চাকরি আপনিই পাবেন, পুরনো মালিক বা বর্গাদার নয়।",
+                        () => game.nextLevel()
+                    );
+                }, 500);
+            }
+        };
+
+        // Level 3 Logic
+        const level3 = {
+            choose: function (choice) {
+                const visual = document.getElementById('l3-visual');
+
+                if (choice === 'skip') {
+                    // Scenario A
+                    visual.innerText = "👯‍♂️❓"; // Imposter
+                    visual.style.animation = "shake 0.5s";
+
+                    setTimeout(() => {
+                        popup.show(
+                            "চাকরি বাতিল!",
+                            "সম্পর্ক যাচাই না করার কারণে, আদালত আপনার নিয়োগ বাতিল করেছে। আপনি চাকরিটি হারিয়েছেন। একজন ছদ্মবেশী (আপনার কাজিন) আপনার জায়গা দখল করেছে।",
+                            () => {
+                                // Reset visual
+                                visual.style.animation = "";
+                                visual.innerText = "👮‍♂️";
+                                // User must try again or move on? The prompt implies failure. 
+                                // Let's force them to retry the choice for education.
+                                // But for flow, let's just let them click the other button now.
+                            }
+                        );
+                    }, 500);
+                } else {
+                    // Scenario B
+                    visual.innerText = "🛡️✅";
+                    popup.show(
+                        "যাচাইকরণ আপনার চাকরি রক্ষা করে",
+                        "আমরা 'সম্পর্ক শংসাপত্র' (ফর্ম-VI) এবং পুলিশ ভেরিফিকেশন চাই যাতে কোনো প্রতারক আপনার পরিবারের চাকরি চুরি করতে না পারে। এটি বাদ দিলে, আপনার নিয়োগ আইনত দুর্বল হবে এবং পরে বাতিল হতে পারে। চাকরি সুরক্ষিত!",
+                        () => game.nextLevel()
+                    );
+                }
+            }
+        };
+
+        // Start
+        game.init();
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Secure Path: Understanding Your Land Claim</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --white: #ffffff;
+            --glass: rgba(255, 255, 255, 0.95);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* UI Containers */
+        #game-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--light);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .screen {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Typography */
+        h1 {
+            color: var(--primary-dark);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        p {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #4b5563;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s, background 0.2s;
+            width: 80%;
+            max-width: 300px;
+            margin: 10px 0;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-green { background: var(--secondary); }
+        .btn-red { background: var(--danger); }
+
+        /* Progress Bar */
+        #progress-bar-container {
+            background: #e5e7eb;
+            height: 8px;
+            width: 100%;
+            position: fixed; /* Keep it visible at top inside container if needed, but simple linear flow usually works */
+            top: 0;
+            max-width: 600px;
+            z-index: 100;
+        }
+        
+        #progress-bar {
+            height: 100%;
+            background: var(--secondary);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Steps Indicator */
+        .steps-indicator {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px 20px;
+            background: var(--white);
+            font-size: 0.75rem;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .step { opacity: 0.5; }
+        .step.active { opacity: 1; font-weight: bold; color: var(--primary); }
+
+        /* Level Specifics */
+        .calendar-icon {
+            font-size: 4rem;
+            margin: 20px;
+            color: var(--dark);
+            border: 3px solid var(--dark);
+            padding: 20px;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            background: var(--danger) !important;
+        }
+
+        .doc-container {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .document {
+            background: white;
+            border: 2px solid #cbd5e1;
+            padding: 15px;
+            border-radius: 8px;
+            width: 120px;
+            position: relative;
+        }
+
+        .document.target {
+            border-style: dashed;
+            border-color: var(--primary);
+        }
+
+        .pen-tool {
+            font-size: 2rem;
+            cursor: grab;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: var(--white);
+            border-radius: 50%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            user-select: none;
+            touch-action: none; /* Critical for custom drag */
+            position: relative;
+            z-index: 50;
+        }
+        
+        .pen-tool.dragging {
+            opacity: 0.8;
+            transform: scale(1.1);
+        }
+
+        .choice-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            align-items: center;
+        }
+
+        /* Modal/Popup */
+        #popup-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .popup-content {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: popUp 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .popup-title {
+            color: var(--primary-dark);
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+
+        .popup-body {
+            font-size: 1rem;
+            color: var(--dark);
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .close-btn {
+            background: var(--dark);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes popUp {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Feedback visual elements */
+        .visual-feedback {
+            font-size: 3rem;
+            margin: 20px;
+            height: 60px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="progress-bar-container"><div id="progress-bar"></div></div>
+        <div class="steps-indicator">
+            <span id="label-notification" class="step">Notification</span>
+            <span id="label-verification" class="step">Verification</span>
+            <span id="label-possession" class="step">Possession</span>
+            <span id="label-job" class="step">Job</span>
+        </div>
+
+        <!-- Intro -->
+        <div id="intro-screen" class="screen active">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🛡️</div>
+            <h1>Why the Wait?</h1>
+            <p style="font-size: 1.2rem; font-weight: 500;">Secure Your Future</p>
+            <p>Understand why the Land SOP procedures take time and how they protect you from future disasters.</p>
+            <button class="btn" onclick="game.start()">Start Journey</button>
+        </div>
+
+        <!-- Level 1: Website Waiting Room -->
+        <div id="level-1" class="screen">
+            <h2>Level 1: The Waiting Room</h2>
+            <p>Your land schedule is published. It takes 21 days.</p>
+            
+            <div class="calendar-icon">
+                📅 <span id="days-counter">Day 1</span>
+            </div>
+
+            <p class="hint">What do you want to do?</p>
+            
+            <button id="btn-wait" class="btn btn-green" onclick="level1.wait()" style="display:none;">Wait Patiently</button> <!-- Hidden simplified flow -->
+            <button id="btn-fast-forward" class="btn" onclick="level1.trySkip()">⏩ Fast Forward (Skip Wait)</button>
+        </div>
+
+        <!-- Level 2: Mutation Match -->
+        <div id="level-2" class="screen">
+            <h2>Level 2: Mutation Match</h2>
+            <p>Match your ROR to your Deed to secure your full claim.</p>
+            
+            <div class="doc-container">
+                <div class="document">
+                    <strong>DEED</strong><br>
+                    <small>Owner: YOU</small><br>
+                    <span style="color:var(--secondary); font-weight:bold;">1.5 Acres</span>
+                </div>
+                <div class="document target" id="ror-doc">
+                    <strong>ROR</strong><br>
+                    <small>Owner: ???</small><br>
+                    <span id="ror-value" style="color:var(--danger); font-weight:bold;">1.0 Acres</span>
+                </div>
+            </div>
+
+            <p>Drag the pen to correct the ROR!</p>
+            <div id="pen-tool" class="pen-tool" draggable="true">🖊️</div>
+            
+        </div>
+
+        <!-- Level 3: The Twin Son Trap -->
+        <div id="level-3" class="screen">
+            <h2>Level 3: Identity Crisis</h2>
+            <p>Police Verification takes 1 month. You have a choice.</p>
+            
+            <div class="visual-feedback" id="l3-visual">👮‍♂️</div>
+            
+            <div class="choice-container">
+                <button class="btn btn-red" onclick="level3.choose('skip')">Skip Verification (Start Job Now)</button>
+                <button class="btn btn-green" onclick="level3.choose('wait')">Do Verification (Wait 1 Mo)</button>
+            </div>
+        </div>
+
+        <!-- Conclusion -->
+        <div id="conclusion-screen" class="screen">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🎉</div>
+            <h1>Mission Accomplished!</h1>
+            <p>You have navigated the SOP successfully.</p>
+            <div style="text-align: left; background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <p>✅ <strong>No Disputes:</strong> Neighbors stayed silent.</p>
+                <p>✅ <strong>Full Payment:</strong> Deeded land matched ROR.</p>
+                <p>✅ <strong>Secure Job:</strong> Identity verified forever.</p>
+            </div>
+            <button class="btn" onclick="location.reload()">Restart Training</button>
+        </div>
+
+    </div>
+
+    <!-- Popup Overlay -->
+    <div id="popup-overlay">
+        <div class="popup-content">
+            <div class="popup-title" id="popup-title">Title</div>
+            <div class="popup-body" id="popup-body">Body text goes here.</div>
+            <button class="btn close-btn" onclick="popup.close()">Got it!</button>
+        </div>
+    </div>
+
+<script>
+    // Game State
+    const game = {
+        currentLevel: 0,
+        init: function() {
+            // Setup dragging for mobile/desktop
+            level2.setupDrag();
+        },
+        start: function() {
+            this.showScreen('level-1');
+            this.updateProgress(1);
+        },
+        showScreen: function(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        },
+        nextLevel: function() {
+            this.currentLevel++;
+            if(this.currentLevel === 1) {
+                this.showScreen('level-2');
+                this.updateProgress(2);
+            } else if(this.currentLevel === 2) {
+                this.showScreen('level-3');
+                this.updateProgress(3);
+            } else {
+                this.showScreen('conclusion-screen');
+                this.updateProgress(4);
+            }
+        },
+        updateProgress: function(step) {
+            const width = (step / 4) * 100;
+            document.getElementById('progress-bar').style.width = width + '%';
+            
+            const labels = ['notification', 'verification', 'possession', 'job'];
+            labels.forEach((label, index) => {
+                const el = document.getElementById('label-' + label);
+                if (index < step) el.classList.add('active');
+            });
+        }
+    };
+
+    // Popup & Audio System
+    const popup = {
+        overlay: document.getElementById('popup-overlay'),
+        title: document.getElementById('popup-title'),
+        body: document.getElementById('popup-body'),
+        onClose: null,
+
+        show: function(title, text, callback) {
+            this.title.innerText = title;
+            this.body.innerText = text;
+            this.overlay.style.display = 'flex';
+            this.onClose = callback;
+            
+            // Speak Logic
+            this.speak(text);
+        },
+        
+        close: function() {
+            window.speechSynthesis.cancel();
+            this.overlay.style.display = 'none';
+            if (this.onClose) {
+                this.onClose();
+                this.onClose = null;
+            }
+        },
+
+        speak: function(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop previous
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US'; // Can try 'en-IN' for Indian accent preference if supported
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+    };
+
+    // Level 1 Logic
+    const level1 = {
+        trySkip: function() {
+            const btn = document.getElementById('btn-fast-forward');
+            btn.classList.add('shake');
+            
+            // Visual feedback
+            setTimeout(() => {
+                btn.classList.remove('shake');
+                popup.show(
+                    "Why wait 3 weeks on the Website?",
+                    "We publish the land schedule on the ECL website and local newspapers for 21 days to invite complaints from the general mass. Why is this good for you? If a jealous relative or neighbor wants to claim your land, they must speak NOW. Once this time is over, your claim becomes stronger. This wait is your shield against future lawsuits.",
+                    () => game.nextLevel()
+                );
+            }, 600);
+        }
+    };
+
+    // Level 2 Logic
+    const level2 = {
+        setupDrag: function() {
+            const pen = document.getElementById('pen-tool');
+            const target = document.getElementById('ror-doc');
+
+            // Touch events for mobile dragging
+            let isDragging = false;
+            let startPos = {x:0, y:0};
+            let currentTranslate = {x:0, y:0};
+
+            // Basic Mouse API (Desktop)
+            pen.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', 'pen');
+            });
+
+            target.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                target.classList.add('target-active');
+            });
+
+            target.addEventListener('drop', (e) => {
+                e.preventDefault();
+                this.success();
+            });
+
+            // Touch API (Mobile)
+            pen.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                const touch = e.touches[0];
+                startPos = { x: touch.clientX, y: touch.clientY };
+                pen.style.position = 'fixed';
+                pen.style.zIndex = 1000;
+                // Move to touch point visually
+                this.movePen(touch.clientX, touch.clientY, pen);
+            }, {passive: false});
+
+            pen.addEventListener('touchmove', (e) => {
+                if(!isDragging) return;
+                e.preventDefault();
+                const touch = e.touches[0];
+                this.movePen(touch.clientX, touch.clientY, pen);
+            }, {passive: false});
+
+            pen.addEventListener('touchend', (e) => {
+                isDragging = false;
+                const touch = e.changedTouches[0];
+                
+                // Check collision
+                const targetRect = target.getBoundingClientRect();
+                if(touch.clientX >= targetRect.left && touch.clientX <= targetRect.right &&
+                   touch.clientY >= targetRect.top && touch.clientY <= targetRect.bottom) {
+                    this.success();
+                }
+
+                // Reset pen
+                pen.style.position = 'relative';
+                pen.style.transform = 'none';
+                pen.style.left = 'auto';
+                pen.style.top = 'auto';
+            });
+        },
+        movePen: function(x, y, el) {
+            el.style.left = (x - 25) + 'px'; // Center offset
+            el.style.top = (y - 25) + 'px';
+        },
+        success: function() {
+            const rorVal = document.getElementById('ror-value');
+            rorVal.innerText = "1.5 Acres";
+            rorVal.style.color = "var(--secondary)";
+            
+            setTimeout(() => {
+                popup.show(
+                    "Why do I need Mutation?",
+                    "We follow 'Mission Sanjivani'—we only buy from recorded owners in the ROR. If your Deed says you own more land than the ROR, we can't pay you for the extra land or give you the full job benefits until the ROR is fixed. Mutation ensures the Compensation and Employment goes to you, not the old owner or a sharecropper.",
+                    () => game.nextLevel()
+                );
+            }, 500);
+        }
+    };
+
+    // Level 3 Logic
+    const level3 = {
+        choose: function(choice) {
+            const visual = document.getElementById('l3-visual');
+            
+            if(choice === 'skip') {
+                // Scenario A
+                visual.innerText = "👯‍♂️❓"; // Imposter
+                visual.style.animation = "shake 0.5s";
+                
+                setTimeout(() => {
+                    popup.show(
+                        "Termination!",
+                        "Because we didn't verify the relationship, the court canceled your appointment. You lost the job. An imposter (your cousin) claimed your spot.",
+                        () => {
+                            // Reset visual
+                            visual.style.animation = "";
+                            visual.innerText = "👮‍♂️";
+                            // User must try again or move on? The prompt implies failure. 
+                            // Let's force them to retry the choice for education.
+                            // But for flow, let's just let them click the other button now.
+                        }
+                    );
+                }, 500);
+            } else {
+                // Scenario B
+                visual.innerText = "🛡️✅";
+                popup.show(
+                    "Verification Protects Your Job",
+                    "We require the 'Relationship Certificate' (Form-VI) and Police Verification to ensure no imposter steals your family's employment. If we skip this, your appointment is legally weak and can be cancelled later. Job Secured!",
+                    () => game.nextLevel()
+                );
+            }
+        }
+    };
+
+    // Start
+    game.init();
+
+</script>
+</body>
+</html>

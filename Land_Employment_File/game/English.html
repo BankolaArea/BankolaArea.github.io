@@ -1,20 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Secure Path: Understanding Your Land Claim</title>
+    <title>Secure Your Future: The Land Acquisition Journey</title>
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --secondary: #10b981;
+            --primary: #4f46e5;
+            --success: #22c55e;
             --danger: #ef4444;
             --warning: #f59e0b;
-            --dark: #1f2937;
-            --light: #f3f4f6;
+            --dark: #1e293b;
+            --light: #f8fafc;
             --white: #ffffff;
-            --glass: rgba(255, 255, 255, 0.95);
         }
 
         * {
@@ -24,577 +23,552 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #1e293b, #0f172a);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0f172a;
             color: var(--dark);
             margin: 0;
             padding: 0;
             height: 100vh;
             display: flex;
+            justify-content: center;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 500px;
+            background: var(--light);
+            height: 100%;
+            display: flex;
             flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
             overflow: hidden;
         }
 
-        /* UI Containers */
-        #game-container {
-            flex: 1;
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            background: var(--light);
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
         }
 
         .screen {
             flex: 1;
             display: none;
+            /* flexible display toggled via JS */
             flex-direction: column;
-            padding: 20px;
             align-items: center;
             justify-content: center;
+            padding: 20px;
             text-align: center;
-            animation: fadeIn 0.5s ease-out;
+            overflow-y: auto;
+            position: relative;
         }
 
         .screen.active {
             display: flex;
+            animation: fadeIn 0.4s ease-out;
         }
 
-        /* Typography */
+        /* Elements */
+        .emoji-icon {
+            font-size: 5rem;
+            margin: 20px;
+            display: inline-block;
+        }
+
         h1 {
-            color: var(--primary-dark);
             font-size: 1.8rem;
-            margin-bottom: 1rem;
-            line-height: 1.2;
+            color: var(--primary);
+            margin: 0.5rem 0;
         }
 
         h2 {
             font-size: 1.4rem;
-            margin-bottom: 0.5rem;
             color: var(--dark);
+            margin: 0.5rem 0;
         }
 
         p {
-            font-size: 1rem;
+            font-size: 1.1rem;
+            color: #475569;
             line-height: 1.5;
-            color: #4b5563;
-            margin-bottom: 1.5rem;
+            margin: 10px 0 20px 0;
         }
 
-        /* Buttons */
         .btn {
             background: var(--primary);
-            color: var(--white);
+            color: white;
             border: none;
-            padding: 15px 30px;
-            font-size: 1.1rem;
+            padding: 18px 30px;
+            font-size: 1.2rem;
             font-weight: bold;
             border-radius: 12px;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.1s, background 0.2s;
-            width: 80%;
-            max-width: 300px;
+            width: 90%;
             margin: 10px 0;
+            box-shadow: 0 4px 0 #3730a3;
+            /* pressed effect style */
+            transition: transform 0.1s;
         }
 
         .btn:active {
-            transform: scale(0.98);
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #3730a3;
         }
 
-        .btn-green { background: var(--secondary); }
-        .btn-red { background: var(--danger); }
-
-        /* Progress Bar */
-        #progress-bar-container {
-            background: #e5e7eb;
-            height: 8px;
-            width: 100%;
-            position: fixed; /* Keep it visible at top inside container if needed, but simple linear flow usually works */
-            top: 0;
-            max-width: 600px;
-            z-index: 100;
-        }
-        
-        #progress-bar {
-            height: 100%;
-            background: var(--secondary);
-            width: 0%;
-            transition: width 0.5s ease;
+        .btn-green {
+            background: var(--success);
+            box-shadow: 0 4px 0 #15803d;
         }
 
-        /* Steps Indicator */
-        .steps-indicator {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            padding: 10px 20px;
-            background: var(--white);
-            font-size: 0.75rem;
-            color: #6b7280;
-            border-bottom: 1px solid #e5e7eb;
+        .btn-green:active {
+            box-shadow: 0 0 0 #15803d;
         }
 
-        .step { opacity: 0.5; }
-        .step.active { opacity: 1; font-weight: bold; color: var(--primary); }
+        .btn-red {
+            background: var(--danger);
+            box-shadow: 0 4px 0 #b91c1c;
+        }
 
-        /* Level Specifics */
-        .calendar-icon {
-            font-size: 4rem;
-            margin: 20px;
-            color: var(--dark);
-            border: 3px solid var(--dark);
-            padding: 20px;
+        .btn-red:active {
+            box-shadow: 0 0 0 #b91c1c;
+        }
+
+        /* Level 1: Map */
+        .map-container {
+            width: 250px;
+            height: 250px;
+            background: #cbd5e1;
+            border: 4px solid #334155;
             border-radius: 10px;
-            background: white;
-        }
-
-        .shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-            background: var(--danger) !important;
-        }
-
-        .doc-container {
+            position: relative;
+            margin: 20px;
+            overflow: hidden;
             display: flex;
-            gap: 10px;
-            margin: 20px 0;
-            width: 100%;
+            align-items: center;
             justify-content: center;
         }
 
-        .document {
-            background: white;
-            border: 2px solid #cbd5e1;
+        .map-blur {
+            filter: blur(8px);
+            transition: filter 1s;
+        }
+
+        .map-sharp {
+            filter: blur(0);
+        }
+
+        .map-obj {
+            font-size: 2rem;
+            position: absolute;
+            transition: opacity 0.5s;
+            opacity: 0;
+        }
+
+        .padlock {
+            font-size: 1.5rem;
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            opacity: 0;
+            transition: opacity 0.5s 1s;
+        }
+
+        /* delayed */
+
+        /* Level 2: Docs */
+        .doc-area {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .doc-card {
+            border: 2px solid #94a3b8;
             padding: 15px;
             border-radius: 8px;
-            width: 120px;
+            background: white;
+            width: 140px;
             position: relative;
         }
 
-        .document.target {
-            border-style: dashed;
-            border-color: var(--primary);
+        .doc-card.correct {
+            border-color: var(--success);
+            background: #dcfce7;
         }
 
-        .pen-tool {
-            font-size: 2rem;
-            cursor: grab;
-            margin-bottom: 20px;
-            padding: 10px;
-            background: var(--white);
-            border-radius: 50%;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            user-select: none;
-            touch-action: none; /* Critical for custom drag */
-            position: relative;
-            z-index: 50;
+        .doc-card.wrong {
+            border-color: var(--danger);
+            background: #fee2e2;
         }
-        
-        .pen-tool.dragging {
+
+        /* Level 3: Calendar */
+        .calendar-box {
+            font-size: 4rem;
+            border: 3px solid var(--dark);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px;
+            background: white;
+            position: relative;
+        }
+
+        .shield-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 5rem;
             opacity: 0.8;
-            transform: scale(1.1);
+            transition: transform 0.5s;
         }
 
-        .choice-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            align-items: center;
-        }
-
-        /* Modal/Popup */
-        #popup-overlay {
+        /* Modal */
+        #modal-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.8);
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(4px);
+            z-index: 100;
         }
 
-        .popup-content {
-            background: var(--white);
+        .modal-content {
+            background: white;
             padding: 30px;
-            border-radius: 20px;
+            border-radius: 15px;
             width: 90%;
             max-width: 400px;
             text-align: center;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            animation: popUp 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .popup-title {
-            color: var(--primary-dark);
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            font-weight: 800;
-        }
-
-        .popup-body {
-            font-size: 1rem;
-            color: var(--dark);
-            margin-bottom: 25px;
-            text-align: left;
-        }
-
-        .close-btn {
-            background: var(--dark);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
+        .lesson-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
         }
 
         /* Animations */
         @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20%,
+            60% {
+                transform: translateX(-10px);
+            }
+
+            40%,
+            80% {
+                transform: translateX(10px);
+            }
+        }
+
+        .shake-anim {
+            animation: shake 0.5s;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes popUp {
-            from { opacity: 0; transform: scale(0.8); }
-            to { opacity: 1; transform: scale(1); }
-        }
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
 
-        /* Feedback visual elements */
-        .visual-feedback {
-            font-size: 3rem;
-            margin: 20px;
-            height: 60px;
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
-
     </style>
 </head>
+
 <body>
 
-    <div id="game-container">
-        <div id="progress-bar-container"><div id="progress-bar"></div></div>
-        <div class="steps-indicator">
-            <span id="label-notification" class="step">Notification</span>
-            <span id="label-verification" class="step">Verification</span>
-            <span id="label-possession" class="step">Possession</span>
-            <span id="label-job" class="step">Job</span>
-        </div>
+    <div id="app">
+        <header>Start -> Survey -> Mutation -> Notice -> Verify -> Job</header>
 
-        <!-- Intro -->
-        <div id="intro-screen" class="screen active">
-            <div style="font-size: 4rem; margin-bottom: 20px;">🛡️</div>
+        <!-- INTRO -->
+        <div id="screen-intro" class="screen active">
             <h1>Why the Wait?</h1>
-            <p style="font-size: 1.2rem; font-weight: 500;">Secure Your Future</p>
-            <p>Understand why the Land SOP procedures take time and how they protect you from future disasters.</p>
-            <button class="btn" onclick="game.start()">Start Journey</button>
+            <div class="emoji-icon">👨‍🌾🏡</div>
+            <h2>Secure Your Future</h2>
+            <p>They say "Time is Money". Here, "Time is Safety".<br>Learn how the delays protect YOU.</p>
+            <button class="btn btn-green" onclick="game.start()">Start the Process</button>
         </div>
 
-        <!-- Level 1: Website Waiting Room -->
-        <div id="level-1" class="screen">
-            <h2>Level 1: The Waiting Room</h2>
-            <p>Your land schedule is published. It takes 21 days.</p>
-            
-            <div class="calendar-icon">
-                📅 <span id="days-counter">Day 1</span>
+        <!-- LEVEL 1: DRONE -->
+        <div id="screen-l1" class="screen">
+            <h2>Level 1: Eye in the Sky</h2>
+            <p>Is your property record accurate?</p>
+
+            <div class="map-container" id="l1-map">
+                <div style="font-size:5rem; opacity:0.3; filter:blur(5px);" id="l1-blur-layer">🗺️</div>
+                <!-- Hidden objects -->
+                <div class="map-obj" style="top:40px; left:40px;">🏠<span class="padlock">🔒</span></div>
+                <div class="map-obj" style="bottom:40px; right:40px;">🌳<span class="padlock">🔒</span></div>
+                <div class="map-obj" style="top:40px; right:50px;">🛖<span class="padlock">🔒</span></div>
             </div>
 
-            <p class="hint">What do you want to do?</p>
-            
-            <button id="btn-wait" class="btn btn-green" onclick="level1.wait()" style="display:none;">Wait Patiently</button> <!-- Hidden simplified flow -->
-            <button id="btn-fast-forward" class="btn" onclick="level1.trySkip()">⏩ Fast Forward (Skip Wait)</button>
+            <button class="btn" onclick="level1.launchDrone()">🚀 Launch Drone (15 Days)</button>
         </div>
 
-        <!-- Level 2: Mutation Match -->
-        <div id="level-2" class="screen">
-            <h2>Level 2: Mutation Match</h2>
-            <p>Match your ROR to your Deed to secure your full claim.</p>
-            
-            <div class="doc-container">
-                <div class="document">
-                    <strong>DEED</strong><br>
-                    <small>Owner: YOU</small><br>
-                    <span style="color:var(--secondary); font-weight:bold;">1.5 Acres</span>
+        <!-- LEVEL 2: MUTATION -->
+        <div id="screen-l2" class="screen">
+            <h2>Level 2: Mission Sanjivani</h2>
+            <p>We pay based on the Government Record (RoR).</p>
+
+            <div class="doc-area">
+                <div class="doc-card">
+                    <strong>Your Deed</strong><br>
+                    <div style="font-size:2rem;">📜</div>
+                    <span style="color:blue; font-weight:bold;">5 Acres</span>
                 </div>
-                <div class="document target" id="ror-doc">
-                    <strong>ROR</strong><br>
-                    <small>Owner: ???</small><br>
-                    <span id="ror-value" style="color:var(--danger); font-weight:bold;">1.0 Acres</span>
+                <div class="doc-card" id="l2-ror">
+                    <strong>RoR Record</strong><br>
+                    <div style="font-size:2rem;">🏛️</div>
+                    <span id="l2-ror-text" style="color:red; font-weight:bold;">3 Acres</span>
                 </div>
             </div>
 
-            <p>Drag the pen to correct the ROR!</p>
-            <div id="pen-tool" class="pen-tool" draggable="true">🖊️</div>
-            
+            <button class="btn btn-warning" onclick="level2.tryClaim()">💰 Claim Money Now</button>
+            <button class="btn btn-green" onclick="level2.mutate()">🖊️ Apply Mutation (Fix Record)</button>
         </div>
 
-        <!-- Level 3: The Twin Son Trap -->
-        <div id="level-3" class="screen">
-            <h2>Level 3: Identity Crisis</h2>
-            <p>Police Verification takes 1 month. You have a choice.</p>
-            
-            <div class="visual-feedback" id="l3-visual">👮‍♂️</div>
-            
-            <div class="choice-container">
-                <button class="btn btn-red" onclick="level3.choose('skip')">Skip Verification (Start Job Now)</button>
-                <button class="btn btn-green" onclick="level3.choose('wait')">Do Verification (Wait 1 Mo)</button>
+        <!-- LEVEL 3: PUBLIC SHIELD -->
+        <div id="screen-l3" class="screen">
+            <h2>Level 3: The Public Shield</h2>
+            <p>A website notice takes 21 days. It feels slow.</p>
+
+            <div class="calendar-box">
+                📅
+                <div id="l3-shield" class="shield-overlay">🛡️</div>
             </div>
+            <div id="l3-anim-area" style="font-size:2rem; height:50px;"></div>
+
+            <button class="btn btn-red" onclick="level3.fastForward()">⏩ Fast Forward (Skip)</button>
+            <button class="btn btn-green" onclick="level3.wait()">⏳ Wait 21 Days (Be Safe)</button>
         </div>
 
-        <!-- Conclusion -->
-        <div id="conclusion-screen" class="screen">
-            <div style="font-size: 4rem; margin-bottom: 20px;">🎉</div>
-            <h1>Mission Accomplished!</h1>
-            <p>You have navigated the SOP successfully.</p>
-            <div style="text-align: left; background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                <p>✅ <strong>No Disputes:</strong> Neighbors stayed silent.</p>
-                <p>✅ <strong>Full Payment:</strong> Deeded land matched ROR.</p>
-                <p>✅ <strong>Secure Job:</strong> Identity verified forever.</p>
+        <!-- LEVEL 4: TWIN SON -->
+        <div id="screen-l4" class="screen">
+            <h2>Level 4: The Twin Defense</h2>
+            <p>Someone wants your job. Who is it?</p>
+
+            <div style="display:flex; justify-content:center; gap:20px; margin-bottom:20px;">
+                <div style="font-size:4rem;">👤</div>
+                <div style="font-size:4rem; filter:grayscale(100%); opacity:0.5;">👤</div>
             </div>
-            <button class="btn" onclick="location.reload()">Restart Training</button>
+            <p>Double check identity?</p>
+
+            <button class="btn btn-red" onclick="level4.skip()">Skip Police Verification</button>
+            <button class="btn btn-green" onclick="level4.verify()">Verify Identity (1 Month)</button>
+        </div>
+
+        <!-- CONCLUSION -->
+        <div id="screen-end" class="screen">
+            <div class="emoji-icon">🎉💼💰</div>
+            <h1>Congratulations!</h1>
+            <p>By following the SOP, you ensured:</p>
+            <ul style="text-align:left; color:#334155; margin-bottom:30px;">
+                <li>✅ Assets Frozen & Secured</li>
+                <li>✅ Full Payment via Mutation</li>
+                <li>✅ Legal Immunity via Publication</li>
+                <li>✅ Job Secured from Imposters</li>
+            </ul>
+            <button class="btn" onclick="location.reload()">🔄 Play Again</button>
         </div>
 
     </div>
 
-    <!-- Popup Overlay -->
-    <div id="popup-overlay">
-        <div class="popup-content">
-            <div class="popup-title" id="popup-title">Title</div>
-            <div class="popup-body" id="popup-body">Body text goes here.</div>
-            <button class="btn close-btn" onclick="popup.close()">Got it!</button>
+    <!-- MODAL -->
+    <div id="modal-overlay">
+        <div class="modal-content">
+            <div class="lesson-icon" id="modal-icon">💡</div>
+            <h2 id="modal-title">Learning Moment</h2>
+            <p id="modal-text">Content goes here...</p>
+            <button class="btn" onclick="modal.close()">Got it!</button>
         </div>
     </div>
 
-<script>
-    // Game State
-    const game = {
-        currentLevel: 0,
-        init: function() {
-            // Setup dragging for mobile/desktop
-            level2.setupDrag();
-        },
-        start: function() {
-            this.showScreen('level-1');
-            this.updateProgress(1);
-        },
-        showScreen: function(id) {
+    <script>
+        // --- AUDIO SYSTEM ---
+        const speak = (text) => {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.1;
+            utterance.pitch = 1;
+            window.speechSynthesis.speak(utterance);
+        };
+
+        // --- GAME STATE ---
+        const game = {
+            screen: 'intro',
+            start: () => switchScreen('screen-l1'),
+            next: (currentId, nextId) => switchScreen(nextId)
+        };
+
+        function switchScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-        },
-        nextLevel: function() {
-            this.currentLevel++;
-            if(this.currentLevel === 1) {
-                this.showScreen('level-2');
-                this.updateProgress(2);
-            } else if(this.currentLevel === 2) {
-                this.showScreen('level-3');
-                this.updateProgress(3);
-            } else {
-                this.showScreen('conclusion-screen');
-                this.updateProgress(4);
+        }
+
+        // --- MODAL SYSTEM ---
+        const modal = {
+            show: (title, text, icon, callback) => {
+                document.getElementById('modal-title').innerText = title;
+                document.getElementById('modal-text').innerText = text;
+                if (icon) document.getElementById('modal-icon').innerText = icon;
+
+                document.getElementById('modal-overlay').style.display = 'flex';
+                speak(text); // AUTO AUDIO
+
+                modal.callback = callback;
+            },
+            close: () => {
+                window.speechSynthesis.cancel();
+                document.getElementById('modal-overlay').style.display = 'none';
+                if (modal.callback) modal.callback();
             }
-        },
-        updateProgress: function(step) {
-            const width = (step / 4) * 100;
-            document.getElementById('progress-bar').style.width = width + '%';
-            
-            const labels = ['notification', 'verification', 'possession', 'job'];
-            labels.forEach((label, index) => {
-                const el = document.getElementById('label-' + label);
-                if (index < step) el.classList.add('active');
-            });
-        }
-    };
+        };
 
-    // Popup & Audio System
-    const popup = {
-        overlay: document.getElementById('popup-overlay'),
-        title: document.getElementById('popup-title'),
-        body: document.getElementById('popup-body'),
-        onClose: null,
+        // --- LEVEL 1: DRONE ---
+        const level1 = {
+            launchDrone: () => {
+                const map = document.getElementById('l1-map');
+                const blur = document.getElementById('l1-blur-layer');
+                const objs = document.querySelectorAll('.map-obj');
+                const locks = document.querySelectorAll('.padlock');
 
-        show: function(title, text, callback) {
-            this.title.innerText = title;
-            this.body.innerText = text;
-            this.overlay.style.display = 'flex';
-            this.onClose = callback;
-            
-            // Speak Logic
-            this.speak(text);
-        },
-        
-        close: function() {
-            window.speechSynthesis.cancel();
-            this.overlay.style.display = 'none';
-            if (this.onClose) {
-                this.onClose();
-                this.onClose = null;
-            }
-        },
+                // Anim
+                blur.style.opacity = '0';
+                map.style.background = '#86efac'; // clearer green
+                objs.forEach(o => o.style.opacity = '1');
 
-        speak: function(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Stop previous
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'en-US'; // Can try 'en-IN' for Indian accent preference if supported
-                utterance.rate = 1.0;
-                window.speechSynthesis.speak(utterance);
-            }
-        }
-    };
-
-    // Level 1 Logic
-    const level1 = {
-        trySkip: function() {
-            const btn = document.getElementById('btn-fast-forward');
-            btn.classList.add('shake');
-            
-            // Visual feedback
-            setTimeout(() => {
-                btn.classList.remove('shake');
-                popup.show(
-                    "Why wait 3 weeks on the Website?",
-                    "We publish the land schedule on the ECL website and local newspapers for 21 days to invite complaints from the general mass. Why is this good for you? If a jealous relative or neighbor wants to claim your land, they must speak NOW. Once this time is over, your claim becomes stronger. This wait is your shield against future lawsuits.",
-                    () => game.nextLevel()
-                );
-            }, 600);
-        }
-    };
-
-    // Level 2 Logic
-    const level2 = {
-        setupDrag: function() {
-            const pen = document.getElementById('pen-tool');
-            const target = document.getElementById('ror-doc');
-
-            // Touch events for mobile dragging
-            let isDragging = false;
-            let startPos = {x:0, y:0};
-            let currentTranslate = {x:0, y:0};
-
-            // Basic Mouse API (Desktop)
-            pen.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', 'pen');
-            });
-
-            target.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                target.classList.add('target-active');
-            });
-
-            target.addEventListener('drop', (e) => {
-                e.preventDefault();
-                this.success();
-            });
-
-            // Touch API (Mobile)
-            pen.addEventListener('touchstart', (e) => {
-                isDragging = true;
-                const touch = e.touches[0];
-                startPos = { x: touch.clientX, y: touch.clientY };
-                pen.style.position = 'fixed';
-                pen.style.zIndex = 1000;
-                // Move to touch point visually
-                this.movePen(touch.clientX, touch.clientY, pen);
-            }, {passive: false});
-
-            pen.addEventListener('touchmove', (e) => {
-                if(!isDragging) return;
-                e.preventDefault();
-                const touch = e.touches[0];
-                this.movePen(touch.clientX, touch.clientY, pen);
-            }, {passive: false});
-
-            pen.addEventListener('touchend', (e) => {
-                isDragging = false;
-                const touch = e.changedTouches[0];
-                
-                // Check collision
-                const targetRect = target.getBoundingClientRect();
-                if(touch.clientX >= targetRect.left && touch.clientX <= targetRect.right &&
-                   touch.clientY >= targetRect.top && touch.clientY <= targetRect.bottom) {
-                    this.success();
-                }
-
-                // Reset pen
-                pen.style.position = 'relative';
-                pen.style.transform = 'none';
-                pen.style.left = 'auto';
-                pen.style.top = 'auto';
-            });
-        },
-        movePen: function(x, y, el) {
-            el.style.left = (x - 25) + 'px'; // Center offset
-            el.style.top = (y - 25) + 'px';
-        },
-        success: function() {
-            const rorVal = document.getElementById('ror-value');
-            rorVal.innerText = "1.5 Acres";
-            rorVal.style.color = "var(--secondary)";
-            
-            setTimeout(() => {
-                popup.show(
-                    "Why do I need Mutation?",
-                    "We follow 'Mission Sanjivani'—we only buy from recorded owners in the ROR. If your Deed says you own more land than the ROR, we can't pay you for the extra land or give you the full job benefits until the ROR is fixed. Mutation ensures the Compensation and Employment goes to you, not the old owner or a sharecropper.",
-                    () => game.nextLevel()
-                );
-            }, 500);
-        }
-    };
-
-    // Level 3 Logic
-    const level3 = {
-        choose: function(choice) {
-            const visual = document.getElementById('l3-visual');
-            
-            if(choice === 'skip') {
-                // Scenario A
-                visual.innerText = "👯‍♂️❓"; // Imposter
-                visual.style.animation = "shake 0.5s";
-                
                 setTimeout(() => {
-                    popup.show(
-                        "Termination!",
-                        "Because we didn't verify the relationship, the court canceled your appointment. You lost the job. An imposter (your cousin) claimed your spot.",
-                        () => {
-                            // Reset visual
-                            visual.style.animation = "";
-                            visual.innerText = "👮‍♂️";
-                            // User must try again or move on? The prompt implies failure. 
-                            // Let's force them to retry the choice for education.
-                            // But for flow, let's just let them click the other button now.
-                        }
+                    locks.forEach(l => l.style.opacity = '1');
+                    setTimeout(() => {
+                        modal.show(
+                            "Assets Locked!",
+                            "We use Drones and Satellites within 15 days. Why? To freeze the image of your assets. Now, no outsider can build a fake hut overnight to steal your compensation. Your assets are locked and safe.",
+                            "🛰️🔒",
+                            () => game.next('screen-l1', 'screen-l2')
+                        );
+                    }, 1000);
+                }, 1000);
+            }
+        };
+
+        // --- LEVEL 2: MUTATION ---
+        const level2 = {
+            tryClaim: () => {
+                const btn = document.querySelector('#screen-l2 .btn-warning');
+                btn.classList.add('shake-anim');
+                setTimeout(() => btn.classList.remove('shake-anim'), 500);
+
+                modal.show(
+                    "Mismatch Error!",
+                    "Stop! The Government Record (RoR) shows less land than your Deed. If we pay now, you lose money. You must fix the record first.",
+                    "⚠️",
+                    null // stay on level
+                );
+            },
+            mutate: () => {
+                document.getElementById('l2-ror-text').innerText = "5 Acres";
+                document.getElementById('l2-ror-text').style.color = "green";
+                document.getElementById('l2-ror').classList.add('correct');
+
+                setTimeout(() => {
+                    modal.show(
+                        "Mission Sanjivani Success!",
+                        "We follow 'Mission Sanjivani'. We can only pay for what is recorded in the RoR. Mutation fixes the record so you get 100% of your money, not just a part of it.",
+                        "✅📝",
+                        () => game.next('screen-l2', 'screen-l3')
                     );
-                }, 500);
-            } else {
-                // Scenario B
-                visual.innerText = "🛡️✅";
-                popup.show(
-                    "Verification Protects Your Job",
-                    "We require the 'Relationship Certificate' (Form-VI) and Police Verification to ensure no imposter steals your family's employment. If we skip this, your appointment is legally weak and can be cancelled later. Job Secured!",
-                    () => game.nextLevel()
+                }, 800);
+            }
+        };
+
+        // --- LEVEL 3: PUBLIC NOTICE ---
+        const level3 = {
+            fastForward: () => {
+                const btn = document.querySelector('#screen-l3 .btn-red');
+                btn.classList.add('shake-anim');
+                setTimeout(() => btn.classList.remove('shake-anim'), 500);
+
+                modal.show(
+                    "RISK ALERT!",
+                    "You rushed the process! A jealous neighbor appeared and filed a lawsuit because they didn't get a chance to speak. Now everything is stuck in court.",
+                    "⚖️🚫",
+                    null
+                );
+            },
+            wait: () => {
+                // Animation of Drum beat
+                const anim = document.getElementById('l3-anim-area');
+                anim.innerHTML = "🥁 📢 🥁 📢";
+
+                setTimeout(() => {
+                    document.getElementById('l3-shield').style.transform = "translate(-50%, -50%) scale(1)";
+                    setTimeout(() => {
+                        modal.show(
+                            "Legal Shield Activated",
+                            "We publish the list for 21 days and announce it by beat of drum. This is your shield. If your jealous neighbor doesn't complain now, they can never complain later. This wait makes your claim legally bulletproof.",
+                            "🛡️",
+                            () => game.next('screen-l3', 'screen-l4')
+                        );
+                    }, 1000);
+                }, 1000);
+            }
+        };
+
+        // --- LEVEL 4: TWIN DEFENSE ---
+        const level4 = {
+            skip: () => {
+                const btn = document.querySelector('#screen-l4 .btn-red');
+                btn.classList.add('shake-anim');
+                setTimeout(() => btn.classList.remove('shake-anim'), 500);
+
+                modal.show(
+                    "IMPOSTER ALERT!",
+                    "You skipped verification! An imposter (looking just like your nominee) walked in with fake papers. The court cancelled the job appointment.",
+                    "👯‍♂️❌",
+                    null
+                );
+            },
+            verify: () => {
+                modal.show(
+                    "Twin Defense Successful",
+                    "Police Verification and Witness Signatures (Form VI) take time, but they ensure no imposter can steal your family's job. A skipped step today is a lost job tomorrow.",
+                    "👮‍♂️✅",
+                    () => game.next('screen-l4', 'screen-end')
                 );
             }
-        }
-    };
+        };
 
-    // Start
-    game.init();
-
-</script>
+    </script>
 </body>
+
 </html>
