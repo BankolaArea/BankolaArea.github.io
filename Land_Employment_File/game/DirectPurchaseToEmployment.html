@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SOP Tutorial: Direct Purchase to Employment</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0f172a;
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 500px;
+            background: var(--light);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .screen {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .screen.active {
+            display: flex;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        /* Elements */
+        .emoji-icon {
+            font-size: 4rem;
+            margin: 10px;
+            display: inline-block;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            color: var(--dark);
+            margin: 0.5rem 0;
+        }
+
+        p {
+            font-size: 1rem;
+            color: #475569;
+            line-height: 1.5;
+            margin: 10px 0 20px 0;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 90%;
+            margin: 10px 0;
+            box-shadow: 0 4px 0 #1d4ed8;
+            transition: transform 0.1s;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #1d4ed8;
+        }
+
+        .btn-green {
+            background: var(--success);
+            box-shadow: 0 4px 0 #15803d;
+        }
+
+        .btn-green:active {
+            box-shadow: 0 0 0 #15803d;
+        }
+
+        .btn-red {
+            background: var(--danger);
+            box-shadow: 0 4px 0 #b91c1c;
+        }
+
+        .btn-red:active {
+            box-shadow: 0 0 0 #b91c1c;
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            box-shadow: none;
+        }
+
+        /* Inventory / Visuals */
+        .doc-area {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .doc-card {
+            border: 2px solid #94a3b8;
+            padding: 10px;
+            border-radius: 8px;
+            background: white;
+            width: 130px;
+            position: relative;
+            font-size: 0.9rem;
+        }
+
+        .doc-card .icon {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Modal */
+        #modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes popUp {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .anim-pulse {
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <header>Phase: <span id="header-phase">Intro</span>
+            <button id="btn-voice" onclick="voice.toggle()"
+                style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:white; margin-left:10px;">🔇</button>
+        </header>
+
+        <!-- INTRO -->
+        <div id="screen-intro" class="screen active">
+            <h1>Direct Purchase Tutorial</h1>
+            <div class="emoji-icon">🤝🏭</div>
+            <h2>From Land to Job</h2>
+            <p>Learn the 5-Phase SOP for Direct Purchase of Land.<br>Simple, Fast, and Secure.</p>
+            <button class="btn btn-green"
+                onclick="game.setHeader('1. Initiation'); game.next('screen-intro', 'screen-p1')">Start
+                Tutorial</button>
+        </div>
+
+        <!-- PHASE 1: INITIATION -->
+        <div id="screen-p1" class="screen">
+            <h2>Phase 1: Initiation</h2>
+            <p>Landowner applies to sell land.</p>
+            <div class="doc-area">
+                <div class="doc-card" onclick="modal.show('Form-I', 'Application Form from Landowner.', '📄')">
+                    <span class="icon">📄</span>Form-I
+                </div>
+            </div>
+            <p><strong>Action:</strong> Check if Approval is there or if the land is in Raniganj Master Plan / a No-Buy
+                Zone.</p>
+            <button class="btn btn-red"
+                onclick="modal.show('Rejected', 'We cannot buy land in No-Buy Zone!', '🚫')">Inside No Buy
+                Zone</button>
+            <button class="btn btn-green" onclick="phase1.approve()">Can Buy</button>
+        </div>
+
+        <!-- PHASE 2: APPROVAL -->
+        <div id="screen-p2" class="screen">
+            <h2>Phase 2: Administrative Approval</h2>
+            <p>Proposal (Form-II) needs GM Vetting.</p>
+            <div class="doc-area">
+                <div class="doc-card">
+                    <span class="icon">📑</span>Form-II
+                </div>
+                <div class="doc-card">
+                    <span class="icon">🏢</span>GM Office
+                </div>
+            </div>
+            <button class="btn" onclick="phase2.submitProposal()">Submit to GM Through Proper Channel</button>
+        </div>
+
+        <!-- PHASE 3: PUBLIC NOTICE -->
+        <div id="screen-p3" class="screen">
+            <h2>Phase 3: Public Notice</h2>
+            <p>Transparency is key. We must publish Form-III.</p>
+            <div class="doc-area">
+                <div class="doc-card">
+                    <span class="icon">📢</span>Newspaper
+                </div>
+                <div class="doc-card">
+                    <span class="icon">🌐</span>Website
+                </div>
+            </div>
+            <button class="btn" onclick="phase3.publish()">Publish Form-III (Wait 3 Weeks)</button>
+        </div>
+
+        <!-- PHASE 4: REGISTRATION -->
+        <div id="screen-p4" class="screen">
+            <h2>Phase 4: Registration</h2>
+            <p>Select the Land Type to proceed:</p>
+            <button class="btn btn-outline" onclick="phase4.choose('tenancy')">Tenancy (General)</button>
+            <button class="btn btn-outline" onclick="phase4.choose('tribal')">Tribal (General)</button>
+            <button class="btn btn-outline" onclick="phase4.choose('devottar')">Devottar</button>
+            <button class="btn btn-outline" onclick="phase4.choose('patta')">Patta</button>
+            <button class="btn btn-outline" onclick="phase4.choose('government')">Government</button>
+        </div>
+
+        <!-- PHASE 5: POSSESSION -->
+        <div id="screen-p5" class="screen">
+            <h2>Phase 5: Possession</h2>
+            <p>Payment made. Taking Physical Possession.</p>
+            <div class="emoji-icon">🚩</div>
+            <p>We need <strong>Form-IV</strong> to certify possession.</p>
+            <button class="btn btn-green" onclick="phase5.takePossession()">Take Possession (Form-IV)</button>
+        </div>
+
+        <!-- PHASE 6: EMPLOYMENT START -->
+        <div id="screen-p6-start" class="screen">
+            <h2>Phase 6: Employment</h2>
+            <p>Unit Level Processing The File When Necessery Criterias are Met.</p>
+            <div class="doc-area">
+                <div class="doc-card"><span class="icon">📂</span>Emp Folder</div>
+            </div>
+            <p>Submitting Forms: A, B, C, V, VI, Attestation.</p>
+            <button class="btn" onclick="phase6.submitUnit()">Submit to Unit Office</button>
+        </div>
+
+        <!-- PHASE 6: HQ VETTING -->
+        <div id="screen-p6-hq" class="screen">
+            <h2>Phase 6: HQ Processing</h2>
+            <p>The file is now at Headquarters.</p>
+            <ul style="text-align:left; font-size:0.9rem; color:#475569;">
+                <li>1. LRE Scrutiny (Form-XIV)</li>
+                <li>2. Committee Vetting (Legal + Planning)</li>
+                <li>3. Website Notice (21 Days)</li>
+                <li>4. Dept Clearances (P&P, Finance)</li>
+            </ul>
+            <button class="btn btn-warning" onclick="phase6.hqProcess()">Process File</button>
+        </div>
+
+        <!-- PHASE 6: FINAL APPROVAL -->
+        <div id="screen-p6-end" class="screen">
+            <h2>Final Approval</h2>
+            <p>Waiting for ECFD (Functional Directors) & CMD Approval...</p>
+            <div id="stamp-area" style="height:80px;"></div>
+            <button class="btn btn-green" id="btn-offer" style="display:none;" onclick="phase6.issueOffer()">Issue Offer
+                Letter</button>
+        </div>
+
+        <!-- END -->
+        <div id="screen-end" class="screen">
+            <div class="emoji-icon">🎉✉️👷</div>
+            <h1>Mission Accomplished!</h1>
+            <p>The land is ours, and the family has employment.</p>
+            <p class="final-msg" style="color:green; font-weight:bold;">SOP Compliant 100%</p>
+            <button class="btn" onclick="location.reload()">🔄 Replay Tutorial</button>
+        </div>
+
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-icon" id="modal-icon">💡</div>
+            <h2 id="modal-title">Info</h2>
+            <p id="modal-text">Details...</p>
+            <button class="btn" onclick="modal.close()">Continue</button>
+        </div>
+    </div>
+
+    <script>
+        // --- GAME ENGINE ---
+        const game = {
+            screen: 'intro',
+            setHeader: (text) => document.getElementById('header-phase').innerText = text,
+            next: (from, to) => {
+                document.getElementById(from).classList.remove('active');
+                const nextScreen = document.getElementById(to);
+                nextScreen.classList.add('active');
+
+                // Voice Trigger
+                const h2 = nextScreen.querySelector('h2');
+                const p = nextScreen.querySelector('p');
+                let speechText = "";
+                if (h2) speechText += h2.innerText + ". ";
+                if (p) speechText += p.innerText;
+                voice.speak(speechText);
+            }
+        };
+
+        const voice = {
+            enabled: false,
+            toggle: () => {
+                voice.enabled = !voice.enabled;
+                const btn = document.getElementById('btn-voice');
+
+                if (voice.enabled) {
+                    btn.innerText = '🔊';
+                    // Optional: Speak immediate feedback
+                    // voice.speak("Voice Enabled"); 
+                } else {
+                    btn.innerText = '🔇';
+                    voice.stop();
+                }
+            },
+            rationalize: (text) => {
+                // 1. Roman Numerals & Forms
+                text = text.replace(/Form-I\b/g, "Form One");
+                text = text.replace(/Form-II\b/g, "Form Two");
+                text = text.replace(/Form-III\b/g, "Form Three");
+                text = text.replace(/Form-IV\b/g, "Form Four");
+                text = text.replace(/Form-V\b/g, "Form Five");
+                text = text.replace(/Form-VI\b/g, "Form Six");
+                text = text.replace(/Form-VII\b/g, "Form Seven");
+                text = text.replace(/Form-XIV\b/g, "Form Fourteen");
+
+                // 2. Acronyms & Abbreviations
+                text = text.replace(/\bSOP\b/g, "S O P");
+                text = text.replace(/\bCBA\b/g, "C B A");
+                text = text.replace(/u\/s/g, "under section");
+                text = text.replace(/\bGM\b/g, "General Manager");
+                text = text.replace(/\bAGM\b/g, "Area General Manager");
+                text = text.replace(/\bWB\b/g, "West Bengal");
+
+                // 3. Punctuation & Pacing
+                // Replace "dot" sounding periods with natural pauses
+                text = text.replace(/\./g, ", ");
+                // Add pauses at newlines
+                text = text.replace(/\n/g, ", ");
+
+                return text;
+            },
+            speak: (text) => {
+                if (!voice.enabled || !('speechSynthesis' in window)) return;
+                window.speechSynthesis.cancel(); // Stop previous
+
+                // Remove HTML tags first
+                let cleanText = text.replace(/<[^>]*>/g, ' ');
+
+                // Rationalize text for speech
+                cleanText = voice.rationalize(cleanText);
+
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.rate = 1.0; // Slightly slower for better clarity if needed, default is 1
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            },
+            stop: () => {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            }
+        };
+
+        const modal = {
+            callback: null,
+            show: (title, text, icon, cb) => {
+                document.getElementById('modal-title').innerText = title;
+                document.getElementById('modal-text').innerHTML = text;
+                document.getElementById('modal-icon').innerText = icon || '💡';
+                document.getElementById('modal-overlay').style.display = 'flex';
+                modal.callback = cb;
+
+                // Voice Trigger for Modal
+                voice.speak(title + ". " + text);
+            },
+            close: () => {
+                document.getElementById('modal-overlay').style.display = 'none';
+                voice.stop(); // Stop voice when closed
+                if (modal.callback) {
+                    const cb = modal.callback;
+                    modal.callback = null;
+                    cb();
+                }
+            }
+        };
+
+        // --- PHASE LOGIC ---
+        const phase1 = {
+            approve: () => {
+                modal.show(
+                    "Phase 1 Complete",
+                    "<strong>Form-I Accepted.</strong><br>Land is verified to be outside the exclusion zone. We can proceed to Proposal (Form-II).",
+                    "✅",
+                    () => {
+                        game.setHeader("2. Administrative Approval");
+                        game.next('screen-p1', 'screen-p2');
+                    }
+                );
+            }
+        };
+
+        const phase2 = {
+            submitProposal: () => {
+                modal.show(
+                    "GM Vetted",
+                    "The Area General Manager has approved the <strong>Form-II Proposal</strong>.<br>Next: Public Transparency.",
+                    "👮‍♂️",
+                    () => {
+                        game.setHeader("3. Public Notice");
+                        game.next('screen-p2', 'screen-p3');
+                    }
+                );
+            }
+        };
+
+        const phase3 = {
+            publish: () => {
+                modal.show(
+                    "Notice Published",
+                    "<strong>Form-III</strong> is live on the Website and Newspapers.<br>We waited 3 weeks. No valid complaints received.",
+                    "📢",
+                    () => {
+                        game.setHeader("4. Registration");
+                        game.next('screen-p3', 'screen-p4');
+                    }
+                );
+            }
+        };
+
+        const phase4 = {
+            choose: (type) => {
+                let title = "";
+                let msg = "";
+
+                switch (type) {
+                    case 'tenancy':
+                        title = "Tenancy (General)";
+                        msg = "<strong>Confirmed.</strong><br>Requires 'Clear Title & ROR'.<br>Acquired via <strong>Registration of Sale Deed</strong>.";
+                        break;
+                    case 'tribal':
+                        title = "Tribal (General)";
+                        msg = "<strong>Confirmed.</strong><br>Requires 'Competent Authority Permission' (CNT/SPT Act).<br>Acquired via <strong>Sale Deed</strong>.";
+                        break;
+                    case 'devottar':
+                        title = "Devottar Land";
+                        msg = "<strong>Confirmed.</strong><br>Requires 'Legal Necessity' & 'Sebait Indemnity'.<br>Acquired via <strong>Sale Deed from Sebait/Heirs</strong>.";
+                        break;
+                    case 'patta':
+                        title = "Patta Land";
+                        msg = "<strong>Confirmed.</strong><br>Requires 'Surrender & Cancellation of Patta'.<br>Acquired via <strong>Transfer of Government Land</strong> (Admin Order).";
+                        break;
+                    case 'government':
+                        title = "Government Land";
+                        msg = "<strong>Confirmed.</strong><br>Requires 'Payment of Transfer Value'.<br>Acquired via <strong>Deed of Conveyance</strong> / Transfer Order.";
+                        break;
+                }
+
+                modal.show(
+                    title,
+                    msg,
+                    "✍️",
+                    () => {
+                        game.setHeader("5. Possession");
+                        game.next('screen-p4', 'screen-p5');
+                    }
+                );
+            }
+        };
+
+        const phase5 = {
+            takePossession: () => {
+                modal.show(
+                    "Physical Possession",
+                    "<strong>Form-IV</strong> Signed!<br>Mutation applied. Form-D updated. Now strictly Employment.",
+                    "🚩",
+                    () => {
+                        game.setHeader("6. Employment (Unit)");
+                        game.next('screen-p5', 'screen-p6-start');
+                    }
+                );
+            }
+        };
+
+        const phase6 = {
+            submitUnit: () => {
+                modal.show(
+                    "Unit Verified",
+                    "Employment Folder (Forms A-VI) verified by Unit. Sending to HQ...",
+                    "📤",
+                    () => {
+                        game.setHeader("6. Employment (HQ)");
+                        game.next('screen-p6-start', 'screen-p6-hq');
+                    }
+                );
+            },
+            hqProcess: () => {
+                // Multi-step simulation
+                modal.show(
+                    "HQ Processing...",
+                    "1. LRE Created Form-XIV Synopsis.<br>2. Committee Vetted.<br>3. 21-Day Notice Complete.<br>4. Finance/Planning Cleared.",
+                    "⚙️",
+                    () => {
+                        game.next('screen-p6-hq', 'screen-p6-end');
+                    }
+                );
+            },
+            issueOffer: () => {
+                modal.show(
+                    "Offer Letter Issued",
+                    "Medical & Police Verification Passed.<br>Appointment Letter handed over!",
+                    "✉️",
+                    () => {
+                        game.setHeader("Victory");
+                        game.next('screen-p6-end', 'screen-end');
+                    }
+                );
+            }
+        };
+
+        // Auto-Run Animation for Stamp Phase
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target.id === 'screen-p6-end' && mutation.target.classList.contains('active')) {
+                    setTimeout(() => {
+                        document.getElementById('stamp-area').innerHTML = '<span style="font-size:3rem; color:green; border:4px solid green; padding:10px; transform:rotate(-10deg); display:inline-block;">APPROVED (ECFD)</span>';
+                        document.getElementById('btn-offer').style.display = 'block';
+                    }, 1500);
+                }
+            });
+        });
+        observer.observe(document.getElementById('screen-p6-end'), { attributes: true });
+
+    </script>
+</body>
+
+</html>
