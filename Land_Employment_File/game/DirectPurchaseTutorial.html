@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SOP Master: Direct Purchase of Land</title>
+    <style>
+        /* 
+           ========================================
+           CSS VARIABLES (THEME)
+           ========================================
+           These variables store the color palette for the entire application.
+           Changing a color here updates it everywhere it's used (buttons, headers, etc.).
+        */
+        :root {
+            --primary: #2563eb;
+            /* Main Blue */
+            --success: #22c55e;
+            /* Success Green */
+            --danger: #ef4444;
+            /* Danger Red */
+            --warning: #f59e0b;
+            /* Warning Yellow/Orange */
+            --dark: #1e293b;
+            /* Dark Text */
+            --light: #f8fafc;
+            /* Light Background */
+            --white: #ffffff;
+            /* Pure White */
+        }
+
+        /* 
+           GLOBAL RESET 
+           Ensures padding and borders are included in element width calculation 
+           and prevents text selection to make it feel like an app.
+        */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 
+           BODY STYLES
+           Centers the app container on the screen.
+        */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0f172a;
+            /* Dark background outside the phone frame */
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            /* Horizontally center */
+        }
+
+        /* 
+           APP CONTAINER (#app)
+           This acts as the "Phone Screen" or main game window.
+           It has a max-width of 500px to look good on desktop and mobile.
+        */
+        #app {
+            width: 100%;
+            max-width: 500px;
+            background: var(--light);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            /* Stack header and content vertically */
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            /* Prevents scrolling outside the content area */
+        }
+
+        /* 
+           HEADER 
+           The top bar showing the Phase Title and Mute button.
+        */
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 
+           SCREENS (.screen)
+           Each "Page" of the game (Intro, Phase 1, Phase 2, etc.) is a .screen div.
+           By default, 'display: none' keeps them hidden.
+           The JavaScript adds the 'active' class to show the current screen.
+        */
+        .screen {
+            flex: 1;
+            display: none;
+            /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            overflow-y: auto;
+            /* Allow scrolling if content is long */
+            position: relative;
+        }
+
+        /* 
+           ACTIVE SCREEN
+           When a screen has the class 'active', it becomes visible using Flexbox.
+        */
+        .screen.active {
+            display: flex;
+            animation: fadeIn 0.4s ease-out;
+            /* Smooth fade-in effect */
+        }
+
+        /* Elements */
+        .emoji-icon {
+            font-size: 4rem;
+            margin: 10px;
+            display: inline-block;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            color: var(--dark);
+            margin: 0.5rem 0;
+        }
+
+        p {
+            font-size: 1rem;
+            color: #475569;
+            line-height: 1.5;
+            margin: 10px 0 20px 0;
+        }
+
+        /* 
+           BUTTONS (.btn)
+           Base styles for all buttons in the game.
+        */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 90%;
+            margin: 10px 0;
+            box-shadow: 0 4px 0 #1d4ed8;
+            /* 3D effect bottom shadow */
+            transition: transform 0.1s;
+        }
+
+        /* Button Press Effect */
+        .btn:active {
+            transform: translateY(4px);
+            /* Moves button down */
+            box-shadow: 0 0 0 #1d4ed8;
+            /* Removes shadow */
+        }
+
+        /* Color Variants for Buttons */
+        .btn-green {
+            background: var(--success);
+            box-shadow: 0 4px 0 #15803d;
+        }
+
+        .btn-green:active {
+            box-shadow: 0 0 0 #15803d;
+        }
+
+        .btn-red {
+            background: var(--danger);
+            box-shadow: 0 4px 0 #b91c1c;
+        }
+
+        .btn-red:active {
+            box-shadow: 0 0 0 #b91c1c;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+            box-shadow: 0 4px 0 #d97706;
+        }
+
+        .btn-warning:active {
+            box-shadow: 0 0 0 #d97706;
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            box-shadow: none;
+        }
+
+        /* 
+           INVENTORY / DOCUMENT ICONS
+           The small clickable cards showing documents (Form-XVI, Plans, etc.)
+        */
+        .doc-area {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .doc-card {
+            border: 2px solid #94a3b8;
+            padding: 10px;
+            border-radius: 8px;
+            background: white;
+            width: 130px;
+            position: relative;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .doc-card .icon {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* 
+           MODAL SYSTEM
+           The overlay and popup box for showing messages without leaving the screen.
+        */
+        #modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            /* Semi-transparent black */
+            display: none;
+            /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Bounce effect */
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes popUp {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="app">
+        <!-- HEADER: Shows Current Phase and Mute Toggle -->
+        <header>
+            <span id="header-phase">Intro</span>
+            <!-- 
+                MUTE BUTTON:
+                onclick="voice.toggle()" calls the toggle function in the voice object 
+                to switch text-to-speech on or off. 
+            -->
+            <button id="btn-voice" onclick="voice.toggle()"
+                style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:white;">🔊</button>
+        </header>
+
+        <!-- 
+            ========================================
+            SCREEN 1: INTRO SEQUENCE
+            ========================================
+            Class 'active' makes this the first screen the user sees.
+        -->
+        <div id="screen-intro" class="screen active">
+            <h1>Direct Purchase SOP</h1>
+            <div class="emoji-icon">🏛️🤝📜</div>
+            <h2>Full Process Guide</h2>
+            <p>Master the 5 Phases: From Internal Planning to Sale Deed & Digitization.</p>
+
+            <!-- START BUTTON: Calls game.start() to initialize the game state and move to Phase 1 -->
+            <button class="btn btn-green" onclick="game.start()">Start Training</button>
+        </div>
+
+        <!-- 
+            ========================================
+            PHASE 1: PREPARATION (INTERNAL PLANNING)
+            ========================================
+            Goal: User decides if land is Govt or Private.
+        -->
+        <div id="screen-p1" class="screen">
+            <h2>Phase 1: Internal Planning</h2>
+            <p><strong>Goal:</strong> Validate Need & Budget before approaching Landowner.</p>
+
+            <!-- DOCUMENT CARDS: Click to see info via modal.show() -->
+            <div class="doc-area">
+                <div class="doc-card"
+                    onclick="modal.show('Justification', '<strong>Form-XVI (5-Point Cert)</strong><br>Signed by Manager/Agent verifying land is needed.', '📝')">
+                    <span class="icon">📝</span>Form-XVI
+                </div>
+                <div class="doc-card"
+                    onclick="modal.show('Planning', '<strong>Mouza Plan & PR</strong><br>Shows layout and overlaps.', '🗺️')">
+                    <span class="icon">🗺️</span>Plans
+                </div>
+            </div>
+
+            <p><strong>Step 1: Viability Check</strong><br>Is this Govt/Forest Land or in Master Plan?</p>
+
+            <!-- 
+                 CHOICE 1: GOVT LAND 
+                 Calls game.next() to switch screen from 'screen-p1' to 'screen-govt'.
+            -->
+            <button class="btn btn-green" onclick="game.next('screen-p1', 'screen-govt')">Forest/Govt</button>
+
+            <!-- 
+                 CHOICE 2: PATTA LAND (NEW)
+                 Calls game.next() to switch to Patta flow.
+            -->
+            <button class="btn btn-green" onclick="game.next('screen-p1', 'screen-patta-intro')">Patta Land</button>
+
+            <!-- 
+                 CHOICE 3: PRIVATE LAND
+                 Calls phase1.verify() to run checks before showing approval options.
+            -->
+            <button class="btn btn-green" onclick="phase1.verify()">Private Tanency Land</button>
+
+            <!-- HIDDEN APPROVAL SECTION: Shown only after phase1.verify() passes -->
+            <div id="p1-approvals" style="display:none; margin-top:20px; width:100%;">
+                <p><strong>Step 2: Vetting Chain</strong></p>
+                <div style="font-size:0.8rem; margin-bottom:10px;">Area Committee ✅ -> HQ Planning ✅ -> HQ Finance ✅ ->
+                    HQ LRE ✅</div>
+
+                <!-- APPROVE BUTTON: Completes Phase 1, moves to Phase 2 -->
+                <button class="btn btn-green" onclick="phase1.approve()">Get Board Approval</button>
+            </div>
+        </div>
+
+
+
+
+        <!-- 
+            ========================================
+            PATTA LAND PROCESS (NEW BRANCH)
+            ========================================
+            Handles the conversion of Patta Land to Govt Land via Cancellation.
+        -->
+        <div id="screen-patta-intro" class="screen">
+            <h2>Patta Land Acquisition</h2>
+            <div class="emoji-icon">📜🏛️</div>
+            <p><strong>Status:</strong> Patta holder is a lessee, not owner.</p>
+            <p><strong>Goal:</strong> Validate claims, assist in Patta Cancellation, then acquire as Govt Land.</p>
+            <button class="btn btn-green" onclick="game.next('screen-patta-intro', 'screen-patta-cancel')">Start Patta
+                Process</button>
+        </div>
+
+        <div id="screen-patta-cancel" class="screen">
+            <h2>Phase 1B: Patta Cancellation</h2>
+            <p><strong>Goal:</strong> Surrender Patta Rights to State.</p>
+
+            <div class="doc-area">
+                <div class="doc-card"
+                    onclick="modal.show('Patta Docs', '<strong>Patta Cert & ROR</strong><br>Proof of lease.<br><strong>Genealogical Chart</strong><br>Family tree authenticated by BDO.', '📜')">
+                    <span class="icon">📜</span>Docs
+                </div>
+            </div>
+
+            <p><strong>Step 1: Verification & Agreement</strong></p>
+            <button class="btn btn-outline" onclick="phasePatta.agreement()">Verify & Sign Form-XX</button>
+
+            <div id="patta-cancel-step" style="display:none; margin-top:20px;">
+                <p><strong>Step 2: Surrender</strong><br>Apply to SDO for annulment.</p>
+                <button class="btn btn-warning" onclick="phasePatta.surrender()">Apply for Cancellation</button>
+            </div>
+        </div>
+
+        <!-- 
+            ========================================
+            GOVERNMENT / FOREST PROCESS (ALTERNATE PATH)
+            ========================================
+            This is a dead-end branch for non-purchase acquisitions.
+        -->
+        <div id="screen-govt" class="screen">
+            <h2>Govt & Forest Land</h2>
+            <div class="emoji-icon">🏛️🌲</div>
+            <p><strong>Status:</strong> Cannot be purchased via Sale Deed.<br>Choose Acquisition Mode:</p>
+
+            <!-- ACQUISITION BUTTONS: Call phaseGovt.choose() with specific codes -->
+            <button class="btn btn-outline" onclick="phaseGovt.choose('PF3')">Direct Transfer (Admin Order)</button>
+            <button class="btn btn-outline" onclick="phaseGovt.choose('CBA')">CBA Act (Section 9 & 11)</button>
+
+            <!-- DYNAMIC DETAILS SECTION: Populated by JS based on choice -->
+            <div id="govt-details" style="display:none; margin-top:15px; border-top:1px solid #ccc; padding-top:10px;">
+                <h3 id="govt-title" style="color:var(--primary); font-size:1.1rem; margin:5px 0;">Method</h3>
+                <p id="govt-desc" style="font-size:0.9rem;">Details...</p>
+
+                <div id="forest-step"
+                    style="display:none; background:#ecfdf5; padding:10px; border-radius:8px; margin:10px 0;">
+                    <strong>🌲 Forest Land (Jungle-Jhari)</strong><br>
+                    <span style="font-size:0.85rem">Must pay NPV + Compensatory Afforestation (CA) for Clearance.</span>
+                </div>
+
+                <!-- COMPLETE BUTTON: Reloads the page to restart -->
+                <button class="btn btn-green"
+                    onclick="modal.show('Transfer Complete', 'Land acquired! Returning to Main Menu.', '🏁', () => location.reload())">
+                    Complete & Return
+                </button>
+            </div>
+
+            <!-- BACK BUTTON: Returns to Phase 1 -->
+            <button class="btn btn-red" style="margin-top:20px;" onclick="game.next('screen-govt', 'screen-p1')">Back to
+                Private Land</button>
+        </div>
+
+        <!-- 
+            ========================================
+            PHASE 2: LANDOWNER APPLICATION
+            ========================================
+            Goal: Scrutiny of documents and Title Search.
+        -->
+        <div id="screen-p2" class="screen">
+            <h2>Phase 2: Application</h2>
+            <p><strong>Goal:</strong> Scrutinize Landowner's Offer.</p>
+
+            <div class="doc-area">
+                <div class="doc-card"
+                    onclick="modal.show('Application', '<strong>Form-I</strong><br>Formal offer from Landowner.', '📄')">
+                    <span class="icon">📄</span>Form-I
+                </div>
+                <div class="doc-card"
+                    onclick="modal.show('Ownership', '<strong>ROR & Link Deeds</strong><br>Trace ownership history.', '📜')">
+                    <span class="icon">📜</span>Deeds
+                </div>
+            </div>
+
+            <!-- LAND CATEGORY SELECTION -->
+            <p style="margin-bottom:5px;"><strong>Step 1: Identify Land Category</strong></p>
+            <div style="display:flex; gap:10px; width:90%; justify-content:center; margin-bottom:15px;">
+                <!-- GENERAL vs TRIBAL: Calls phase2.idCategory() to switch UI mode -->
+                <button class="btn btn-outline" style="padding:10px;"
+                    onclick="phase2.idCategory('General')">General</button>
+                <button class="btn btn-outline" style="padding:10px;"
+                    onclick="phase2.idCategory('Tribal')">Tribal</button>
+            </div>
+
+            <!-- 
+                TRIBAL PERMISSION FLOW
+                Hidden by default. Shown if 'Tribal' is selected above. 
+            -->
+            <div id="p2-tribal-flow"
+                style="display:none; background:#fff7ed; padding:10px; border:1px solid #fdba74; border-radius:8px; margin-bottom:15px;">
+                <p style="margin:5px 0; color:#c2410c;"><strong>⚠️ Tribal Land (CNT/SPT Act)</strong></p>
+                <p style="font-size:0.85rem; margin:5px 0;">Permission from District Authority is required
+                    <strong>BEFORE</strong> Form-II.
+                </p>
+
+                <!-- PERMISSION BUTTON: Simulates applying for permission -->
+                <button class="btn btn-warning" id="btn-perm" onclick="phase2.getPermission()">Apply for District
+                    Permission</button>
+
+                <!-- STATUS MESSAGE: Shown after permission is simulated -->
+                <div id="p2-perm-done" style="display:none; color:green; font-weight:bold; margin-top:5px;">✅ Permission
+                    Granted</div>
+            </div>
+
+            <!-- 
+                COMMON STEPS
+                Legal Search and Scrutiny. Shown after Category is picked (and permission granted if Tribal).
+            -->
+            <div id="p2-common" style="display:none;">
+                <button class="btn btn-outline" onclick="phase2.legalSearch()">Run 30-Year Legal Search</button>
+
+                <!-- RESULT SECTION: Shown after Legal Search -->
+                <div id="p2-result" style="display:none; margin-top:20px;">
+                    <p style="color:green; font-weight:bold;">Search Clear! No Disputes.</p>
+
+                    <!-- CREATE FORM-II BUTTON: Completes Phase 2, Moves to Phase 3 -->
+                    <button class="btn btn-green" onclick="phase2.scrutinize()">Create Form-II Summary</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 
+            ========================================
+            PHASE 3: TRANSPARENCY
+            ========================================
+            Goal: Public Notice (Form-III)
+        -->
+        <div id="screen-p3" class="screen">
+            <h2>Phase 3: Transparency</h2>
+            <p><strong>Goal:</strong> Public Notice to invite objections.</p>
+
+            <div class="doc-area">
+                <div class="doc-card"><span class="icon">📢</span>Newspaper</div>
+                <div class="doc-card"><span class="icon">🌐</span>Website</div>
+            </div>
+
+            <p>Publish <strong>Form-III</strong> and wait 3 weeks.</p>
+
+            <!-- TIMER BUTTON: Simulates 3-week wait, then moves to Phase 4 -->
+            <button class="btn btn-warning" onclick="phase3.wait()">Start 3-Week Timer</button>
+        </div>
+
+        <!-- 
+            ========================================
+            PHASE 4: EXECUTION (SALE DEED)
+            ========================================
+        -->
+        <div id="screen-p4" class="screen">
+            <h2>Phase 4: Sale Deed</h2>
+            <p><strong>Goal:</strong> Register the Sale Deed.</p>
+            <p>Based on Category Selection: <strong>Clauses Applied.</strong></p>
+
+            <div id="p4-register" style="display:block; margin-top:15px;">
+                <p><strong>Req:</strong> ID, Pan, Photo, & Map (colored).</p>
+                <!-- REGISTER BUTTON: Completes Phase 4, Moves to Phase 5 -->
+                <button class="btn btn-green" onclick="phase4.register()">Sign & Register Deed</button>
+            </div>
+        </div>
+
+        <!-- 
+            ========================================
+            PHASE 5: POST PURCHASE
+            ========================================
+            Goal: Mutations and Employment.
+        -->
+        <div id="screen-p5" class="screen">
+            <h2>Phase 5: Post-Purchase</h2>
+            <p><strong>Goal:</strong> Possession, Mutation, Digitization.</p>
+
+            <div class="doc-area">
+                <div class="doc-card"
+                    onclick="modal.show('Possession', '<strong>Form-IV</strong><br>Certificate of Possession signed on the field.', '🚩')">
+                    <span class="icon">🚩</span>Form-IV
+                </div>
+                <div class="doc-card"
+                    onclick="modal.show('Mutation', '<strong>Mutation</strong><br>Apply to State Rev Dept immediately.', '🏛️')">
+                    <span class="icon">🏛️</span>Mutation
+                </div>
+            </div>
+
+            <!-- PAYMENT BUTTON -->
+            <button class="btn btn-green" onclick="phase5.payment()">Release Payment (RTGS)</button>
+
+            <!-- DIGITIZATION SECTION: Shown after payment -->
+            <div id="p5-digitize" style="display:none; margin-top:20px;">
+                <p>Payment Done. Possession Taken.</p>
+                <!-- DIGITIZATION BUTTON: Completes the game -->
+                <button class="btn btn-green" onclick="phase5.digitize()">Digitize & Upload to Coal RR</button>
+            </div>
+        </div>
+
+        <!-- 
+            ========================================
+            END SCREEN
+            ========================================
+        -->
+        <div id="screen-end" class="screen">
+            <div class="emoji-icon">🎉✅🏭</div>
+            <h1>SOP Compliant!</h1>
+            <p>You successfully navigated the Direct Purchase process from Planning to Digitization.</p>
+            <!-- REPLAY BUTTON: Reloads page -->
+            <button class="btn" onclick="location.reload()">🔄 Replay</button>
+        </div>
+
+    </div>
+
+    <!-- 
+        ========================================
+        MODAL COMPONENT
+        ========================================
+        This HTML is outside the screens because it overlays everything.
+        Controlled by modal.show() and modal.dismiss().
+    -->
+    <div id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-icon" id="modal-icon">💡</div>
+            <h2 id="modal-title">Info</h2>
+            <p id="modal-text">Details...</p>
+            <button class="btn btn-outline" onclick="modal.dismiss()" style="margin-bottom:10px;">Go Back</button>
+            <button class="btn" onclick="modal.close()">Continue</button>
+        </div>
+    </div>
+
+    <!-- 
+        ========================================
+        GAME LOGIC (JAVASCRIPT)
+        ========================================
+    -->
+    <script>
+        // --- CORE GAME ENGINE ---
+        // Handles navigation between screens and updating headers.
+        const game = {
+            // Initialization function called when game starts
+            start: () => {
+                game.setHeader('1. Internal Planning');
+                game.next('screen-intro', 'screen-p1');
+            },
+
+            // Transitions from one screen (ID 'from') to another (ID 'to')
+            next: (from, to) => {
+                // Remove 'active' class to hide current screen
+                document.getElementById(from).classList.remove('active');
+                // Add 'active' class to show next screen
+                document.getElementById(to).classList.add('active');
+
+                // AUTO-VOICE NAVIGATION
+                // Reads the title (h2) and description (p) of the new screen automatically
+                const h2 = document.getElementById(to).querySelector('h2');
+                const p = document.getElementById(to).querySelector('p');
+                let text = (h2 ? h2.innerText : "") + ". " + (p ? p.innerText : "");
+                voice.speak(text);
+            },
+
+            // Updates the top header text
+            setHeader: (text) => document.getElementById('header-phase').innerText = text
+        };
+
+        // --- MODAL CONTROLLER ---
+        // Interfaces with the #modal-overlay div to show alerts.
+        const modal = {
+            callback: null, // Stores a function to run when the user clicks "Continue"
+
+            /**
+             * SHOW MODAL
+             * @param {string} title - The big text header
+             * @param {string} text - The body text (supports HTML)
+             * @param {string} icon - The emoji icon to show
+             * @param {function} cb - (Optional) Function to run after closing
+             */
+            show: (title, text, icon, cb) => {
+                document.getElementById('modal-title').innerText = title;
+                document.getElementById('modal-text').innerHTML = text;
+                document.getElementById('modal-icon').innerText = icon || '💡';
+                document.getElementById('modal-overlay').style.display = 'flex'; // Show overlay
+                modal.callback = cb;
+                voice.speak(title + ". " + text); // Narrate the alert
+            },
+
+            // 'Go Back' button - closes modal without running the callback
+            dismiss: () => {
+                document.getElementById('modal-overlay').style.display = 'none';
+                voice.stop();
+                modal.callback = null;
+            },
+
+            // 'Continue' button - closes modal AND runs the callback (like moving to next step)
+            close: () => {
+                document.getElementById('modal-overlay').style.display = 'none';
+                voice.stop();
+                if (modal.callback) {
+                    const cb = modal.callback;
+                    modal.callback = null;
+                    cb(); // Execute the stored next step
+                }
+            }
+        };
+
+        // --- TEXT TO SPEECH ENGINE ---
+        const voice = {
+            enabled: true, // Starts muted by default
+
+            // Toggles mute state and icon (🔈 vs 🔇)
+            toggle: () => {
+                voice.enabled = !voice.enabled;
+                document.getElementById('btn-voice').innerText = voice.enabled ? '🔊' : '🔇';
+            },
+
+            // Uses window.speechSynthesis to read text out loud
+            speak: (text) => {
+                if (!voice.enabled || !('speechSynthesis' in window)) return;
+                window.speechSynthesis.cancel(); // Stop any current speech
+
+                // RATIONALIZATION
+                // Replaces abbreviations and forms with fuller words for better pronunciation.
+                text = text.replace(/Form-I\b/g, "Form One");
+                text = text.replace(/Form-II\b/g, "Form Two");
+                text = text.replace(/Form-III\b/g, "Form Three");
+                text = text.replace(/Form-IV\b/g, "Form Four");
+                text = text.replace(/Form-XVI\b/g, "Form Sixteen");
+                text = text.replace(/Form-VII\b/g, "Form Seven");
+                text = text.replace(/Techno-Econ/g, "Techno Economic");
+                text = text.replace(/LRE/g, "Land Revenue Estate");
+                text = text.replace(/ECL/g, "E C L");
+                text = text.replace(/RTGS/g, "R T G S");
+                text = text.replace(/CNT/g, "C N T");
+                text = text.replace(/<[^>]*>/g, " "); // Strip HTML tags so they aren't read
+
+                const u = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(u);
+            },
+
+            stop: () => window.speechSynthesis.cancel()
+        };
+
+        // --- PHASE SPECIFIC LOGIC ---
+        // Each object below corresponds to a specific phase of the SOP logic.
+
+        const phaseGovt = {
+            // Handles logic when user selects a Government Acquisition method
+            choose: (mode) => {
+                const details = document.getElementById('govt-details');
+                const title = document.getElementById('govt-title');
+                const desc = document.getElementById('govt-desc');
+                const forest = document.getElementById('forest-step');
+
+                details.style.display = 'block'; // Reveal the details section
+
+                if (mode === 'PF3') {
+                    // Method: Direct Transfer
+                    title.innerText = "Administrative Order (Direct Transfer)";
+                    desc.innerHTML = "<strong>Process:</strong><br>1. Apply to District Collector.<br>2. Evaluation of 'Transfer Value'.<br>3. Pay Salami (Capitalized Value).<br>4. Sign <strong>Deed of Conveyance/Lease</strong>.";
+                    voice.speak("Direct Transfer selected. Apply to Collector, pay Salami, and sign Lease Deed.");
+                } else {
+                    // Method: CBA Act
+                    title.innerText = "CBA Act Acquisition";
+                    desc.innerHTML = "<strong>Process:</strong><br>1. Include in Notification (Sec 4, 7, 9).<br>2. <strong>Vesting</strong> (Sec 11) in Central Govt.<br>3. Compensation paid to State Govt.";
+                    voice.speak("C B A Act selected. Land vests in Central Government under Section 11.");
+                }
+
+                // Show Forest step
+                forest.style.display = 'block';
+            }
+        };
+
+        const phase1 = {
+            // Triggered when "No (Private Land)" is clicked
+            verify: () => {
+                modal.show(
+                    "Viability Confirmed",
+                    "Land is <strong>Private (Rayati)</strong>.<br>Not in exclusion zone.<br>Minutes of Meeting confirm villagers' consent.",
+                    "✅",
+                    // Callback: Reveal approval options after user clicks 'Continue'
+                    () => {
+                        document.getElementById('p1-approvals').style.display = 'block';
+                    }
+                );
+            },
+            // Triggered when "Get Board Approval" is clicked
+            approve: () => {
+                modal.show(
+                    "Board Approved",
+                    "Proposal vetted by Area and HQ (Planning, Safety, Finance, LRE).<br>Board of Directors/CMD has granted Administrative Approval.",
+                    "🏢",
+                    // Callback: Move to Phase 2
+                    () => {
+                        game.setHeader("2. Application");
+                        game.next('screen-p1', 'screen-p2');
+                    }
+                );
+            }
+        };
+
+        const phase2 = {
+            // Updates UI based on Land Category Selection (Tribal vs General)
+            idCategory: (type) => {
+                const flow = document.getElementById('p2-tribal-flow');
+                const common = document.getElementById('p2-common');
+
+                // Reset: hide both sections first
+                flow.style.display = 'none';
+                common.style.display = 'none';
+
+                if (type === 'Tribal') {
+                    // SHOW TRIBAL FLOW
+                    flow.style.display = 'block';
+                    voice.speak("Tribal Land selected. You must obtain permission from District Authority before proceeding.");
+                } else {
+                    // SHOW GENERAL FLOW (Skip permission)
+                    common.style.display = 'block';
+                    voice.speak("General Land selected. Proceed to Legal Search.");
+                }
+            },
+            // Simulates getting District Commissioner's permission
+            getPermission: () => {
+                modal.show(
+                    "Applying...",
+                    "Application submitted to District Collector / Deputy Commissioner (CNT/SPT Act).<br>Waiting for approval...",
+                    "⏳",
+                    () => {
+                        // Simulate a 500ms delay to feel like a process
+                        setTimeout(() => {
+                            document.getElementById('btn-perm').style.display = 'none'; // Hide apply button
+                            document.getElementById('p2-perm-done').style.display = 'block'; // Show success msg
+                            document.getElementById('p2-common').style.display = 'block'; // Show next steps
+                            voice.speak("Permission Granted. You may now create the Scrutiny Report.");
+                        }, 500);
+                    }
+                );
+            },
+            // Simulates the Legal Search Process
+            legalSearch: () => {
+                modal.show(
+                    "30-Year Search",
+                    "Lawyer checked Court and Registration records for 30 years.<br><strong>Result:</strong> Clear Title. No Civil Suits.",
+                    "⚖️",
+                    () => {
+                        document.getElementById('p2-result').style.display = 'block'; // Show result
+                    }
+                );
+            },
+            // Completion of Phase 2
+            scrutinize: () => {
+                modal.show(
+                    "Form-II Ready",
+                    "Documents verified against registers.<br><strong>Tribal Permission Attached.</strong><br>Form-II (Scrutiny Report) verified by Manager.",
+                    "📑",
+                    () => {
+                        game.setHeader("3. Transparency");
+                        game.next('screen-p2', 'screen-p3');
+                    }
+                );
+            }
+        };
+
+
+
+        const phasePatta = {
+            // Step 1: Verification & Agreement
+            agreement: () => {
+                modal.show(
+                    "Agreement Signed",
+                    "<strong>Form-XX</strong>: Agreement to surrender sign by Holder.<br><strong>Form-XIX</strong>: Affidavit sworn before Magistrate.",
+                    "✍️",
+                    () => {
+                        document.getElementById('patta-cancel-step').style.display = 'block';
+                    }
+                );
+            },
+            // Step 2: SDO Cancellation
+            surrender: () => {
+                modal.show(
+                    "Patta Cancelled",
+                    "SDO has issued <strong>Cancellation Order</strong> (Form-XVIII).<br>Land has reverted to <strong>Government Land</strong>.<br>Now proceed to Direct Transfer.",
+                    "🏛️",
+                    () => {
+                        // Route to Govt Screen to finish acquisition
+                        game.setHeader("Govt Land Acquisition");
+                        game.next('screen-patta-cancel', 'screen-govt');
+
+                        // Optional: Auto-trigger hint for Govt screen
+                        setTimeout(() => {
+                            voice.speak("Patta Cancelled. Now this is Government Land. Choose Direct Transfer.");
+                        }, 1500);
+                    }
+                );
+            }
+        };
+
+        const phase3 = {
+            // Phase 3 is simple - just a timer simulation
+            wait: () => {
+                modal.show(
+                    "3 Weeks Later...",
+                    "<strong>Form-III</strong> Published.<br>No valid objections received within 14 days of expiry.<br>Land is clear for purchase.",
+                    "🗓️",
+                    () => {
+                        game.setHeader("4. Sale Deed");
+                        game.next('screen-p3', 'screen-p4');
+                    }
+                );
+            }
+        };
+
+        const phase4 = {
+            // Not currently used in HTML but useful for future expansion (Specific clause selection)
+            select: (type) => {
+                let msg = "";
+                if (type === 'Tribal') msg = "<strong>Tribal Land:</strong> Requires DC Permission under CNT/SPT Act.";
+                else if (type === 'Devottar') msg = "<strong>Devottar:</strong> Requires Legal Necessity proof & Indemnity from Sebait.";
+                else msg = "<strong>General Tenancy:</strong> Standard Sale Deed registration.";
+
+                modal.show(
+                    type + " Selected",
+                    msg,
+                    "✍️",
+                    () => {
+                        document.getElementById('p4-register').style.display = 'block';
+                    }
+                );
+            },
+            // Phase 4 Completion
+            register: () => {
+                modal.show(
+                    "Deed Registered",
+                    "Vendor and Project Officer signed.<br>Indemnity clause included.<br>Map attached.",
+                    "🤝",
+                    () => {
+                        game.setHeader("5. Post-Purchase");
+                        game.next('screen-p4', 'screen-p5');
+                    }
+                );
+            }
+        };
+
+        const phase5 = {
+            // Step 1: Payment
+            payment: () => {
+                modal.show(
+                    "Payment Made",
+                    "Land value paid via RTGS.<br><strong>Action:</strong> Take physical possession (Form-IV) and apply for Mutation immediately.",
+                    "💰",
+                    () => {
+                        document.getElementById('p5-digitize').style.display = 'block'; // Reveal Digitization Step
+                    }
+                );
+            },
+            // Step 2: Digitization (Final Step)
+            digitize: () => {
+                modal.show(
+                    "Records Digitized",
+                    "Land records scanned and uploaded.<br><strong>Verified:</strong> Data successfully loaded in Coal RR Portal (ECL).",
+                    "💻",
+                    () => {
+                        game.setHeader("Complete");
+                        game.next('screen-p5', 'screen-end');
+                    }
+                );
+            }
+        };
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- Ensure proper scaling on mobile devices to prevent zooming issues -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SOP Tutorial: Employment Process</title>
+
+    <!-- CSS: Defines the Visual Style of the Game -->
+    <style>
+        /* CSS Variables for consistent color theme management across the app */
+        :root {
+            --primary: #2563eb;
+            /* Main blue color for primary actions/headers */
+            --success: #22c55e;
+            /* Green color for success states/buttons */
+            --danger: #ef4444;
+            /* Red color for danger/reject actions */
+            --warning: #f59e0b;
+            /* Orange/Yellow for warnings or processing states */
+            --purple: #9333ea;
+            /* Purple color for specific actions/highlights */
+            --dark: #1e293b;
+            /* Dark slate for text */
+            --light: #f8fafc;
+            /* Light background for the app container */
+            --white: #ffffff;
+            /* Pure white */
+        }
+
+        /* Partial reset to ensure consistent sizing and interaction behavior */
+        * {
+            box-sizing: border-box;
+            /* Include padding/border in total width/height */
+            user-select: none;
+            /* Prevent text selection to make it feel like an app/game */
+            -webkit-tap-highlight-color: transparent;
+            /* Remove highlight tap color on mobile */
+        }
+
+        /* Body: Centers the mobile app view on the screen */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            /* Modern font stack */
+            background: #0f172a;
+            /* Dark background outside the phone frame */
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            /* Full viewport height */
+            display: flex;
+            /* Flexbox to center the #app */
+            justify-content: center;
+        }
+
+        /* #app: The main container simulating a mobile device screen */
+        #app {
+            width: 100%;
+            max-width: 500px;
+            /* Limits width to resemble a phone */
+            background: var(--light);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            /* Stacks header and screens vertically */
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            /* Shadow for depth */
+            overflow: hidden;
+            /* Hides scrolling outside the container */
+        }
+
+        /* Header: Sticks to the top, shows current phase */
+        header {
+            background: var(--purple);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            /* Ensures header is above scrolling content */
+        }
+
+        /* .screen: Represents a "Page" or "View" in the SPA (Single Page App) */
+        .screen {
+            flex: 1;
+            /* Takes up remaining vertical space */
+            display: none;
+            /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            /* Center content vertically */
+            padding: 20px;
+            text-align: center;
+            overflow-y: auto;
+            /* Allow scrolling within the screen if content overflows */
+            position: relative;
+        }
+
+        /* .active: The class added to the current visible screen */
+        .screen.active {
+            display: flex;
+            /* Makes it visible using flexbox */
+            animation: fadeIn 0.4s ease-out;
+            /* Animates entry */
+        }
+
+        /* Visual Elements */
+        .emoji-icon {
+            font-size: 4rem;
+            /* Large icons for visual appeal */
+            margin: 10px;
+            display: inline-block;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            color: var(--purple);
+            margin: 0.5rem 0;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            color: var(--dark);
+            margin: 0.5rem 0;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            color: #475569;
+            margin: 5px 0;
+        }
+
+        p {
+            font-size: 1rem;
+            color: #475569;
+            /* Muted slate text color */
+            line-height: 1.5;
+            /* Better readability */
+            margin: 10px 0 20px 0;
+        }
+
+        /* Button Styles */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            /* Rounded corners */
+            cursor: pointer;
+            width: 90%;
+            /* Full width buttons */
+            margin: 8px 0;
+            box-shadow: 0 4px 0 #1d4ed8;
+            /* 3D effect shadow */
+            transition: transform 0.1s;
+            /* Smooth press animation */
+        }
+
+        /* Button Click Effect */
+        .btn:active {
+            transform: translateY(4px);
+            /* Moves down to simulating pressing */
+            box-shadow: 0 0 0 #1d4ed8;
+            /* Removes shadow to look flat */
+        }
+
+        /* Green Variant (Success/Next) */
+        .btn-green {
+            background: var(--success);
+            box-shadow: 0 4px 0 #15803d;
+        }
+
+        .btn-green:active {
+            box-shadow: 0 0 0 #15803d;
+        }
+
+        /* Purple Variant (Special Action) */
+        .btn-purple {
+            background: var(--purple);
+            box-shadow: 0 4px 0 #7e22ce;
+        }
+
+        .btn-purple:active {
+            box-shadow: 0 0 0 #7e22ce;
+        }
+
+        /* Warning Variant (Alerts/Waits) */
+        .btn-warning {
+            background: var(--warning);
+            box-shadow: 0 4px 0 #b45309;
+        }
+
+        /* Outline Variant (Secondary Actions) */
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            box-shadow: none;
+            /* Flat style */
+        }
+
+        /* Small Button Variant */
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            width: auto;
+            margin: 5px;
+        }
+
+        /* Inventory / Visuals Area to display documents/icons */
+        .doc-area {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+            /* Wraps items if insufficient space */
+            justify-content: center;
+        }
+
+        /* Document/Item Card */
+        .doc-card {
+            border: 2px solid #94a3b8;
+            padding: 8px;
+            border-radius: 8px;
+            background: white;
+            width: 100px;
+            /* Smaller cards for more items */
+            position: relative;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .doc-card:hover {
+            transform: translateY(-2px);
+            /* Lift effect on hover */
+            border-color: var(--primary);
+        }
+
+        .doc-card .icon {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Checklist Item Styles */
+        .checklist-item {
+            text-align: left;
+            width: 90%;
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .checklist-item.checked {
+            border-color: var(--success);
+            background: #f0fdf4;
+            color: #15803d;
+        }
+
+        /* Modal (Popup) Styles */
+        #modal-overlay {
+            position: absolute;
+            /* Overlays the entire app */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            /* Semi-transparent dimming */
+            display: none;
+            /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            /* Highest layer */
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Bouncy popup */
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes popUp {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Progress Bar for Phases */
+        .progress-bar {
+            width: 90%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Main Game Container -->
+    <div id="app">
+        <!-- Header: Displays Current Phase and Voice Control -->
+        <header>Phase: <span id="header-phase">Intro</span>
+            <!-- Accessibility: Toggle Voiceover -->
+            <button id="btn-voice" onclick="voice.toggle()"
+                style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:white; margin-left:10px;">🔊</button>
+        </header>
+
+        <!-- SCREEN: INTRO -->
+        <!-- Initial landing screen explaining the goal -->
+        <div id="screen-intro" class="screen active">
+            <h1>Employment Process</h1>
+            <div class="emoji-icon">👷‍♂️📋</div>
+            <h2>Step by Step Guide as per SOP</h2>
+            <p>Employment in ECL after land possession as per SOP.</p>
+            <button class="btn btn-green" onclick="game.start()">Start Tutorial</button>
+            <button class="btn btn-outline" onclick="modal.showSpecialCases()">Special Cases (Patta/CNT/CBA)</button>
+        </div>
+
+        <!-- SCREEN: PHASE 1 - INITIATION -->
+        <!-- Start of the application process -->
+        <div id="screen-p1" class="screen">
+            <h2>Phase 1: Initiation</h2>
+            <p><strong>Nominee & Landowner</strong> submit application.</p>
+            <!-- Document Cards allowing users to explore required forms -->
+            <div class="doc-area">
+                <div class="doc-card"
+                    onclick="modal.show('Form-V (Application)', 'Core application form submitted by the nominee.', '📝')">
+                    <span class="icon">📝</span>Form-V
+                </div>
+                <div class="doc-card"
+                    onclick="modal.show('Form-A', 'Self-declaration by nominee regarding personal details.', '👤')">
+                    <span class="icon">👤</span>Form-A
+                </div>
+                <div class="doc-card"
+                    onclick="modal.show('Form-VI', 'Relationship Certificate signed by Nominee & Landowner.', '👪')">
+                    <span class="icon">👪</span>Form-VI
+                </div>
+                <div class="doc-card"
+                    onclick="modal.show('Affidavits', '<strong>Step 4.E:</strong> Nominee (No disputes).<br><strong>Step 4.F:</strong> Landowner (No co-sharers/bargadars).', '⚖️')">
+                    <span class="icon">⚖️</span>Affidavits
+                </div>
+                <div class="doc-card"
+                    onclick="modal.show('Indemnity Bond', '<strong>Step 4.G:</strong> To indemnify ECL if documents are forged. With Sureties.', '🤝')">
+                    <span class="icon">🤝</span>Indemnity
+                </div>
+            </div>
+            <p><small>Note: All photocopies must be self-attested.</small></p>
+            <button class="btn btn-purple"
+                onclick="game.next('screen-p1', 'screen-p2'); game.setHeader('2. Unit Processing')">Submit to Unit
+                Authority</button>
+        </div>
+
+        <!-- SCREEN: PHASE 2 - UNIT PROCESSING -->
+        <!-- Verification at the unit level -->
+        <div id="screen-p2" class="screen">
+            <h2>Phase 2: Unit Processing</h2>
+            <p>Unit Authority (Surveyor, Manager, PO) builds the file.</p>
+
+            <!-- Checklist Items: Interactive checks for user engagement -->
+            <div class="checklist-item" id="p2-c1" onclick="this.classList.toggle('checked')">
+                <span>1. Verify ROR (Ownership)</span> <span style="float:right">🔍</span>
+            </div>
+            <div class="checklist-item" id="p2-c2" onclick="this.classList.toggle('checked')">
+                <span>2. Verify Mutation (To ECL)</span> <span style="float:right">📜</span>
+            </div>
+            <div class="checklist-item" id="p2-c3" onclick="this.classList.toggle('checked')">
+                <span>3. Verify Possession (Form-IV)</span> <span style="float:right">🚩</span>
+            </div>
+
+            <div class="doc-area">
+                <div class="doc-card" onclick="modal.show('Form-IV', 'Certificate of Possession.', '🚩')"><span
+                        class="icon">🚩</span>Form-IV</div>
+                <div class="doc-card"
+                    onclick="modal.show('Form-C', 'Relationship Verification by Personnel Dept.', '👥')"><span
+                        class="icon">👥</span>Form-C</div>
+                <div class="doc-card" onclick="modal.show('Form-VII', 'Reconciliation (No overlap).', '🗺️')"><span
+                        class="icon">🗺️</span>Form-VII</div>
+                <div class="doc-card" onclick="modal.show('Form-VIII', 'Land Utilization Cert.', '🏭')"><span
+                        class="icon">🏭</span>Form-VIII</div>
+            </div>
+
+            <button class="btn btn-purple" onclick="phase2.complete()">Forward to Area (Checklist CL-4)</button>
+        </div>
+
+        <!-- SCREEN: PHASE 3 - AREA SCRUTINY -->
+        <!-- Verification at the Area level -->
+        <div id="screen-p3" class="screen">
+            <h2>Phase 3: Area Scrutiny</h2>
+            <p>Area GM & Land Cell verification.</p>
+
+            <button class="btn btn-outline"
+                onclick="modal.show('Computerized Check', 'Verifies against Land Inventory Record to prevent duplicate claims.', '💻')">1.
+                Computer Check</button>
+            <button class="btn btn-outline"
+                onclick="modal.show('Original Docs', '<strong>Form-XIII:</strong> Notice issued to candidate to bring originals.', '📁')">2.
+                Original Doc Check</button>
+            <button class="btn btn-outline"
+                onclick="modal.show('Police Verification', '<strong>Form-XV:</strong> Antecedents & Relationship check.', '👮')">3.
+                Police Verification</button>
+
+            <div class="doc-area">
+                <div class="doc-card" onclick="modal.show('Form-XXI', 'Cert of Data Accuracy.', '✅')"><span
+                        class="icon">✅</span>Form-XXI</div>
+                <div class="doc-card" onclick="modal.show('Form-XXII', 'ALCC Recommendation.', '🏛️')"><span
+                        class="icon">🏛️</span>Form-XXII</div>
+            </div>
+
+            <button class="btn btn-purple"
+                onclick="game.next('screen-p3', 'screen-p4-intro'); game.setHeader('4. HQ Processing')">Recommend to HQ
+                (CL-5)</button>
+        </div>
+
+        <!-- SCREEN: PHASE 4 - HQ PROCESSING (Container) -->
+        <!-- Step 1 & 2: LRE and Committee -->
+        <div id="screen-p4-intro" class="screen">
+            <h2>Phase 4: HQ Processing</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 10%;"></div>
+            </div>
+            <h3>Step 1: LRE Scrutiny</h3>
+            <p>HQ LRE Dealing Officer checks compliance.</p>
+            <div class="doc-card" style="margin: 0 auto;"
+                onclick="modal.show('Form-XIV', 'Synopsis of the employment details.', '📄')">
+                <span class="icon">📄</span>Form-XIV
+            </div>
+            <p>Synced with R&R Policy?</p>
+            <button class="btn btn-purple" onclick="game.next('screen-p4-intro', 'screen-p4-comm');">Proceed to
+                Committee</button>
+        </div>
+
+        <div id="screen-p4-comm" class="screen">
+            <h2>Phase 4: HQ Processing</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 30%;"></div>
+            </div>
+            <h3>Step 2: 3-Member Committee</h3>
+            <p><strong>Members:</strong> LRE, Legal, Planning.</p>
+            <p>They vet the proposal before public release.</p>
+            <button class="btn btn-green" onclick="game.next('screen-p4-comm', 'screen-p4-web');">Committee
+                Recommends</button>
+        </div>
+
+        <!-- Step 3: Web Publication -->
+        <div id="screen-p4-web" class="screen">
+            <h2>Phase 4: HQ Processing</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 50%;"></div>
+            </div>
+            <h3>Step 3: Web Publication</h3>
+            <p>Form-XIV uploaded to ECL Website.</p>
+            <div class="emoji-icon">🌐</div>
+            <p>Must wait <strong>21 Days</strong> for public complaints.</p>
+            <button class="btn btn-warning" onclick="phase4.wait21Days()">Wait 21 Days...</button>
+        </div>
+
+        <!-- Step 4: GM Vetting -->
+        <div id="screen-p4-vetting" class="screen">
+            <h2>Phase 4: HQ Processing</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 70%;"></div>
+            </div>
+            <h3>Step 4: 4-GM Vetting</h3>
+            <div class="checklist-item"><span>1. GM (Project & Planning): Manpower Plan & PR</span></div>
+            <div class="checklist-item"><span>2. GM (Safety): Essentiality/DGMS</span></div>
+            <div class="checklist-item"><span>3. GM (Finance): Budget Concurrence</span></div>
+            <div class="checklist-item"><span>4. GM (LRE): Land Revenue/Consolidation</span></div>
+            <button class="btn btn-purple" onclick="game.next('screen-p4-vetting', 'screen-p4-ecfd');">Forward to
+                ECFD</button>
+        </div>
+
+        <!-- Step 5: ECFD Consent -->
+        <div id="screen-p4-ecfd" class="screen">
+            <h2>Phase 4: HQ Processing</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 90%;"></div>
+            </div>
+            <h3>Step 5: ECFD Consent</h3>
+            <p><strong>Functional Directors:</strong><br>Tech (P&P), Tech (Ops), Personnel, Finance.</p>
+            <button class="btn btn-green" onclick="game.next('screen-p4-ecfd', 'screen-p4-final');">Grant
+                Consent</button>
+        </div>
+
+        <!-- Step 6: Final Approval -->
+        <div id="screen-p4-final" class="screen">
+            <h2>Phase 4: HQ Processing</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100%;"></div>
+            </div>
+            <h3>Step 6: Final Approval</h3>
+            <p>Is the proposal within approved Project Report (PR) parameters?</p>
+            <button class="btn btn-outline" onclick="phase4.approve('cmd')">Yes (CMD Approval)</button>
+            <button class="btn btn-outline" onclick="phase4.approve('board')">No (Board Approval)</button>
+        </div>
+
+        <!-- SCREEN: PHASE 5 - APPOINTMENT -->
+        <!-- Final check by Personnel department -->
+        <div id="screen-p5" class="screen">
+            <h2>Phase 5: Appointment</h2>
+            <p>File with <strong>HOD (Personnel)</strong>.</p>
+            <div class="checklist-item"><span>1. Medical Fitness Exam</span></div>
+            <div class="checklist-item"><span>2. Education/Caste Verify</span></div>
+            <div class="checklist-item"><span>3. Police Verification</span></div>
+            <div class="emoji-icon">🏥🎓👮</div>
+            <button class="btn btn-green" onclick="phase5.issueOffer()">Issue Offer Letter</button>
+        </div>
+
+        <!-- SCREEN: END -->
+        <!-- Final Success Screen -->
+        <div id="screen-end" class="screen">
+            <div class="emoji-icon">🎉✉️🤝</div>
+            <h1>Employment Granted!</h1>
+            <p>The process is complete. The nominee has received the appointment letter.</p>
+            <p style="color:green; font-weight:bold;">SOP Compliant 100%</p>
+            <button class="btn" onclick="location.reload()">🔄 Replay Procedure</button>
+        </div>
+
+    </div>
+
+    <!-- MODAL COMPONENT -->
+    <!-- Reusable popup for showing details without leaving the current screen -->
+    <div id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-icon" id="modal-icon">💡</div>
+            <h2 id="modal-title">Info</h2>
+            <p id="modal-text">Details...</p>
+            <button class="btn btn-outline" onclick="modal.dismiss()" style="margin-bottom:10px;">Close</button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT: Logic Controller -->
+    <script>
+        // --- GAME ENGINE OBJECT ---
+        // Handles global state, screen transitions, and header updates
+        const game = {
+            screen: 'intro', // Tracks current screen
+            setHeader: (text) => document.getElementById('header-phase').innerText = text, // Updates top bar title
+
+            // Starts the tutorial flow
+            start: () => {
+                game.setHeader('1. Initiation');
+                game.next('screen-intro', 'screen-p1');
+            },
+
+            // Transition logic: Hides 'from' screen, Shows 'to' screen
+            next: (from, to) => {
+                document.getElementById(from).classList.remove('active');
+                const nextScreen = document.getElementById(to);
+                nextScreen.classList.add('active');
+
+                // Auto-Voice Trigger: Reads the headers of the new screen
+                const h2 = nextScreen.querySelector('h2');
+                const h3 = nextScreen.querySelector('h3');
+                let speechText = "";
+                if (h2) speechText += h2.innerText + ". ";
+                if (h3) speechText += h3.innerText + ". ";
+                voice.speak(speechText);
+            }
+        };
+
+        // --- MODAL CONTROLLER ---
+        // Manages showing key information popups, including special case logic
+        const modal = {
+            show: (title, text, icon) => {
+                document.getElementById('modal-title').innerText = title;
+                document.getElementById('modal-text').innerHTML = text; // innerHTML allows bolding/structure
+                document.getElementById('modal-icon').innerText = icon || '💡';
+                document.getElementById('modal-overlay').style.display = 'flex';
+                voice.speak(title); // Speak title on open
+            },
+            dismiss: () => {
+                document.getElementById('modal-overlay').style.display = 'none';
+                voice.stop();
+            },
+
+            // Specific logic to display special cases (Patta/CNT/CBA)
+            showSpecialCases: () => {
+                const text = `
+                    <div style="text-align:left; font-size:0.9rem;">
+                        <strong>1. Patta Land:</strong> Requires Form-XVIII (Cancellation), Form-XIX (Affidavit), Form-XX (Agreement).<br><br>
+                        <strong>2. CNT Act:</strong> If Sale Deed pending -> Agrmt Form-XXIV + Affidavit + Indemnity (Promise to transfer in 2 yrs).<br><br>
+                        <strong>3. CBA Act:</strong> Addl Affidavit from landowner (Sec 9 date) transferring rights.
+                    </div>
+                `;
+                modal.show('Special Cases', text, '⚠️');
+            }
+        };
+
+        // --- VOICE / ACCESSIBILITY ENGINE ---
+        // Handles Text-to-Speech functionality using the Web Speech API
+        const voice = {
+            enabled: true, // Default state
+
+            // Toggles voice on/off and updates icon
+            toggle: () => {
+                voice.enabled = !voice.enabled;
+                document.getElementById('btn-voice').innerText = voice.enabled ? '🔊' : '🔇';
+                voice.stop();
+            },
+
+            // RATIONALIZATION
+            // Replaces abbreviations and forms with fuller words for better pronunciation.
+            rationalize: (text) => {
+                // 1. Roman Numerals & Forms
+                text = text.replace(/Form-I\b/g, "Form One");
+                text = text.replace(/Form-II\b/g, "Form Two");
+                text = text.replace(/Form-III\b/g, "Form Three");
+                text = text.replace(/Form-IV\b/g, "Form Four");
+                text = text.replace(/Form-V\b/g, "Form Five");
+                text = text.replace(/Form-VI\b/g, "Form Six");
+                text = text.replace(/Form-VII\b/g, "Form Seven");
+                text = text.replace(/Form-VIII\b/g, "Form Eight");
+                text = text.replace(/Form-XIII\b/g, "Form Thirteen");
+                text = text.replace(/Form-XIV\b/g, "Form Fourteen");
+                text = text.replace(/Form-XV\b/g, "Form Fifteen");
+                text = text.replace(/Form-XVI\b/g, "Form Sixteen");
+                text = text.replace(/Form-XVIII\b/g, "Form Eighteen");
+                text = text.replace(/Form-XIX\b/g, "Form Nineteen");
+                text = text.replace(/Form-XX\b/g, "Form Twenty");
+                text = text.replace(/Form-XXI\b/g, "Form Twenty One");
+                text = text.replace(/Form-XXII\b/g, "Form Twenty Two");
+                text = text.replace(/Form-XXIV\b/g, "Form Twenty Four");
+                text = text.replace(/Form-A\b/g, "Form A");
+                text = text.replace(/Form-C\b/g, "Form C");
+
+                // 2. Acronyms & Abbreviations
+                text = text.replace(/\bSOP\b/g, "S O P");
+                text = text.replace(/\bECL\b/g, "E C L");
+                text = text.replace(/\bLRE\b/g, "Land Revenue Estate");
+                text = text.replace(/\bDGMS\b/g, "D G M S");
+                text = text.replace(/\bGM\b/g, "General Manager");
+                text = text.replace(/\bALCC\b/g, "Area Land Cell Committee");
+                text = text.replace(/\bECFD\b/g, "E C F D");
+                text = text.replace(/\bCMD\b/g, "Chairman Managing Director");
+                text = text.replace(/\bPR\b/g, "Project Report");
+                text = text.replace(/\bROR\b/g, "Record of Rights");
+                text = text.replace(/\bPO\b/g, "Project Officer");
+                text = text.replace(/\bCNT\b/g, "C N T");
+                text = text.replace(/\bCBA\b/g, "C B A");
+                text = text.replace(/\bHQ\b/g, "Headquarters");
+                text = text.replace(/P&P/g, "Projects and Planning");
+                text = text.replace(/CL-4/g, "Checklist Four");
+                text = text.replace(/CL-5/g, "Checklist Five");
+                text = text.replace(/\bRTGS\b/g, "R T G S");
+                text = text.replace(/\bHOD\b/g, "Head of Department");
+                text = text.replace(/\bDept\b/g, "Department");
+                text = text.replace(/\bCert\b/g, "Certificate");
+                text = text.replace(/\bGovt\b/g, "Government");
+                text = text.replace(/\bAddl\b/g, "Additional");
+                text = text.replace(/\bAgrmt\b/g, "Agreement");
+
+                // 3. Punctuation & Pacing
+                text = text.replace(/\./g, ", ");
+                text = text.replace(/\n/g, ", ");
+
+                return text;
+            },
+
+            // System speak function
+            speak: (text) => {
+                if (!voice.enabled || !('speechSynthesis' in window)) return;
+                window.speechSynthesis.cancel();
+
+                // Remove HTML tags first
+                let cleanText = text.replace(/<[^>]*>/g, ' ');
+
+                // Rationalize text for speech
+                cleanText = voice.rationalize(cleanText);
+
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                window.speechSynthesis.speak(utterance);
+            },
+
+            // Stop speaking
+            stop: () => {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            }
+        };
+
+        // --- PHASE LOGIC CONTROLLERS ---
+
+        // Phase 2 Logic: Unit Processing
+        const phase2 = {
+            complete: () => {
+                game.next('screen-p2', 'screen-p3');
+                game.setHeader('3. Area Scrutiny');
+            }
+        };
+
+        // Phase 4 Logic: HQ Processing & 21-Day Wait Simulation
+        const phase4 = {
+            wait21Days: () => {
+                const btn = document.querySelector('#screen-p4-web .btn-warning');
+                const originalText = btn.innerText;
+                btn.innerText = "Waiting... ⏳";
+                btn.disabled = true;
+
+                // Simulate waiting period with a timeout
+                setTimeout(() => {
+                    btn.innerText = "No Complaints Received ✅";
+                    btn.classList.remove('btn-warning');
+                    btn.classList.add('btn-green');
+
+                    // Update button behavior to proceed
+                    btn.onclick = () => game.next('screen-p4-web', 'screen-p4-vetting');
+                    btn.disabled = false;
+                    voice.speak("No complaints received. Proceeding.");
+                }, 1500); // 1.5 seconds delay
+            },
+
+            // Handles different approval paths (CMD vs Board)
+            approve: (type) => {
+                let msg = "";
+                if (type === 'cmd') msg = "Strictly within Project Report parameters -> <strong>CMD Approved.</strong>";
+                else msg = "Deviates from Project Report -> <strong>Board Approved.</strong>";
+
+                modal.show('Competent Authority', msg, '✍️');
+                setTimeout(() => {
+                    modal.dismiss();
+                    game.next('screen-p4-final', 'screen-p5');
+                    game.setHeader('5. Appointment');
+                }, 2000);
+            }
+        };
+
+        // Phase 5 Logic: Appointment
+        const phase5 = {
+            issueOffer: () => {
+                modal.show('Success', 'Offer Letter Issued! Welcome to ECL.', '✉️');
+                setTimeout(() => {
+                    modal.dismiss();
+                    game.next('screen-p5', 'screen-end');
+                    game.setHeader('Mission Accomplished');
+                }, 1500);
+            }
+        };
+
+    </script>
+</body>
+
+</html>
