@@ -331,7 +331,7 @@
             <h1>Direct Purchase SOP</h1>
             <div class="emoji-icon">🏛️🤝📜</div>
             <h2>Full Process Guide</h2>
-            <p>Master the 5 Phases: From Internal Planning to Sale Deed & Digitization.</p>
+            <p>From Internal Planning to Deed Registration & Digitization.</p>
 
             <!-- START BUTTON: Calls game.start() to initialize the game state and move to Phase 1 -->
             <button class="btn btn-green" onclick="game.start()">Start Training</button>
@@ -350,7 +350,7 @@
             <!-- DOCUMENT CARDS: Click to see info via modal.show() -->
             <div class="doc-area">
                 <div class="doc-card"
-                    onclick="modal.show('Justification', '<strong>Form-XVI (5-Point Cert)</strong><br>Signed by Manager/Agent verifying land is needed.', '📝')">
+                    onclick="modal.show('Justification', '<strong>Form-XVI (5-Point Certificate)</strong><br>Signed by Manager/Agent verifying land is needed.', '📝')">
                     <span class="icon">📝</span>Form-XVI
                 </div>
                 <div class="doc-card"
@@ -414,7 +414,7 @@
 
             <div class="doc-area">
                 <div class="doc-card"
-                    onclick="modal.show('Patta Docs', '<strong>Patta Cert & ROR</strong><br>Proof of lease.<br><strong>Genealogical Chart</strong><br>Family tree authenticated by BDO.', '📜')">
+                    onclick="modal.show('Patta Docs', '<strong>Patta Certificate & ROR</strong><br>Proof of lease.<br><strong>Genealogical Chart</strong><br>Family tree authenticated by BDO.', '📜')">
                     <span class="icon">📜</span>Docs
                 </div>
             </div>
@@ -782,7 +782,7 @@
             verify: () => {
                 modal.show(
                     "Viability Confirmed",
-                    "Land is <strong>Private (Rayati)</strong>.<br>Not in exclusion zone.<br>Minutes of Meeting confirm villagers' consent.",
+                    "Land is <strong>Private (Tanency)</strong>.<br>Not in exclusion zone.<br>Minutes of Meeting confirm villagers' consent.",
                     "✅",
                     // Callback: Reveal approval options after user clicks 'Continue'
                     () => {
@@ -963,7 +963,7 @@
             digitize: () => {
                 modal.show(
                     "Records Digitized",
-                    "Land records scanned and uploaded.<br><strong>Verified:</strong> Data successfully loaded in Coal RR Portal (ECL).",
+                    "Land documents scanned and recorded in the Coal RR Portal of ECL.",
                     "💻",
                     () => {
                         game.setHeader("Complete");

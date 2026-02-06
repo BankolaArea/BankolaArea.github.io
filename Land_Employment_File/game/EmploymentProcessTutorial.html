@@ -368,7 +368,6 @@
             <h2>Step by Step Guide as per SOP</h2>
             <p>Employment in ECL after land possession as per SOP.</p>
             <button class="btn btn-green" onclick="game.start()">Start Tutorial</button>
-            <button class="btn btn-outline" onclick="modal.showSpecialCases()">Special Cases (Patta/CNT/CBA)</button>
         </div>
 
         <!-- SCREEN: PHASE 1 - INITIATION -->
@@ -400,6 +399,7 @@
                 </div>
             </div>
             <p><small>Note: All photocopies must be self-attested.</small></p>
+            <button class="btn btn-outline" onclick="modal.showSpecialCases()">Special Cases (Patta/CNT/CBA)</button>
             <button class="btn btn-purple"
                 onclick="game.next('screen-p1', 'screen-p2'); game.setHeader('2. Unit Processing')">Submit to Unit
                 Authority</button>
@@ -636,7 +636,7 @@
                         <strong>3. CBA Act:</strong> Addl Affidavit from landowner (Sec 9 date) transferring rights.
                     </div>
                 `;
-                modal.show('Special Cases', text, '⚠️');
+                modal.show('Cases where additional documents required', text, '⚠️');
             }
         };
 
