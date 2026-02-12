@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Modules Index</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 70%);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding-top: 2rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        p.subtitle {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            margin-top: 0.5rem;
+        }
+
+        section {
+            margin-bottom: 4rem;
+        }
+
+        h2 {
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .grid-large {
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        }
+
+        a.card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2rem;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+
+        a.card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+            transform: translateX(-100%);
+            transition: 0.5s;
+        }
+
+        a.card:hover::before {
+            transform: translateX(100%);
+        }
+
+        a.card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(56, 189, 248, 0.5);
+            box-shadow: 0 10px 30px -10px var(--accent-glow);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .card h3 {
+            color: var(--text-primary);
+            margin: 0 0 0.75rem 0;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .card p {
+            color: var(--text-secondary);
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .card .tag {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            font-weight: 500;
+        }
+
+        .tag.legacy {
+            background: rgba(148, 163, 184, 0.1);
+            color: #94a3b8;
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+
+        .tag.dev {
+            background: rgba(234, 179, 8, 0.1);
+            color: #eab308;
+            border-color: rgba(234, 179, 8, 0.2);
+        }
+
+        a.card:hover h3 {
+            color: var(--accent);
+        }
+
+        footer {
+            margin-top: auto;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid var(--card-border);
+            width: 100%;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Game Module Index</h1>
+            <p class="subtitle">Access point for simulation tutorials and resources</p>
+        </header>
+
+        <section>
+            <h2>Core Tutorials</h2>
+            <div class="grid grid-large">
+                <a href="CBA_Acquisition_ProcessTutorial.html" class="card">
+                    <span class="tag">Active</span>
+                    <h3>CBA Acquisition Process</h3>
+                    <p>Gamified tutorial explaining the chronological process for land acquisition under the CBA Act.
+                    </p>
+                </a>
+                <a href="DirectPurchaseTutorial.html" class="card">
+                    <span class="tag">Active</span>
+                    <h3>Direct Purchase</h3>
+                    <p>Interactive guide covering the direct land purchase procedures and requirements.</p>
+                </a>
+                <a href="EmploymentProcessTutorial.html" class="card">
+                    <span class="tag">Active</span>
+                    <h3>Employment Process</h3>
+                    <p>Detailed simulation of the employment workflow and processing steps.</p>
+                </a>
+
+            </div>
+        </section>
+
+        <section>
+            <h2>Localized Versions</h2>
+            <div class="grid">
+
+                <a href="Bengali.html" class="card">
+                    <span class="tag">Bengali</span>
+                    <h3>Bengali Version</h3>
+                    <p>Complete Bengali localization of the core training module.</p>
+                </a>
+            </div>
+        </section>
+
+        <section>
+            <h2>Archives & Tools</h2>
+            <div class="grid">
+                <a href="English.html" class="card">
+                    <span class="tag English">English</span>
+                    <h3>English Version</h3>
+                    <p>Standard English localization of the core training module.</p>
+                </a>
+                <a href="DirectPurchaseToEmployment.html" class="card">
+                    <span class="tag">Full Flow</span>
+                    <h3>Direct Purchase → Employment</h3>
+                    <p>Comprehensive end-to-end simulation covering the entire lifecycle from purchase to employment.
+                    </p>
+                </a>
+                <a href="V0.1English.html" class="card">
+                    <span class="tag legacy">Legacy v0.1</span>
+                    <h3>English Archive</h3>
+                    <p>Previous version of the English tutorial.</p>
+                </a>
+                <a href="V0.1Bengali.html" class="card">
+                    <span class="tag legacy">Legacy v0.1</span>
+                    <h3>Bengali Archive</h3>
+                    <p>Previous version of the Bengali tutorial.</p>
+                </a>
+                <a href="debug_audio.html" class="card">
+                    <span class="tag dev">DevTool</span>
+                    <h3>Audio Debugger</h3>
+                    <p>Utility for testing and troubleshooting audio assets.</p>
+                </a>
+            </div>
+        </section>
+
+        <footer>
+            <p>Analytics India &copy; 2026</p>
+        </footer>
+    </div>
+</body>
+
+</html>
