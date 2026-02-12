@@ -3,48 +3,74 @@
 
 <head>
     <meta charset="UTF-8">
+    <!-- Ensure proper scaling on mobile devices to prevent zooming issues -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SOP Tutorial: Direct Purchase to Employment</title>
+
+    <!-- CSS: Defines the Visual Style of the Game -->
     <style>
+        /* CSS Variables for consistent color theme management across the app */
         :root {
             --primary: #2563eb;
+            /* Main blue color for primary actions/headers */
             --success: #22c55e;
+            /* Green color for success states/buttons */
             --danger: #ef4444;
+            /* Red color for danger/reject actions */
             --warning: #f59e0b;
+            /* Orange/Yellow for warnings or processing states */
             --dark: #1e293b;
+            /* Dark slate for text */
             --light: #f8fafc;
+            /* Light background for the app container */
             --white: #ffffff;
+            /* Pure white */
         }
 
+        /* partial reset to ensure consistent sizing and interaction behavior */
         * {
             box-sizing: border-box;
+            /* Include padding/border in total width/height */
             user-select: none;
+            /* Prevent text selection to make it feel like an app/game */
             -webkit-tap-highlight-color: transparent;
+            /* Remove highlight tap color on mobile */
         }
 
+        /* Body: Centers the mobile app view on the screen */
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            /* Modern font stack */
             background: #0f172a;
+            /* Dark background outside the phone frame */
             color: var(--dark);
             margin: 0;
             padding: 0;
             height: 100vh;
+            /* Full viewport height */
             display: flex;
+            /* Flexbox to center the #app */
             justify-content: center;
         }
 
+        /* #app: The main container simulating a mobile device screen */
         #app {
             width: 100%;
             max-width: 500px;
+            /* Limits width to resemble a phone */
             background: var(--light);
             height: 100%;
             display: flex;
             flex-direction: column;
+            /* Stacks header and screens vertically */
             position: relative;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            /* Shadow for depth */
             overflow: hidden;
+            /* Hides scrolling outside the container */
         }
 
+        /* Header: Sticks to the top, shows current phase */
         header {
             background: var(--primary);
             color: white;
@@ -53,28 +79,38 @@
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             z-index: 10;
+            /* Ensures header is above scrolling content */
         }
 
+        /* .screen: Represents a "Page" or "View" in the SPA (Single Page App) */
         .screen {
             flex: 1;
+            /* Takes up remaining vertical space */
             display: none;
+            /* Hidden by default */
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            /* Center content vertically */
             padding: 20px;
             text-align: center;
             overflow-y: auto;
+            /* Allow scrolling within the screen if content overflows */
             position: relative;
         }
 
+        /* .active: The class added to the current visible screen */
         .screen.active {
             display: flex;
+            /* Makes it visible using flexbox */
             animation: fadeIn 0.4s ease-out;
+            /* Animates entry */
         }
 
-        /* Elements */
+        /* Visual Elements */
         .emoji-icon {
             font-size: 4rem;
+            /* Large icons for visual appeal */
             margin: 10px;
             display: inline-block;
         }
@@ -94,10 +130,13 @@
         p {
             font-size: 1rem;
             color: #475569;
+            /* Muted slate text color */
             line-height: 1.5;
+            /* Better readability */
             margin: 10px 0 20px 0;
         }
 
+        /* Button Styles */
         .btn {
             background: var(--primary);
             color: white;
@@ -106,18 +145,26 @@
             font-size: 1.1rem;
             font-weight: bold;
             border-radius: 12px;
+            /* Rounded corners */
             cursor: pointer;
             width: 90%;
+            /* Full width buttons */
             margin: 10px 0;
             box-shadow: 0 4px 0 #1d4ed8;
+            /* 3D effect shadow */
             transition: transform 0.1s;
+            /* Smooth press animation */
         }
 
+        /* Button Click Effect */
         .btn:active {
             transform: translateY(4px);
+            /* Moves down to simulating pressing */
             box-shadow: 0 0 0 #1d4ed8;
+            /* Removes shadow to look flat */
         }
 
+        /* Green Variant (Success/Next) */
         .btn-green {
             background: var(--success);
             box-shadow: 0 4px 0 #15803d;
@@ -127,6 +174,7 @@
             box-shadow: 0 0 0 #15803d;
         }
 
+        /* Red Variant (Danger/Reject) */
         .btn-red {
             background: var(--danger);
             box-shadow: 0 4px 0 #b91c1c;
@@ -136,22 +184,26 @@
             box-shadow: 0 0 0 #b91c1c;
         }
 
+        /* Outline Variant (Secondary Actions) */
         .btn-outline {
             background: white;
             color: var(--primary);
             border: 2px solid var(--primary);
             box-shadow: none;
+            /* Flat style */
         }
 
-        /* Inventory / Visuals */
+        /* Inventory / Visuals Area to display documents/icons */
         .doc-area {
             display: flex;
             gap: 10px;
             margin: 20px 0;
             flex-wrap: wrap;
+            /* Wraps items if insufficient space */
             justify-content: center;
         }
 
+        /* Document/Item Card */
         .doc-card {
             border: 2px solid #94a3b8;
             padding: 10px;
@@ -168,18 +220,22 @@
             margin-bottom: 5px;
         }
 
-        /* Modal */
+        /* Modal (Popup) Styles */
         #modal-overlay {
             position: absolute;
+            /* Overlays the entire app */
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.8);
+            /* Semi-transparent dimming */
             display: none;
+            /* Hidden by default */
             align-items: center;
             justify-content: center;
             z-index: 100;
+            /* Highest layer */
         }
 
         .modal-content {
@@ -190,6 +246,7 @@
             max-width: 400px;
             text-align: center;
             animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Bouncy popup */
         }
 
         .modal-icon {
@@ -238,32 +295,79 @@
 
         .anim-pulse {
             animation: pulse 1s infinite;
+            /* Continuous pulsing for attention */
         }
     </style>
 </head>
 
 <body>
 
+    <!-- Main Game Container -->
     <div id="app">
+        <!-- Header: Displays Current Phase and Voice Control -->
         <header>Phase: <span id="header-phase">Intro</span>
+            <!-- Accessibility: Toggle Voiceover -->
             <button id="btn-voice" onclick="voice.toggle()"
-                style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:white; margin-left:10px;">🔇</button>
+                style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:white; margin-left:10px;">🔊</button>
         </header>
 
-        <!-- INTRO -->
+        <!-- SCREEN: INTRO -->
+        <!-- Initial landing screen explaining the goal -->
         <div id="screen-intro" class="screen active">
             <h1>Direct Purchase Tutorial</h1>
             <div class="emoji-icon">🤝🏭</div>
             <h2>From Land to Job</h2>
             <p>Learn the 5-Phase SOP for Direct Purchase of Land.<br>Simple, Fast, and Secure.</p>
+            <!-- Start Button: Initializes game, sets header, moves to Phase 1 -->
             <button class="btn btn-green"
-                onclick="game.setHeader('1. Initiation'); game.next('screen-intro', 'screen-p1')">Start
+                onclick="game.setHeader('1. Internal Planning'); game.next('screen-intro', 'screen-p1')">Start
                 Tutorial</button>
         </div>
 
-        <!-- PHASE 1: INITIATION -->
+        <!-- SCREEN: PHASE 1 - INTERNAL PLANNING -->
+        <!-- Justification and initial checks before contacting landowner -->
         <div id="screen-p1" class="screen">
-            <h2>Phase 1: Initiation</h2>
+            <h2>Phase 1: Internal Planning</h2>
+            <p>Before land is offered, we must justify why we need it.</p>
+            <!-- Interactive Document Cards: Clicking shows info modal -->
+            <div class="doc-area">
+                <div class="doc-card"
+                    onclick="modal.show('Form-XVI', '<strong>Five Point Certificate</strong><br>Justification signed by Survey Officer, Manager, & Agent.', '📝')">
+                    <span class="icon">📝</span>Form-XVI
+                </div>
+                <div class="doc-card"
+                    onclick="modal.show('Mouza Plan', '<strong>Mouza Map</strong><br>Shows layout of the panel/area required.', '🗺️')">
+                    <span class="icon">🗺️</span>Mouza Plan
+                </div>
+                <div class="doc-card"
+                    onclick="modal.show('Form-VII', '<strong>Reconciliation Cert</strong><br>Ensures no overlap with adjacent mines.', '🤝')">
+                    <span class="icon">🤝</span>Form-VII
+                </div>
+                <div class="doc-card"
+                    onclick="modal.show('Techno-Econ', '<strong>Techno-Economic Report</strong><br>Cost of acquisition vs benefits.', '💰')">
+                    <span class="icon">💰</span>Report
+                </div>
+            </div>
+
+            <p><strong>Step 2:</strong> Verify Landowner Consent (Meeting Minutes).</p>
+            <button class="btn btn-outline" onclick="phase1.verifyConsent()">Verify Consent</button>
+
+            <p><strong>Step 3 & 4:</strong> Submit for Scrutiny (Area & HQ).</p>
+            <button class="btn btn-warning" onclick="phase1.scrutinize()">Process Internal File</button>
+
+            <!-- Hidden Approval Section: Appears after scrutiny completes -->
+            <div id="p1-approval" style="display:none; margin-top:20px;">
+                <p style="color:green; font-weight:bold;">✅ Board Approval Granted</p>
+                <button class="btn btn-green"
+                    onclick="game.setHeader('2. Initiation'); game.next('screen-p1', 'screen-p2')">Proceed to
+                    Form-I</button>
+            </div>
+        </div>
+
+        <!-- SCREEN: PHASE 2 - INITIATION -->
+        <!-- Landowner Application and Initial Validity Checks -->
+        <div id="screen-p2" class="screen">
+            <h2>Phase 2: Initiation</h2>
             <p>Landowner applies to sell land.</p>
             <div class="doc-area">
                 <div class="doc-card" onclick="modal.show('Form-I', 'Application Form from Landowner.', '📄')">
@@ -272,15 +376,18 @@
             </div>
             <p><strong>Action:</strong> Check if Approval is there or if the land is in Raniganj Master Plan / a No-Buy
                 Zone.</p>
+            <!-- Failure Path -->
             <button class="btn btn-red"
                 onclick="modal.show('Rejected', 'We cannot buy land in No-Buy Zone!', '🚫')">Inside No Buy
                 Zone</button>
-            <button class="btn btn-green" onclick="phase1.approve()">Can Buy</button>
+            <!-- Success Path -->
+            <button class="btn btn-green" onclick="phase2.approve()">Can Buy</button>
         </div>
 
-        <!-- PHASE 2: APPROVAL -->
-        <div id="screen-p2" class="screen">
-            <h2>Phase 2: Administrative Approval</h2>
+        <!-- SCREEN: PHASE 3 - APPROVAL -->
+        <!-- Processing the proposal through official channels (GM) -->
+        <div id="screen-p3" class="screen">
+            <h2>Phase 3: Administrative Approval</h2>
             <p>Proposal (Form-II) needs GM Vetting.</p>
             <div class="doc-area">
                 <div class="doc-card">
@@ -290,12 +397,13 @@
                     <span class="icon">🏢</span>GM Office
                 </div>
             </div>
-            <button class="btn" onclick="phase2.submitProposal()">Submit to GM Through Proper Channel</button>
+            <button class="btn" onclick="phase3.submitProposal()">Submit to GM Through Proper Channel</button>
         </div>
 
-        <!-- PHASE 3: PUBLIC NOTICE -->
-        <div id="screen-p3" class="screen">
-            <h2>Phase 3: Public Notice</h2>
+        <!-- SCREEN: PHASE 4 - PUBLIC NOTICE -->
+        <!-- Transparency step to check for objections -->
+        <div id="screen-p4" class="screen">
+            <h2>Phase 4: Public Notice</h2>
             <p>Transparency is key. We must publish Form-III.</p>
             <div class="doc-area">
                 <div class="doc-card">
@@ -305,43 +413,49 @@
                     <span class="icon">🌐</span>Website
                 </div>
             </div>
-            <button class="btn" onclick="phase3.publish()">Publish Form-III (Wait 3 Weeks)</button>
+            <!-- Simulation of 3-week waiting period -->
+            <button class="btn" onclick="phase4.publish()">Publish Form-III (Wait 3 Weeks)</button>
         </div>
 
-        <!-- PHASE 4: REGISTRATION -->
-        <div id="screen-p4" class="screen">
-            <h2>Phase 4: Registration</h2>
-            <p>Select the Land Type to proceed:</p>
-            <button class="btn btn-outline" onclick="phase4.choose('tenancy')">Tenancy (General)</button>
-            <button class="btn btn-outline" onclick="phase4.choose('tribal')">Tribal (General)</button>
-            <button class="btn btn-outline" onclick="phase4.choose('devottar')">Devottar</button>
-            <button class="btn btn-outline" onclick="phase4.choose('patta')">Patta</button>
-            <button class="btn btn-outline" onclick="phase4.choose('government')">Government</button>
-        </div>
-
-        <!-- PHASE 5: POSSESSION -->
+        <!-- SCREEN: PHASE 5 - REGISTRATION -->
+        <!-- Identifying Land Type to determine specific acquisition path -->
         <div id="screen-p5" class="screen">
-            <h2>Phase 5: Possession</h2>
+            <h2>Phase 5: Registration</h2>
+            <p>Select the Land Type to proceed:</p>
+            <!-- Different land types trigger different modal info -->
+            <button class="btn btn-outline" onclick="phase5.choose('tenancy')">Tenancy (General)</button>
+            <button class="btn btn-outline" onclick="phase5.choose('tribal')">Tribal (General)</button>
+            <button class="btn btn-outline" onclick="phase5.choose('devottar')">Devottar</button>
+            <button class="btn btn-outline" onclick="phase5.choose('patta')">Patta</button>
+            <button class="btn btn-outline" onclick="phase5.choose('government')">Government</button>
+        </div>
+
+        <!-- SCREEN: PHASE 6 - POSSESSION -->
+        <!-- Legal Transfer and Physical Possession -->
+        <div id="screen-p6" class="screen">
+            <h2>Phase 6: Possession</h2>
             <p>Payment made. Taking Physical Possession.</p>
             <div class="emoji-icon">🚩</div>
             <p>We need <strong>Form-IV</strong> to certify possession.</p>
-            <button class="btn btn-green" onclick="phase5.takePossession()">Take Possession (Form-IV)</button>
+            <button class="btn btn-green" onclick="phase6.takePossession()">Take Possession (Form-IV)</button>
         </div>
 
-        <!-- PHASE 6: EMPLOYMENT START -->
-        <div id="screen-p6-start" class="screen">
-            <h2>Phase 6: Employment</h2>
+        <!-- SCREEN: PHASE 7 - EMPLOYMENT (START) -->
+        <!-- Initial Employment processing at Unit level -->
+        <div id="screen-p7-start" class="screen">
+            <h2>Phase 7: Employment</h2>
             <p>Unit Level Processing The File When Necessery Criterias are Met.</p>
             <div class="doc-area">
                 <div class="doc-card"><span class="icon">📂</span>Emp Folder</div>
             </div>
             <p>Submitting Forms: A, B, C, V, VI, Attestation.</p>
-            <button class="btn" onclick="phase6.submitUnit()">Submit to Unit Office</button>
+            <button class="btn" onclick="phase7.submitUnit()">Submit to Unit Office</button>
         </div>
 
-        <!-- PHASE 6: HQ VETTING -->
-        <div id="screen-p6-hq" class="screen">
-            <h2>Phase 6: HQ Processing</h2>
+        <!-- SCREEN: PHASE 7 - EMPLOYMENT (HQ) -->
+        <!-- HQ Checkpoint logic sequence -->
+        <div id="screen-p7-hq" class="screen">
+            <h2>Phase 7: HQ Processing</h2>
             <p>The file is now at Headquarters.</p>
             <ul style="text-align:left; font-size:0.9rem; color:#475569;">
                 <li>1. LRE Scrutiny (Form-XIV)</li>
@@ -349,19 +463,24 @@
                 <li>3. Website Notice (21 Days)</li>
                 <li>4. Dept Clearances (P&P, Finance)</li>
             </ul>
-            <button class="btn btn-warning" onclick="phase6.hqProcess()">Process File</button>
+            <button class="btn btn-warning" onclick="phase7.hqProcess()">Process File</button>
         </div>
 
-        <!-- PHASE 6: FINAL APPROVAL -->
-        <div id="screen-p6-end" class="screen">
+        <!-- SCREEN: PHASE 7 - FINAL APPROVAL -->
+        <!-- Final executive approval and animation area -->
+        <div id="screen-p7-end" class="screen">
             <h2>Final Approval</h2>
             <p>Waiting for ECFD (Functional Directors) & CMD Approval...</p>
-            <div id="stamp-area" style="height:80px;"></div>
-            <button class="btn btn-green" id="btn-offer" style="display:none;" onclick="phase6.issueOffer()">Issue Offer
+            <!-- Stamp animation appears here via JS -->
+            <div id="stamp-area"
+                style="min-height:150px; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+            </div>
+            <button class="btn btn-green" id="btn-offer" style="display:none;" onclick="phase7.issueOffer()">Issue Offer
                 Letter</button>
         </div>
 
-        <!-- END -->
+        <!-- SCREEN: END -->
+        <!-- Final Success Screen -->
         <div id="screen-end" class="screen">
             <div class="emoji-icon">🎉✉️👷</div>
             <h1>Mission Accomplished!</h1>
@@ -372,27 +491,33 @@
 
     </div>
 
-    <!-- MODAL -->
+    <!-- MODAL COMPONENT -->
+    <!-- Reusable popup for showing details without leaving the current screen -->
     <div id="modal-overlay">
         <div class="modal-content">
             <div class="modal-icon" id="modal-icon">💡</div>
             <h2 id="modal-title">Info</h2>
             <p id="modal-text">Details...</p>
+            <button class="btn btn-outline" onclick="modal.dismiss()" style="margin-bottom:10px;">Go Back</button>
             <button class="btn" onclick="modal.close()">Continue</button>
         </div>
     </div>
 
+    <!-- JAVASCRIPT: Logic Controller -->
     <script>
-        // --- GAME ENGINE ---
+        // --- GAME ENGINE OBJECT ---
+        // Handles global state, screen transitions, and header updates
         const game = {
-            screen: 'intro',
-            setHeader: (text) => document.getElementById('header-phase').innerText = text,
+            screen: 'intro', // Tracks current screen
+            setHeader: (text) => document.getElementById('header-phase').innerText = text, // Updates top bar title
+
+            // Transition logic: Hides 'from' screen, Shows 'to' screen
             next: (from, to) => {
                 document.getElementById(from).classList.remove('active');
                 const nextScreen = document.getElementById(to);
                 nextScreen.classList.add('active');
 
-                // Voice Trigger
+                // Auto-Voice Trigger: Reads the title and description of the new screen
                 const h2 = nextScreen.querySelector('h2');
                 const p = nextScreen.querySelector('p');
                 let speechText = "";
@@ -402,8 +527,12 @@
             }
         };
 
+        // --- VOICE / ACCESSIBILITY ENGINE ---
+        // Handles Text-to-Speech functionality using the Web Speech API
         const voice = {
-            enabled: false,
+            enabled: true, // Default state
+
+            // Toggles voice on/off and updates icon
             toggle: () => {
                 voice.enabled = !voice.enabled;
                 const btn = document.getElementById('btn-voice');
@@ -417,8 +546,10 @@
                     voice.stop();
                 }
             },
+
+            // Pre-process text to make it sound natural (e.g., expanding abbreviations)
             rationalize: (text) => {
-                // 1. Roman Numerals & Forms
+                // 1. Roman Numerals & Forms: Convert technical terms to spoken words
                 text = text.replace(/Form-I\b/g, "Form One");
                 text = text.replace(/Form-II\b/g, "Form Two");
                 text = text.replace(/Form-III\b/g, "Form Three");
@@ -427,110 +558,165 @@
                 text = text.replace(/Form-VI\b/g, "Form Six");
                 text = text.replace(/Form-VII\b/g, "Form Seven");
                 text = text.replace(/Form-XIV\b/g, "Form Fourteen");
+                text = text.replace(/Form-XVI\b/g, "Form Sixteen");
+                text = text.replace(/Form-XXII\b/g, "Form Twenty Two");
 
-                // 2. Acronyms & Abbreviations
+                // 2. Acronyms & Abbreviations: Expand for clarity
                 text = text.replace(/\bSOP\b/g, "S O P");
                 text = text.replace(/\bCBA\b/g, "C B A");
                 text = text.replace(/u\/s/g, "under section");
                 text = text.replace(/\bGM\b/g, "General Manager");
                 text = text.replace(/\bAGM\b/g, "Area General Manager");
                 text = text.replace(/\bWB\b/g, "West Bengal");
+                text = text.replace(/\bLRE\b/g, "Land Revenue Estate");
+                text = text.replace(/\bDGMS\b/g, "D G M S");
+                text = text.replace(/Techno-Econ/g, "Techno Economic");
 
-                // 3. Punctuation & Pacing
-                // Replace "dot" sounding periods with natural pauses
+                // 3. Punctuation & Pacing: Add pauses for better flow
                 text = text.replace(/\./g, ", ");
-                // Add pauses at newlines
                 text = text.replace(/\n/g, ", ");
 
                 return text;
             },
-            speak: (text) => {
-                if (!voice.enabled || !('speechSynthesis' in window)) return;
-                window.speechSynthesis.cancel(); // Stop previous
 
-                // Remove HTML tags first
+            // System speak function
+            speak: (text) => {
+                // Guard clause: Exit if voice disabled or browser not supported
+                if (!voice.enabled || !('speechSynthesis' in window)) return;
+
+                window.speechSynthesis.cancel(); // Stop any currently playing audio
+
+                // Remove HTML tags so they aren't read out loud
                 let cleanText = text.replace(/<[^>]*>/g, ' ');
 
-                // Rationalize text for speech
+                // Rationalize text before speaking
                 cleanText = voice.rationalize(cleanText);
 
                 const utterance = new SpeechSynthesisUtterance(cleanText);
-                utterance.rate = 1.0; // Slightly slower for better clarity if needed, default is 1
-                utterance.pitch = 1.0;
+                utterance.rate = 1.0; // Normal speed
+                utterance.pitch = 1.0; // Normal pitch
                 window.speechSynthesis.speak(utterance);
             },
+
+            // Stop speaking immediately
             stop: () => {
                 if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             }
         };
 
+        // --- MODAL CONTROLLER ---
+        // Manages showing key information popups and handling their closure
         const modal = {
-            callback: null,
+            callback: null, // Function to run when modal is "Continued"
+
             show: (title, text, icon, cb) => {
                 document.getElementById('modal-title').innerText = title;
-                document.getElementById('modal-text').innerHTML = text;
+                document.getElementById('modal-text').innerHTML = text; // innerHTML allows bolding/structure
                 document.getElementById('modal-icon').innerText = icon || '💡';
                 document.getElementById('modal-overlay').style.display = 'flex';
                 modal.callback = cb;
 
-                // Voice Trigger for Modal
+                // Voice Trigger: Read modal content when it appears
                 voice.speak(title + ". " + text);
             },
+
+            // "Continue" Action: Closes modal and runs the next step callback
             close: () => {
                 document.getElementById('modal-overlay').style.display = 'none';
-                voice.stop(); // Stop voice when closed
+                voice.stop();
                 if (modal.callback) {
                     const cb = modal.callback;
                     modal.callback = null;
-                    cb();
+                    cb(); // Execute next step
                 }
+            },
+
+            // "Go Back" Action: Just closes the modal without triggering progress
+            dismiss: () => {
+                document.getElementById('modal-overlay').style.display = 'none';
+                voice.stop();
+                modal.callback = null;
             }
         };
 
-        // --- PHASE LOGIC ---
+        // --- PHASE LOGIC CONTROLLERS ---
+        // Each object manages logic specific to that phase of the game
+
+        // Phase 1 Logic: Internal Planning
         const phase1 = {
-            approve: () => {
+            verifyConsent: () => {
                 modal.show(
-                    "Phase 1 Complete",
-                    "<strong>Form-I Accepted.</strong><br>Land is verified to be outside the exclusion zone. We can proceed to Proposal (Form-II).",
-                    "✅",
+                    "Consent Verified",
+                    "<strong>Minutes of Meeting</strong> confirmed.<br>Villagers are willing to sell at the negotiated rate.",
+                    "🤝",
+                    null // No callback, just informational
+                );
+            },
+            scrutinize: () => {
+                modal.show(
+                    "Internal Scrutiny",
+                    "<strong>1. Mine Proposal:</strong> Justified (Form-XVI).<br><strong>2. Area Committee:</strong> Recommended (Form-XXII).<br><strong>3. HQ Vetting:</strong> Approved by GMs (Planning, Safety, Finance, LRE).",
+                    "🏢",
                     () => {
-                        game.setHeader("2. Administrative Approval");
-                        game.next('screen-p1', 'screen-p2');
+                        // Reveal the hidden "Proceed" button upon completion
+                        document.getElementById('p1-approval').style.display = 'block';
+                        voice.speak("Internal processes complete. Board approval granted.");
                     }
                 );
             }
         };
 
+        // Phase 2 Logic: Initiation
         const phase2 = {
-            submitProposal: () => {
+            approve: () => {
                 modal.show(
-                    "GM Vetted",
-                    "The Area General Manager has approved the <strong>Form-II Proposal</strong>.<br>Next: Public Transparency.",
-                    "👮‍♂️",
+                    "Phase 2 Complete",
+                    "<strong>Form-I Accepted.</strong><br>Land is verified to be outside the exclusion zone. We can proceed to Proposal (Form-II).",
+                    "✅",
                     () => {
-                        game.setHeader("3. Public Notice");
+                        // Move to Phase 3
+                        game.setHeader("3. Administrative Approval");
                         game.next('screen-p2', 'screen-p3');
                     }
                 );
             }
         };
 
+        // Phase 3 Logic: Administrative Approval
         const phase3 = {
-            publish: () => {
+            submitProposal: () => {
                 modal.show(
-                    "Notice Published",
-                    "<strong>Form-III</strong> is live on the Website and Newspapers.<br>We waited 3 weeks. No valid complaints received.",
-                    "📢",
+                    "GM Vetted",
+                    "The Area General Manager has approved the <strong>Form-II Proposal</strong>.<br>Next: Public Transparency.",
+                    "👮‍♂️",
                     () => {
-                        game.setHeader("4. Registration");
+                        // Move to Phase 4
+                        game.setHeader("4. Public Notice");
                         game.next('screen-p3', 'screen-p4');
                     }
                 );
             }
         };
 
+        // Phase 4 Logic: Public Notice
         const phase4 = {
+            publish: () => {
+                modal.show(
+                    "Notice Published",
+                    "<strong>Form-III</strong> is live on the Website and Newspapers.<br>We waited 3 weeks. No valid complaints received.",
+                    "📢",
+                    () => {
+                        // Move to Phase 5
+                        game.setHeader("5. Registration");
+                        game.next('screen-p4', 'screen-p5');
+                    }
+                );
+            }
+        };
+
+        // Phase 5 Logic: Registration
+        // Handles logic for 5 different land types via Switch case
+        const phase5 = {
             choose: (type) => {
                 let title = "";
                 let msg = "";
@@ -563,47 +749,53 @@
                     msg,
                     "✍️",
                     () => {
-                        game.setHeader("5. Possession");
-                        game.next('screen-p4', 'screen-p5');
+                        // Move to Phase 6
+                        game.setHeader("6. Possession");
+                        game.next('screen-p5', 'screen-p6');
                     }
                 );
             }
         };
 
-        const phase5 = {
+        // Phase 6 Logic: Possession
+        const phase6 = {
             takePossession: () => {
                 modal.show(
                     "Physical Possession",
                     "<strong>Form-IV</strong> Signed!<br>Mutation applied. Form-D updated. Now strictly Employment.",
                     "🚩",
                     () => {
-                        game.setHeader("6. Employment (Unit)");
-                        game.next('screen-p5', 'screen-p6-start');
+                        // Move to Phase 7 (Start)
+                        game.setHeader("7. Employment (Unit)");
+                        game.next('screen-p6', 'screen-p7-start');
                     }
                 );
             }
         };
 
-        const phase6 = {
+        // Phase 7 Logic: Employment Processing
+        const phase7 = {
             submitUnit: () => {
                 modal.show(
                     "Unit Verified",
                     "Employment Folder (Forms A-VI) verified by Unit. Sending to HQ...",
                     "📤",
                     () => {
-                        game.setHeader("6. Employment (HQ)");
-                        game.next('screen-p6-start', 'screen-p6-hq');
+                        // Move to Phase 7 (HQ)
+                        game.setHeader("7. Employment (HQ)");
+                        game.next('screen-p7-start', 'screen-p7-hq');
                     }
                 );
             },
             hqProcess: () => {
-                // Multi-step simulation
+                // Multi-step HQ simulation
                 modal.show(
                     "HQ Processing...",
                     "1. LRE Created Form-XIV Synopsis.<br>2. Committee Vetted.<br>3. 21-Day Notice Complete.<br>4. Finance/Planning Cleared.",
                     "⚙️",
                     () => {
-                        game.next('screen-p6-hq', 'screen-p6-end');
+                        // Move to Final Approval Screen
+                        game.next('screen-p7-hq', 'screen-p7-end');
                     }
                 );
             },
@@ -613,25 +805,31 @@
                     "Medical & Police Verification Passed.<br>Appointment Letter handed over!",
                     "✉️",
                     () => {
+                        // Move to Success/End Screen
                         game.setHeader("Victory");
-                        game.next('screen-p6-end', 'screen-end');
+                        game.next('screen-p7-end', 'screen-end');
                     }
                 );
             }
         };
 
-        // Auto-Run Animation for Stamp Phase
+        // --- AUTOMATED VISUAL EFFECTS ---
+        // Observer detects when the Final Approval screen becomes active ('display: flex')
+        // and triggers the "APPROVED" stamp animation after a delay.
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
-                if (mutation.target.id === 'screen-p6-end' && mutation.target.classList.contains('active')) {
+                if (mutation.target.id === 'screen-p7-end' && mutation.target.classList.contains('active')) {
                     setTimeout(() => {
-                        document.getElementById('stamp-area').innerHTML = '<span style="font-size:3rem; color:green; border:4px solid green; padding:10px; transform:rotate(-10deg); display:inline-block;">APPROVED (ECFD)</span>';
+                        // Insert the Stamp HTML
+                        document.getElementById('stamp-area').innerHTML = '<span style="font-size:2.5rem; color:green; border:4px solid green; padding:10px; transform:rotate(-10deg); display:inline-block; white-space:nowrap;">APPROVED (ECFD)</span>';
+                        // Reveal the issue offer button
                         document.getElementById('btn-offer').style.display = 'block';
-                    }, 1500);
+                    }, 1500); // 1.5 Second delay for suspense
                 }
             });
         });
-        observer.observe(document.getElementById('screen-p6-end'), { attributes: true });
+        // Start watching the target element for attribute changes (specifically class changes)
+        observer.observe(document.getElementById('screen-p7-end'), { attributes: true });
 
     </script>
 </body>
