@@ -1,14 +1,12 @@
 {
-  "dataSource": "csv",
-
+  "dataSource": "gsheet",
   "googleSheet": {
-    "sheetId": "YOUR_GOOGLE_SHEET_ID_HERE",
+    "sheetId": "1QnOxrB97HPDSkLv1LIKGpwDQ_nNjpPH7x1bSH9MnKy0",
     "sheets": {
       "approved": "Approved",
       "under_process": "Under_Process"
     }
   },
-
   "tables": {
     "approved": {
       "csvPath": "data/approved.csv",
