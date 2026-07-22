@@ -1,0 +1,22 @@
+{
+  "dataSource": "csv",
+
+  "googleSheet": {
+    "sheetId": "YOUR_GOOGLE_SHEET_ID_HERE",
+    "sheets": {
+      "approved": "Approved",
+      "under_process": "Under_Process"
+    }
+  },
+
+  "tables": {
+    "approved": {
+      "csvPath": "data/approved.csv",
+      "columns": 3
+    },
+    "under_process": {
+      "csvPath": "data/under_process.csv",
+      "columns": 5
+    }
+  }
+}
