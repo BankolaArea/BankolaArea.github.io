@@ -11,6 +11,10 @@
 // 1. PROJECT DATA & CONFIGURATION (Extracted directly from Part B.qgs)
 // ---------------------------------------------------------------------------
 
+/**
+ * 📍 MAP STARTUP LOCATION & PROJECT CRS
+ * Edit center [lon, lat], defaultZoom, and extent to change where the map opens.
+ */
 const QGIS_PROJECT_INFO = {
   filename: "Part B.qgs",
   version: "3.44.15-Solothurn",
@@ -19,11 +23,15 @@ const QGIS_PROJECT_INFO = {
   crs: "EPSG:4326 (WGS 84)",
   projectedCrs: "EPSG:32645 (WGS 84 / UTM zone 45N)",
   extent: [87.2757366, 23.6746642, 87.2940692, 23.6915430], // [xmin, ymin, xmax, ymax]
-  center: [87.2865, 23.6895], // Lon, Lat
-  defaultZoom: 15
+  center: [87.2865, 23.6895], // Starting [Longitude, Latitude]
+  defaultZoom: 15             // Initial Zoom Level (e.g. 14 for overview, 15-16 for pit detail)
 };
 
-// Part B OCP Mining Lease Boundary Coordinates (from Part-B-OCP.kml)
+/**
+ * 📐 PART B OCP MINING LEASE BOUNDARY VERTICES (WGS84 Lon/Lat)
+ * Extracted from Part-B-OCP.kml. Replace this array with any new polygon coordinates.
+ * NOTE: The last point should match the first point to close the polygon ring.
+ */
 const PART_B_OCP_POLYGON = [
   [87.2845870925932, 23.68416998949326],
   [87.28650444077128, 23.68426505813315],
@@ -38,8 +46,11 @@ const PART_B_OCP_POLYGON = [
   [87.2845870925932, 23.68416998949326]
 ];
 
-// Sentinel-2 L2A Cloud-Optimized GeoTIFFs (COGs) defined in Part B.qgs
-// Tracked with both acquisition date AND exact file placement order
+/**
+ * 🛰️ SENTINEL-2 CLOUD-OPTIMIZED GEOTIFFS (COGs)
+ * Directly streamed from AWS S3 using client-side HTTP range requests.
+ * To add a new scene, paste another entry with its unique id, name, date, and COG URL.
+ */
 const SENTINEL_LAYERS_CONFIG = [
   {
     id: "s2_20261020",
@@ -120,28 +131,73 @@ if (typeof proj4 !== 'undefined' && typeof ol !== 'undefined' && ol.proj && ol.p
 }
 
 // ---------------------------------------------------------------------------
-// 3. APPLICATION STATE
+// 3. APPLICATION STATE & DEVELOPER QUICK CONFIGURATION
 // ---------------------------------------------------------------------------
+// 💡 DEVELOPER TIP: Change any default setting below to instantly customize the app!
 
 const state = {
   map: null,
   baseLayers: {},
+
+  // =========================================================================
+  // 🗺️ 1. DEFAULT BASE MAP
+  // Change to any of the following keys:
+  //   "osm"            : OpenStreetMap Standard (Vector/Roads)
+  //   "google-earth"   : Google Earth Satellite (High-res photographic)
+  //   "google-traffic" : Google Traffic & Hybrid Roads
+  //   "esri-sat"       : Esri World Imagery Satellite
+  //   "carto-dark"     : CartoDB Dark Matter (Sleek dark theme)
+  // =========================================================================
   activeBaseKey: "osm",
+
+  // =========================================================================
+  // 🛰️ 2. DEFAULT ACTIVE SATELLITE RASTER SCENE (Sentinel-2 COG)
+  // Set to "latest" to AUTOMATICALLY select the most recent acquisition date!
+  // Options:
+  //   "latest"      : (Recommended) Automatically picks the newest scene by date
+  //   "s2_20261020" : Specific scene ID from SENTINEL_LAYERS_CONFIG
+  // =========================================================================
+  activeRasterId: "latest",
+
+  // =========================================================================
+  // 🔀 3. SPLIT-SCREEN SWIPE COMPARISON SETTINGS
+  // =========================================================================
+  swipeSecondaryRasterId: "s2_20260915", // Right side comparison scene ID
+  isSwipeActive: false,                  // Set true to start in Swipe comparison mode on load
+  swipePercent: 50,                      // Initial divider slider position (0 - 100%)
+
+  // =========================================================================
+  // 📐 4. PART-B-OCP LEASEHOLD BOUNDARY DEFAULTS
+  // =========================================================================
+  boundaryVisible: true,     // true = boundary visible on map load, false = hidden by default
+  boundaryColor: "#ff9800",  // Border & point color hex (e.g. #ff9800 orange, #00e5ff cyan, #10b981 emerald, #ef4444 red)
+  boundaryOpacity: 0.25,     // Polygon fill opacity: 0.0 (transparent) to 1.0 (completely solid)
+
+  // =========================================================================
+  // 🎛️ 5. DEFAULT GPU RASTER IMAGE ENHANCEMENT FILTERS (WebGL)
+  // =========================================================================
+  rasterFilters: {
+    brightness: 100,  // Brightness: 30 to 250 (%)
+    contrast: 115,    // Contrast: 50 to 250 (%)
+    saturation: 120,  // Saturation: 0 to 300 (%)
+    gamma: 100,       // Exposure/Gamma: 50 to 200 (%)
+    preset: "natural" // Preset: "natural" | "high-contrast" | "vegetation" | "grayscale"
+  },
+
+  // =========================================================================
+  // 📱 6. DEFAULT VIEW MODE (MOBILE / DESKTOP / AUTO)
+  // Options:
+  //   "auto"    : Automatically detects mobile (< 850px) vs desktop screen (Recommended)
+  //   "mobile"  : Forces touch-friendly mobile drawer & bottom navigation
+  //   "desktop" : Forces full side-by-side desktop workspace
+  // =========================================================================
+  defaultViewMode: "auto",
+
+  // Runtime objects (managed internally by OpenLayers)
   rasterLayers: {},
-  activeRasterId: "s2_20261015",
-  swipeSecondaryRasterId: "s2_20260915",
-  isSwipeActive: false,
-  swipePercent: 50,
   vectorLayer: null,
   drawInteraction: null,
-  measureActive: false,
-  rasterFilters: {
-    brightness: 100,
-    contrast: 115,
-    saturation: 120,
-    gamma: 100,
-    preset: "natural"
-  }
+  measureActive: false
 };
 
 // ---------------------------------------------------------------------------
@@ -151,14 +207,14 @@ const state = {
 function initWebGisMap() {
   const centerMercator = ol.proj.fromLonLat(QGIS_PROJECT_INFO.center);
 
-  // BASE LAYERS
+  // BASE LAYERS (Visibility dynamically matches state.activeBaseKey)
   state.baseLayers["google-earth"] = new ol.layer.Tile({
     title: "Google Earth Satellite",
     source: new ol.source.XYZ({
       url: "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
       maxZoom: 20
     }),
-    visible: true
+    visible: state.activeBaseKey === "google-earth"
   });
 
   state.baseLayers["google-traffic"] = new ol.layer.Tile({
@@ -167,7 +223,7 @@ function initWebGisMap() {
       url: "https://mt1.google.com/vt/lyrs=h@159000000,traffic|seconds_into_week:-1&style=3&x={x}&y={y}&z={z}",
       maxZoom: 20
     }),
-    visible: false
+    visible: state.activeBaseKey === "google-traffic"
   });
 
   state.baseLayers["esri-sat"] = new ol.layer.Tile({
@@ -176,7 +232,7 @@ function initWebGisMap() {
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       maxZoom: 19
     }),
-    visible: false
+    visible: state.activeBaseKey === "esri-sat"
   });
 
   state.baseLayers["carto-dark"] = new ol.layer.Tile({
@@ -185,13 +241,13 @@ function initWebGisMap() {
       url: "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
       maxZoom: 19
     }),
-    visible: false
+    visible: state.activeBaseKey === "carto-dark"
   });
 
   state.baseLayers["osm"] = new ol.layer.Tile({
     title: "OpenStreetMap",
     source: new ol.source.OSM(),
-    visible: false
+    visible: state.activeBaseKey === "osm"
   });
 
   // INITIALIZE SENTINEL-2 COG RASTER LAYERS
@@ -254,8 +310,29 @@ function initWebGisMap() {
 // 5. SENTINEL-2 COG RASTER LAYER CREATION
 // ---------------------------------------------------------------------------
 
+/**
+ * Automatically discovers the latest Sentinel-2 acquisition by date.
+ */
+function getLatestRasterId() {
+  if (!SENTINEL_LAYERS_CONFIG || SENTINEL_LAYERS_CONFIG.length === 0) return null;
+  const sorted = [...SENTINEL_LAYERS_CONFIG].sort((a, b) => {
+    const timeA = new Date(a.date).getTime() || 0;
+    const timeB = new Date(b.date).getTime() || 0;
+    return timeB - timeA; // Descending: newest first
+  });
+  return sorted[0].id;
+}
+
 function initSentinelCogLayers() {
+  // If activeRasterId is "latest" (or missing), dynamically pick the newest scene by date
+  if (!state.activeRasterId || state.activeRasterId === "latest") {
+    state.activeRasterId = getLatestRasterId();
+  }
+
   SENTINEL_LAYERS_CONFIG.forEach(cfg => {
+    const isDefaultActive = (cfg.id === state.activeRasterId);
+    cfg.defaultChecked = isDefaultActive;
+
     // Primary WebGL GeoTIFF Source for direct byte-range COG reading
     let layer;
     try {
@@ -273,7 +350,7 @@ function initSentinelCogLayers() {
       layer = new ol.layer.WebGLTile({
         title: cfg.name,
         source: cogSource,
-        visible: cfg.defaultChecked,
+        visible: isDefaultActive,
         opacity: 0.95
       });
     } catch (err) {
@@ -282,12 +359,21 @@ function initSentinelCogLayers() {
       layer = new ol.layer.Tile({
         title: cfg.name,
         source: new ol.source.TileDebug(),
-        visible: cfg.defaultChecked
+        visible: isDefaultActive
       });
     }
 
     state.rasterLayers[cfg.id] = layer;
   });
+
+  // Automatically update the header and mobile scene tags with the active scene
+  const initialCfg = SENTINEL_LAYERS_CONFIG.find(c => c.id === state.activeRasterId);
+  if (initialCfg) {
+    const sceneNameEl = document.getElementById("currentSceneName");
+    if (sceneNameEl) sceneNameEl.textContent = initialCfg.name;
+    const mobileTag = document.getElementById("mobileSceneTag");
+    if (mobileTag) mobileTag.textContent = `${initialCfg.shortName} ⭐`;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -309,10 +395,15 @@ function initVectorBoundaryLayer() {
     features: [feature]
   });
 
+  // Read developer defaults from state
+  const bColor = state.boundaryColor || "#ff9800";
+  const bOpacity = typeof state.boundaryOpacity === "number" ? state.boundaryOpacity : 0.25;
+  const bVis = state.boundaryVisible !== undefined ? state.boundaryVisible : true;
+
   state.vectorLayer = new ol.layer.Vector({
     source: vectorSource,
-    style: createVectorStyle("#ff9800", 0.25),
-    visible: true,
+    style: createVectorStyle(bColor, bOpacity),
+    visible: bVis,
     zIndex: 99
   });
 }
@@ -399,32 +490,44 @@ function setupSidebarUI() {
     });
   }
 
-  // Vector Boundary Toggle
+  // Vector Boundary Toggle - automatically synced with state.boundaryVisible
   const chkKmlBoundary = document.getElementById("chkKmlBoundary");
-  chkKmlBoundary.addEventListener("change", (e) => {
-    state.vectorLayer.setVisible(e.target.checked);
-  });
+  if (chkKmlBoundary) {
+    if (state.boundaryVisible !== undefined) chkKmlBoundary.checked = state.boundaryVisible;
+    chkKmlBoundary.addEventListener("change", (e) => {
+      state.vectorLayer.setVisible(e.target.checked);
+    });
+  }
 
-  // Vector Style Customizer
+  // Vector Style Customizer - automatically synced with state.boundaryColor & boundaryOpacity
   const kmlBorderColor = document.getElementById("kmlBorderColor");
   const kmlOpacity = document.getElementById("kmlOpacity");
   const kmlOpacityVal = document.getElementById("kmlOpacityVal");
 
+  if (kmlBorderColor && state.boundaryColor) {
+    kmlBorderColor.value = state.boundaryColor;
+  }
+  if (kmlOpacity && state.boundaryOpacity !== undefined) {
+    kmlOpacity.value = state.boundaryOpacity;
+    if (kmlOpacityVal) kmlOpacityVal.textContent = `${Math.round(state.boundaryOpacity * 100)}%`;
+  }
+
   function updateVectorStyle() {
     const color = kmlBorderColor.value;
     const opacity = parseFloat(kmlOpacity.value);
-    kmlOpacityVal.textContent = `${Math.round(opacity * 100)}%`;
+    if (kmlOpacityVal) kmlOpacityVal.textContent = `${Math.round(opacity * 100)}%`;
     state.vectorLayer.setStyle(createVectorStyle(color, opacity));
   }
 
-  kmlBorderColor.addEventListener("input", updateVectorStyle);
-  kmlOpacity.addEventListener("input", updateVectorStyle);
+  if (kmlBorderColor) kmlBorderColor.addEventListener("input", updateVectorStyle);
+  if (kmlOpacity) kmlOpacity.addEventListener("input", updateVectorStyle);
 
-  // Base Map Buttons
+  // Base Map Buttons - automatically highlights button matching state.activeBaseKey
   const basemapBtns = document.querySelectorAll(".basemap-btn");
   basemapBtns.forEach(btn => {
+    const key = btn.getAttribute("data-base");
+    btn.classList.toggle("active", key === state.activeBaseKey);
     btn.addEventListener("click", () => {
-      const key = btn.getAttribute("data-base");
       switchBaseMap(key);
       basemapBtns.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
@@ -1359,8 +1462,8 @@ function setupMobileAndAdaptiveView() {
   const btnDrawerClose = document.getElementById("btnCloseSidebar");
   const mobileNavBtns = document.querySelectorAll(".mobile-nav-btn");
 
-  // Read saved preference or default to 'auto'
-  state.viewMode = localStorage.getItem("qgis_openmap_viewmode") || "auto";
+  // Read saved preference or default to state.defaultViewMode
+  state.viewMode = localStorage.getItem("qgis_openmap_viewmode") || state.defaultViewMode || "auto";
 
   function isDeviceMobile() {
     return window.innerWidth <= 850 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
