@@ -126,7 +126,7 @@ if (typeof proj4 !== 'undefined' && typeof ol !== 'undefined' && ol.proj && ol.p
 const state = {
   map: null,
   baseLayers: {},
-  activeBaseKey: "google-earth",
+  activeBaseKey: "osm",
   rasterLayers: {},
   activeRasterId: "s2_20261015",
   swipeSecondaryRasterId: "s2_20260915",
@@ -1134,9 +1134,9 @@ function exportGeoJson() {
 
 function toggleFullscreen() {
   if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(() => {});
+    document.documentElement.requestFullscreen().catch(() => { });
   } else {
-    document.exitFullscreen().catch(() => {});
+    document.exitFullscreen().catch(() => { });
   }
 }
 
