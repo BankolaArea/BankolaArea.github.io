@@ -158,13 +158,15 @@ const state = {
   //   "s2_20261020" : Specific scene ID from SENTINEL_LAYERS_CONFIG
   // =========================================================================
   activeRasterId: "latest",
+  defaultRasterOpacity: 1.0, // Default raster opacity/visibility (1.0 = 100% fully opaque/visible)
+
 
   // =========================================================================
-  // 🔀 3. SPLIT-SCREEN SWIPE COMPARISON SETTINGS
+  // 📅 3. MULTI-DATE TIMELINE COMPARISON SETTINGS
+  // Navigate scenes chronologically using floating Up/Down buttons or ArrowUp/ArrowDown keys
   // =========================================================================
-  swipeSecondaryRasterId: "s2_20260915", // Right side comparison scene ID
-  isSwipeActive: false,                  // Set true to start in Swipe comparison mode on load
-  swipePercent: 50,                      // Initial divider slider position (0 - 100%)
+  dateBannerDuration: 3500, // Duration (ms) the top date banner stays visible on change
+
 
   // =========================================================================
   // 📐 4. PART-B-OCP LEASEHOLD BOUNDARY DEFAULTS
@@ -293,7 +295,7 @@ function initWebGisMap() {
   setupMapEvents();
   setupSidebarUI();
   setupFilterControls();
-  setupSwipeFeature();
+  setupDateStepperFeature();
   setupMeasureTool();
   setupDragAndDrop();
   setupMobileAndAdaptiveView();
@@ -347,11 +349,12 @@ function initSentinelCogLayers() {
         wrapX: true
       });
 
+      const defaultOpacity = (state.defaultRasterOpacity !== undefined ? state.defaultRasterOpacity : 1.0);
       layer = new ol.layer.WebGLTile({
         title: cfg.name,
         source: cogSource,
         visible: isDefaultActive,
-        opacity: 0.95
+        opacity: defaultOpacity
       });
     } catch (err) {
       console.warn("WebGLTile GeoTIFF fallback:", err);
@@ -359,7 +362,8 @@ function initSentinelCogLayers() {
       layer = new ol.layer.Tile({
         title: cfg.name,
         source: new ol.source.TileDebug(),
-        visible: isDefaultActive
+        visible: isDefaultActive,
+        opacity: (state.defaultRasterOpacity !== undefined ? state.defaultRasterOpacity : 1.0)
       });
     }
 
@@ -688,6 +692,9 @@ function renderRasterLayersList(sortMode = 'date-desc') {
       ? `<span class="badge-date-pill" title="Identified Date: ${dateInfo.dateStr}"><i class="fa-regular fa-calendar"></i> ${dateInfo.dateStr}</span>`
       : `<span class="badge-file-order" title="Date could not be identified by JS - placed in exact file order"><i class="fa-solid fa-file-lines"></i> Order in File: #${(cfg.fileOrderIndex ?? 0) + 1}</span>`;
 
+    const defOpacity = (state.defaultRasterOpacity !== undefined ? state.defaultRasterOpacity : 1.0);
+    const defOpacityPercent = Math.round(defOpacity * 100);
+
     card.innerHTML = `
       <div class="layer-top-row">
         <label class="layer-title-group" for="radio_${cfg.id}">
@@ -702,8 +709,8 @@ function renderRasterLayersList(sortMode = 'date-desc') {
       </div>
       <div class="layer-opacity-row">
         <span>Opacity:</span>
-        <input type="range" class="raster-opacity-slider" data-layer="${cfg.id}" min="0" max="1" step="0.05" value="0.95" />
-        <span id="val_opacity_${cfg.id}">95%</span>
+        <input type="range" class="raster-opacity-slider" data-layer="${cfg.id}" min="0" max="1" step="0.05" value="${defOpacity}" />
+        <span id="val_opacity_${cfg.id}">${defOpacityPercent}%</span>
       </div>
     `;
 
@@ -751,7 +758,7 @@ function switchBaseMap(activeKey) {
   showToast(`Switched Base Map to ${state.baseLayers[activeKey].get("title")}`);
 }
 
-function switchActiveRasterScene(layerId) {
+function switchActiveRasterScene(layerId, showBanner = true) {
   state.activeRasterId = layerId;
   const cfg = SENTINEL_LAYERS_CONFIG.find(c => c.id === layerId);
 
@@ -759,6 +766,10 @@ function switchActiveRasterScene(layerId) {
   document.querySelectorAll(".raster-layer-card").forEach(c => c.classList.remove("active-scene"));
   const activeCard = document.getElementById(`card_${layerId}`);
   if (activeCard) activeCard.classList.add("active-scene");
+
+  // Synchronize radio button in the list
+  const radio = document.getElementById(`radio_${layerId}`);
+  if (radio) radio.checked = true;
 
   // Update header and mobile scene label
   if (cfg) {
@@ -768,14 +779,13 @@ function switchActiveRasterScene(layerId) {
     if (mobileTag) mobileTag.textContent = `${cfg.shortName} ⭐`;
   }
 
-  // Update layer visibility if not in swipe mode
-  if (!state.isSwipeActive) {
-    Object.keys(state.rasterLayers).forEach(id => {
-      state.rasterLayers[id].setVisible(id === layerId);
-    });
-  }
+  // Update layer visibility: activate selected layer, hide others
+  Object.keys(state.rasterLayers).forEach(id => {
+    state.rasterLayers[id].setVisible(id === layerId);
+  });
 
-  showToast(`Active COG Scene: ${cfg ? cfg.name : layerId}`);
+  // Update on-map and sidebar date stepper controls & display top notification banner
+  updateDateStepperUI(layerId, showBanner);
 }
 
 function fitToPartBExtent() {
@@ -897,126 +907,167 @@ function applyRasterFilters() {
 }
 
 // ---------------------------------------------------------------------------
-// 9. SPLIT-SCREEN MULTI-DATE SWIPE COMPARISON
+// 9. MULTI-DATE TIMELINE STEPPER COMPARISON (UP/DOWN ARROWS & KEYBOARD)
 // ---------------------------------------------------------------------------
 
-function setupSwipeFeature() {
-  const btnToggleSwipe = document.getElementById("btnToggleSwipe");
-  const btnActivateSwipe = document.getElementById("btnActivateSwipe");
-  const swipeDivider = document.getElementById("swipeDivider");
-  const mapViewport = document.getElementById("mapViewport");
+let dateBannerTimeout = null;
 
-  function toggleSwipeMode() {
-    state.isSwipeActive = !state.isSwipeActive;
-    btnToggleSwipe.classList.toggle("active", state.isSwipeActive);
+/**
+ * Returns Sentinel-2 scenes sorted chronologically (Newest first: Index 0 = Latest).
+ */
+function getChronologicalScenes() {
+  return [...SENTINEL_LAYERS_CONFIG].sort((a, b) => {
+    const timeA = new Date(a.date).getTime() || 0;
+    const timeB = new Date(b.date).getTime() || 0;
+    return timeB - timeA; // Descending: newest first
+  });
+}
 
-    if (state.isSwipeActive) {
-      swipeDivider.style.display = "block";
-      updateSwipeLayers();
-      showToast("Swipe comparison mode enabled. Drag the center slider!");
-    } else {
-      swipeDivider.style.display = "none";
-      // Restore normal layer visibility
-      switchActiveRasterScene(state.activeRasterId);
-      // Remove any clipping
-      const rightLayer = state.rasterLayers[state.swipeSecondaryRasterId];
-      if (rightLayer) {
-        const el = rightLayer.getElement ? rightLayer.getElement() : null;
-        if (el) el.style.clipPath = "";
-      }
-      showToast("Swipe comparison mode disabled");
-    }
+/**
+ * Step through raster scenes chronologically:
+ * - "newer" / "up": Decreases index towards 0 (Newer date)
+ * - "older" / "down": Increases index towards length-1 (Older date)
+ */
+function stepRasterScene(direction = "newer") {
+  const scenes = getChronologicalScenes();
+  if (!scenes || scenes.length === 0) return;
+
+  const total = scenes.length;
+  let currIdx = scenes.findIndex(s => s.id === state.activeRasterId);
+  if (currIdx === -1) currIdx = 0;
+
+  let nextIdx;
+  if (direction === "newer" || direction === "up") {
+    // Newer date -> index decreases towards 0
+    nextIdx = currIdx - 1;
+    if (nextIdx < 0) nextIdx = total - 1; // Wrap around to oldest scene
+  } else {
+    // Older date -> index increases towards total-1
+    nextIdx = currIdx + 1;
+    if (nextIdx >= total) nextIdx = 0; // Wrap around to newest scene
   }
 
-  btnToggleSwipe.addEventListener("click", toggleSwipeMode);
-  btnActivateSwipe.addEventListener("click", () => {
-    if (!state.isSwipeActive) toggleSwipeMode();
-    else updateSwipeLayers();
-  });
+  const targetScene = scenes[nextIdx];
+  switchActiveRasterScene(targetScene.id, true);
+}
 
-  // Swipe selection change
-  document.getElementById("swipeLeftSelect").addEventListener("change", (e) => {
-    state.activeRasterId = e.target.value;
-    updateSwipeLayers();
-  });
+/**
+ * Shows the floating on-map date banner at the top of the canvas for a few seconds.
+ */
+function showMapDateBanner(cfg, currIdx, total) {
+  const banner = document.getElementById("mapDateBanner");
+  if (!banner || !cfg) return;
 
-  document.getElementById("swipeRightSelect").addEventListener("change", (e) => {
-    state.swipeSecondaryRasterId = e.target.value;
-    updateSwipeLayers();
-  });
+  const titleEl = document.getElementById("bannerDateTitle");
+  const subEl = document.getElementById("bannerDateSub");
 
-  // Draggable Divider Logic
-  let isDragging = false;
+  if (titleEl) {
+    titleEl.textContent = cfg.name;
+  }
+  if (subEl) {
+    const cleanTag = cfg.clean ? " ⭐ Clean" : "";
+    subEl.textContent = `Scene ${currIdx + 1} of ${total} • Date: ${cfg.date || "N/A"} • Cloud: ${cfg.cloud || "N/A"}${cleanTag} • Use ▲ / ▼ keys`;
+  }
 
-  swipeDivider.addEventListener("mousedown", (e) => {
-    isDragging = true;
-    document.body.style.cursor = "ew-resize";
-  });
+  // Pop in banner
+  banner.classList.add("visible");
 
-  window.addEventListener("mouseup", () => {
-    if (isDragging) {
-      isDragging = false;
-      document.body.style.cursor = "default";
+  // Auto-hide after configured duration (default: 3500ms)
+  const duration = (state.dateBannerDuration !== undefined ? state.dateBannerDuration : 3500);
+  if (dateBannerTimeout) clearTimeout(dateBannerTimeout);
+  dateBannerTimeout = setTimeout(() => {
+    banner.classList.remove("visible");
+  }, duration);
+}
+
+/**
+ * Synchronizes all on-map and sidebar date stepper UI elements.
+ */
+function updateDateStepperUI(layerId, showBanner = true) {
+  const scenes = getChronologicalScenes();
+  if (!scenes || scenes.length === 0) return;
+
+  const total = scenes.length;
+  let currIdx = scenes.findIndex(s => s.id === layerId);
+  if (currIdx === -1) currIdx = 0;
+  const cfg = scenes[currIdx];
+  if (!cfg) return;
+
+  // 1. Update on-map stepper display
+  const stepperDateText = document.getElementById("stepperDateText");
+  const stepperIdxText = document.getElementById("stepperIdxText");
+  if (stepperDateText) stepperDateText.textContent = cfg.date || cfg.shortName;
+  if (stepperIdxText) stepperIdxText.textContent = `${currIdx + 1} of ${total}`;
+
+  // 2. Update sidebar timeline comparison card
+  const sidebarTimelineBadge = document.getElementById("sidebarTimelineBadge");
+  const sidebarTimelineTitle = document.getElementById("sidebarTimelineTitle");
+  const sidebarTimelineMeta = document.getElementById("sidebarTimelineMeta");
+  if (sidebarTimelineBadge) sidebarTimelineBadge.textContent = `${currIdx + 1} / ${total}`;
+  if (sidebarTimelineTitle) sidebarTimelineTitle.textContent = cfg.name;
+  if (sidebarTimelineMeta) {
+    sidebarTimelineMeta.textContent = `Acquisition: ${cfg.date || "N/A"} • Cloud Cover: ${cfg.cloud || "N/A"}${cfg.clean ? " (Cleanest ⭐)" : ""}`;
+  }
+
+  // 3. Show top floating banner if requested
+  if (showBanner) {
+    showMapDateBanner(cfg, currIdx, total);
+  }
+}
+
+function setupDateStepperFeature() {
+  // On-Map Floating Stepper Buttons
+  const btnDateNewer = document.getElementById("btnDateNewer");
+  const btnDateOlder = document.getElementById("btnDateOlder");
+  if (btnDateNewer) btnDateNewer.addEventListener("click", () => stepRasterScene("newer"));
+  if (btnDateOlder) btnDateOlder.addEventListener("click", () => stepRasterScene("older"));
+
+  // Sidebar Stepper Buttons
+  const btnSidebarDateNewer = document.getElementById("btnSidebarDateNewer");
+  const btnSidebarDateOlder = document.getElementById("btnSidebarDateOlder");
+  if (btnSidebarDateNewer) btnSidebarDateNewer.addEventListener("click", () => stepRasterScene("newer"));
+  if (btnSidebarDateOlder) btnSidebarDateOlder.addEventListener("click", () => stepRasterScene("older"));
+
+  // Top Floating Tool Button (Cycle Date)
+  const btnNextDate = document.getElementById("btnNextDate");
+  if (btnNextDate) btnNextDate.addEventListener("click", () => stepRasterScene("older"));
+
+  // Close Banner Button & Click-to-Dismiss
+  const btnCloseDateBanner = document.getElementById("btnCloseDateBanner");
+  const mapDateBanner = document.getElementById("mapDateBanner");
+  if (btnCloseDateBanner) {
+    btnCloseDateBanner.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (mapDateBanner) mapDateBanner.classList.remove("visible");
+      if (dateBannerTimeout) clearTimeout(dateBannerTimeout);
+    });
+  }
+  if (mapDateBanner) {
+    mapDateBanner.addEventListener("click", () => {
+      mapDateBanner.classList.remove("visible");
+      if (dateBannerTimeout) clearTimeout(dateBannerTimeout);
+    });
+  }
+
+  // Global Keyboard Up/Down Arrow Key Navigation
+  window.addEventListener("keydown", (e) => {
+    // Avoid intercepting when user is typing in form inputs, textareas, selects
+    const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+    if (tag === "input" || tag === "textarea" || tag === "select") return;
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      stepRasterScene("newer");
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      stepRasterScene("older");
     }
   });
 
-  window.addEventListener("mousemove", (e) => {
-    if (!isDragging) return;
-    const rect = mapViewport.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const percent = Math.max(5, Math.min(95, (offsetX / rect.width) * 100));
-
-    state.swipePercent = percent;
-    swipeDivider.style.left = `${percent}%`;
-
-    applySwipeClipping();
-  });
-
-  // Touch support for mobile/tablets
-  swipeDivider.addEventListener("touchstart", () => { isDragging = true; });
-  window.addEventListener("touchend", () => { isDragging = false; });
-  window.addEventListener("touchmove", (e) => {
-    if (!isDragging || !e.touches[0]) return;
-    const rect = mapViewport.getBoundingClientRect();
-    const offsetX = e.touches[0].clientX - rect.left;
-    const percent = Math.max(5, Math.min(95, (offsetX / rect.width) * 100));
-    state.swipePercent = percent;
-    swipeDivider.style.left = `${percent}%`;
-    applySwipeClipping();
-  });
+  // Initial UI synchronization (without popping the banner on page load)
+  updateDateStepperUI(state.activeRasterId, false);
 }
 
-function updateSwipeLayers() {
-  const leftCfg = SENTINEL_LAYERS_CONFIG.find(c => c.id === state.activeRasterId);
-  const rightCfg = SENTINEL_LAYERS_CONFIG.find(c => c.id === state.swipeSecondaryRasterId);
-
-  document.getElementById("lblSwipeLeft").textContent = leftCfg ? leftCfg.shortName : "Left Layer";
-  document.getElementById("lblSwipeRight").textContent = rightCfg ? rightCfg.shortName : "Right Layer";
-
-  // Make both active
-  Object.keys(state.rasterLayers).forEach(id => {
-    const isVisible = (id === state.activeRasterId || id === state.swipeSecondaryRasterId);
-    state.rasterLayers[id].setVisible(isVisible);
-  });
-
-  applySwipeClipping();
-}
-
-function applySwipeClipping() {
-  // Use CSS clip-path on the right-hand layer element
-  const rightLayer = state.rasterLayers[state.swipeSecondaryRasterId];
-  if (!rightLayer) return;
-
-  const rightEl = rightLayer.getElement ? rightLayer.getElement() : null;
-  const pct = state.swipePercent;
-
-  if (rightEl) {
-    rightEl.style.clipPath = `polygon(${pct}% 0, 100% 0, 100% 100%, ${pct}% 100%)`;
-  }
-
-  // Also trigger OpenLayers render to keep canvas in sync
-  state.map.render();
-}
 
 // ---------------------------------------------------------------------------
 // 10. MEASUREMENT TOOL (DISTANCE & POLYGON AREA)

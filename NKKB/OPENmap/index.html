@@ -137,8 +137,8 @@
                   </div>
                   <div class="control-row">
                     <label>Fill Opacity:</label>
-                    <input type="range" id="kmlOpacity" min="0" max="1" step="0.05" value="0.25" />
-                    <span id="kmlOpacityVal">25%</span>
+                    <input type="range" id="kmlOpacity" min="0" max="1" step="0.05" value="0.15" />
+                    <span id="kmlOpacityVal">15%</span>
                   </div>
                 </div>
               </div>
@@ -226,27 +226,34 @@
               </div>
             </div>
 
-            <!-- Swipe Comparison Settings -->
+            <!-- Multi-Date Timeline Comparison (Step-by-Step Arrow Stepper) -->
             <div class="panel-section">
               <div class="section-header">
-                <h3><i class="fa-solid fa-clone"></i> Split-Screen Swipe Setup</h3>
+                <h3><i class="fa-solid fa-timeline"></i> Multi-Date Comparison</h3>
               </div>
-              <div class="swipe-config-box">
-                <div class="swipe-row">
-                  <label>Left Layer (Before):</label>
-                  <select id="swipeLeftSelect" class="form-select">
-                    <!-- Options populated via JS -->
-                  </select>
+              <div class="date-stepper-panel-box">
+                <div class="timeline-step-row">
+                  <button class="btn-step" id="btnSidebarDateNewer" title="Newer Satellite Date (Up Arrow Key)">
+                    <i class="fa-solid fa-chevron-up"></i> Newer Date (▲)
+                  </button>
+                  <button class="btn-step" id="btnSidebarDateOlder" title="Older Satellite Date (Down Arrow Key)">
+                    <i class="fa-solid fa-chevron-down"></i> Older Date (▼)
+                  </button>
                 </div>
-                <div class="swipe-row">
-                  <label>Right Layer (After):</label>
-                  <select id="swipeRightSelect" class="form-select">
-                    <!-- Options populated via JS -->
-                  </select>
+                <div class="timeline-scene-card" id="timelineActiveCard">
+                  <div class="timeline-card-header">
+                    <span class="active-tag"><i class="fa-solid fa-satellite"></i> Active Scene</span>
+                    <span class="timeline-step-badge" id="sidebarTimelineBadge">1 / 6</span>
+                  </div>
+                  <div class="timeline-card-body">
+                    <strong id="sidebarTimelineTitle">Loading active scene...</strong>
+                    <div class="timeline-meta" id="sidebarTimelineMeta">Acquisition Date: --</div>
+                  </div>
                 </div>
-                <button class="btn-primary-block" id="btnActivateSwipe">
-                  <i class="fa-solid fa-arrows-left-right"></i> Launch Multi-Date Swipe
-                </button>
+                <div class="keyboard-hint-box">
+                  <i class="fa-regular fa-keyboard"></i>
+                  <span>Tip: Press <kbd>▲</kbd> / <kbd>▼</kbd> arrow keys on your keyboard anywhere on the map to switch dates</span>
+                </div>
               </div>
             </div>
           </div>
@@ -343,13 +350,29 @@
         <!-- The OpenLayers Map Canvas -->
         <div id="map" class="ol-map"></div>
 
-        <!-- Split Screen Curtain Divider (Visible during Swipe mode) -->
-        <div id="swipeDivider" class="swipe-divider" style="display: none;">
-          <div class="swipe-handle">
-            <i class="fa-solid fa-arrows-left-right"></i>
+        <!-- Floating On-Map Date Banner (Displays for a few seconds on date change) -->
+        <div id="mapDateBanner" class="map-date-banner" title="Click to dismiss">
+          <div class="banner-badge"><i class="fa-solid fa-satellite"></i> Sentinel-2</div>
+          <div class="banner-info">
+            <span class="banner-title" id="bannerDateTitle">Loading scene date...</span>
+            <span class="banner-sub" id="bannerDateSub">Scene 1 of 6 • Use ▲ / ▼ arrow keys</span>
           </div>
-          <div class="swipe-label-left" id="lblSwipeLeft">Oct 15 (Cleanest)</div>
-          <div class="swipe-label-right" id="lblSwipeRight">Sep 15 (Baseline)</div>
+          <button class="banner-close" id="btnCloseDateBanner" title="Close Notification"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Floating On-Map Date Stepper Controls (Up/Down Buttons on Map) -->
+        <div class="map-date-stepper-widget" id="mapDateStepper">
+          <button class="map-stepper-btn" id="btnDateNewer" title="Newer Satellite Date (Up Arrow Key)">
+            <i class="fa-solid fa-chevron-up"></i>
+          </button>
+          <div class="map-stepper-display" id="mapStepperDisplay" title="Current satellite date (Use Up/Down arrows to compare)">
+            <span class="stepper-label-tag"><i class="fa-solid fa-satellite"></i> DATE</span>
+            <span class="stepper-date-text" id="stepperDateText">2026-10-20</span>
+            <span class="stepper-idx-text" id="stepperIdxText">1 / 6</span>
+          </div>
+          <button class="map-stepper-btn" id="btnDateOlder" title="Older Satellite Date (Down Arrow Key)">
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
         </div>
 
         <!-- Floating Map Tools (Top Right) -->
@@ -358,8 +381,8 @@
               class="fa-solid fa-crosshairs"></i></button>
           <button class="map-tool-btn" id="btnMeasure" title="Measure Distance & Area"><i
               class="fa-solid fa-ruler-combined"></i></button>
-          <button class="map-tool-btn" id="btnToggleSwipe" title="Toggle Split-Screen Swipe"><i
-              class="fa-solid fa-arrows-split-up-and-left"></i></button>
+          <button class="map-tool-btn" id="btnNextDate" title="Cycle Next Date Scene (Down Arrow Key)"><i
+              class="fa-solid fa-clock-rotate-left"></i></button>
           <div class="map-tool-sep"></div>
           <button class="map-tool-btn" id="btnZoomIn" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
           <button class="map-tool-btn" id="btnZoomOut" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>

@@ -161,10 +161,26 @@ By default, `state.activeRasterId` is set to `"latest"`:
 const state = {
   ...
   activeRasterId: "latest", // <-- Automatically selects the newest acquisition by date!
+  defaultRasterOpacity: 1.0, // <-- Default opacity/visibility (1.0 = 100% full opacity)
   ...
 };
 ```
 When set to `"latest"`, the engine compares the dates of all available Sentinel-2 scenes and activates the newest one automatically. The scene badges in the sidebar and mobile header update dynamically without manual changes!
+
+### Default Raster Opacity / Visibility:
+By default, `state.defaultRasterOpacity` is set to `1.0` (100% visibility).
+- `1.0` : 100% (Solid, fully opaque)
+- `0.95`: 95%
+- `0.80`: 80% (Subtle basemap bleed-through)
+
+Changing `defaultRasterOpacity` in `state` automatically adjusts both the WebGL raster layers and the sidebar opacity range sliders + percentage labels.
+
+### Multi-Date Comparison & Arrow Key Stepper:
+To compare satellite imagery over time without relying on a split-screen slider:
+- **On-Map Floating Stepper**: Click the **▲ (Newer Date)** or **▼ (Older Date)** chevron buttons directly on the map.
+- **Keyboard Navigation**: Press <kbd>▲ ArrowUp</kbd> (Newer) or <kbd>▼ ArrowDown</kbd> (Older) anywhere on the map to instantly cycle dates.
+- **Notification Banner**: Whenever a date changes, an animated banner pops down from the top of the map for 3.5 seconds with the date, cloud cover, and scene index.
+- Configure duration via `state.dateBannerDuration: 3500` (in milliseconds).
 
 ### To Pin a Specific Scene Instead:
 If you prefer to lock the map to a fixed scene (e.g. October 15 cleanest), simply provide its ID:
