@@ -240,6 +240,7 @@ function initWebGisMap() {
   setupSwipeFeature();
   setupMeasureTool();
   setupDragAndDrop();
+  setupMobileAndAdaptiveView();
   loadAndParseQgsProject();
   populatePitAnalyticsTable();
 
@@ -455,9 +456,13 @@ function setupSidebarUI() {
   document.getElementById("btnDownloadGeoJSON").addEventListener("click", exportGeoJson);
 
   // Close Legend
-  document.getElementById("btnCloseLegend").addEventListener("click", () => {
-    document.getElementById("mapLegend").style.display = "none";
-  });
+  const btnCloseLegend = document.getElementById("btnCloseLegend");
+  if (btnCloseLegend) {
+    btnCloseLegend.addEventListener("click", () => {
+      const mapLegend = document.getElementById("mapLegend");
+      if (mapLegend) mapLegend.style.display = "none";
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -652,9 +657,12 @@ function switchActiveRasterScene(layerId) {
   const activeCard = document.getElementById(`card_${layerId}`);
   if (activeCard) activeCard.classList.add("active-scene");
 
-  // Update header scene label
+  // Update header and mobile scene label
   if (cfg) {
-    document.getElementById("currentSceneName").textContent = cfg.name;
+    const sceneNameEl = document.getElementById("currentSceneName");
+    if (sceneNameEl) sceneNameEl.textContent = cfg.name;
+    const mobileTag = document.getElementById("mobileSceneTag");
+    if (mobileTag) mobileTag.textContent = `${cfg.shortName} ⭐`;
   }
 
   // Update layer visibility if not in swipe mode
@@ -1340,7 +1348,216 @@ function showToast(message) {
 }
 
 // ---------------------------------------------------------------------------
-// 17. BOOTSTRAP ON DOM LOAD
+// 17. ADAPTIVE VIEW MODE (MOBILE / DESKTOP / AUTO) & MOBILE DRAWER INTERACTIONS
+// ---------------------------------------------------------------------------
+
+function setupMobileAndAdaptiveView() {
+  const appContainer = document.getElementById("app-container");
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  const btnDrawerOpen = document.getElementById("btnMobileDrawerOpen");
+  const btnDrawerClose = document.getElementById("btnCloseSidebar");
+  const mobileNavBtns = document.querySelectorAll(".mobile-nav-btn");
+
+  // Read saved preference or default to 'auto'
+  state.viewMode = localStorage.getItem("qgis_openmap_viewmode") || "auto";
+
+  function isDeviceMobile() {
+    return window.innerWidth <= 850 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+
+  function updateViewModeUI() {
+    const effectiveMobile = state.viewMode === "mobile" || (state.viewMode === "auto" && isDeviceMobile());
+
+    // Update container classes
+    if (state.viewMode === "desktop") {
+      appContainer.classList.add("is-desktop");
+      appContainer.classList.remove("is-mobile");
+    } else if (state.viewMode === "mobile") {
+      appContainer.classList.add("is-mobile");
+      appContainer.classList.remove("is-desktop");
+    } else {
+      // Auto mode: remove manual overrides so CSS media query triggers automatically
+      appContainer.classList.remove("is-desktop");
+      appContainer.classList.remove("is-mobile");
+    }
+
+    // Update status bar label & icon
+    const statusLabel = document.getElementById("statusModeLabel");
+    const statusIcon = document.getElementById("statusModeIcon");
+    if (statusLabel && statusIcon) {
+      if (state.viewMode === "auto") {
+        statusLabel.textContent = effectiveMobile ? "View: Auto (Mobile)" : "View: Auto (Desktop)";
+        statusIcon.className = "fa-solid fa-wand-magic-sparkles";
+      } else if (state.viewMode === "mobile") {
+        statusLabel.textContent = "View: Mobile (Manual)";
+        statusIcon.className = "fa-solid fa-mobile-screen";
+      } else {
+        statusLabel.textContent = "View: Desktop (Manual)";
+        statusIcon.className = "fa-solid fa-desktop";
+      }
+    }
+
+    // Update mobile topbar toggle button
+    const mobileModeText = document.getElementById("mobileModeText");
+    const mobileModeIcon = document.getElementById("mobileModeIcon");
+    if (mobileModeText && mobileModeIcon) {
+      if (effectiveMobile) {
+        mobileModeText.textContent = state.viewMode === "mobile" ? "Desktop" : (isDeviceMobile() ? "Desktop" : "Auto");
+        mobileModeIcon.className = "fa-solid fa-desktop";
+      } else {
+        mobileModeText.textContent = "Mobile";
+        mobileModeIcon.className = "fa-solid fa-mobile-screen";
+      }
+    }
+
+    // Update mobile bottom nav mode button
+    const mobileBottomModeText = document.getElementById("mobileBottomModeText");
+    const mobileBottomModeIcon = document.getElementById("mobileBottomModeIcon");
+    if (mobileBottomModeText && mobileBottomModeIcon) {
+      if (state.viewMode === "mobile") {
+        mobileBottomModeText.textContent = "Desktop";
+        mobileBottomModeIcon.className = "fa-solid fa-desktop";
+      } else if (state.viewMode === "desktop") {
+        mobileBottomModeText.textContent = "Mobile";
+        mobileBottomModeIcon.className = "fa-solid fa-mobile-screen";
+      } else {
+        mobileBottomModeText.textContent = "Desktop";
+        mobileBottomModeIcon.className = "fa-solid fa-desktop";
+      }
+    }
+
+    // Re-evaluate map layout to prevent clipping or blank areas
+    setTimeout(() => {
+      if (state.map) state.map.updateSize();
+    }, 120);
+  }
+
+  function cycleViewMode() {
+    if (state.viewMode === "auto") {
+      state.viewMode = isDeviceMobile() ? "desktop" : "mobile";
+    } else if (state.viewMode === "mobile") {
+      state.viewMode = "desktop";
+    } else if (state.viewMode === "desktop") {
+      state.viewMode = "auto";
+    } else {
+      state.viewMode = "auto";
+    }
+
+    localStorage.setItem("qgis_openmap_viewmode", state.viewMode);
+    updateViewModeUI();
+
+    if (state.viewMode === "mobile") {
+      showToast("Switched to Touch-Friendly Mobile Version 📱");
+    } else if (state.viewMode === "desktop") {
+      showToast("Switched to Full Desktop Workspace 💻");
+    } else {
+      showToast("View mode set to Auto (Adapts dynamically to window size) ⚡");
+    }
+  }
+
+  // Toggle button event listeners
+  const btnStatusModeToggle = document.getElementById("btnStatusModeToggle");
+  if (btnStatusModeToggle) {
+    btnStatusModeToggle.addEventListener("click", cycleViewMode);
+  }
+
+  const btnMobileModeSwitch = document.getElementById("btnMobileModeSwitch");
+  if (btnMobileModeSwitch) {
+    btnMobileModeSwitch.addEventListener("click", () => {
+      if (state.viewMode === "desktop") {
+        state.viewMode = "auto";
+      } else {
+        state.viewMode = "desktop";
+      }
+      localStorage.setItem("qgis_openmap_viewmode", state.viewMode);
+      updateViewModeUI();
+      showToast(state.viewMode === "desktop" ? "Desktop view enabled 💻" : "Auto view mode restored ⚡");
+    });
+  }
+
+  const btnMobileBottomNavMode = document.getElementById("btnMobileBottomNavMode");
+  if (btnMobileBottomNavMode) {
+    btnMobileBottomNavMode.addEventListener("click", cycleViewMode);
+  }
+
+  // Responsive window resize watcher
+  window.addEventListener("resize", () => {
+    if (state.viewMode === "auto") {
+      updateViewModeUI();
+    } else {
+      if (state.map) state.map.updateSize();
+    }
+  });
+
+  // Mobile Drawer Controls
+  function openMobileDrawer(targetTabId) {
+    if (sidebar) sidebar.classList.add("open");
+    if (backdrop) backdrop.classList.add("active");
+
+    if (targetTabId) {
+      const tabBtns = document.querySelectorAll(".tab-btn");
+      const tabPanes = document.querySelectorAll(".tab-pane");
+      tabBtns.forEach(b => b.classList.toggle("active", b.getAttribute("data-tab") === targetTabId));
+      tabPanes.forEach(p => p.classList.toggle("active", p.id === targetTabId));
+    }
+  }
+
+  function closeMobileDrawer() {
+    if (sidebar) sidebar.classList.remove("open");
+    if (backdrop) backdrop.classList.remove("active");
+
+    // Reset bottom nav active button to 'map'
+    mobileNavBtns.forEach(btn => {
+      btn.classList.toggle("active", btn.getAttribute("data-action") === "map");
+    });
+
+    setTimeout(() => {
+      if (state.map) state.map.updateSize();
+    }, 200);
+  }
+
+  if (btnDrawerOpen) {
+    btnDrawerOpen.addEventListener("click", () => {
+      if (sidebar && sidebar.classList.contains("open")) {
+        closeMobileDrawer();
+      } else {
+        openMobileDrawer();
+      }
+    });
+  }
+
+  if (btnDrawerClose) {
+    btnDrawerClose.addEventListener("click", closeMobileDrawer);
+  }
+
+  if (backdrop) {
+    backdrop.addEventListener("click", closeMobileDrawer);
+  }
+
+  // Mobile Bottom Navigation Buttons
+  mobileNavBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const action = btn.getAttribute("data-action");
+      if (action === "mode-toggle") return; // Handled separately
+
+      mobileNavBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      if (action === "map") {
+        closeMobileDrawer();
+      } else if (action && action.startsWith("tab-")) {
+        openMobileDrawer(action);
+      }
+    });
+  });
+
+  // Initial call
+  updateViewModeUI();
+}
+
+// ---------------------------------------------------------------------------
+// 18. BOOTSTRAP ON DOM LOAD
 // ---------------------------------------------------------------------------
 
 document.addEventListener("DOMContentLoaded", () => {

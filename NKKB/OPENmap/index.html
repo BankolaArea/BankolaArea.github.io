@@ -1,31 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Part B.qgs • Client-Side QGIS WebGIS & Raster Viewer</title>
-  
+
   <!-- Modern Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  
+
   <!-- OpenLayers v10 CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.4.0/ol.css" />
-  
+
   <!-- Custom Modern GIS UI Styles -->
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <div id="app-container">
     <input type="file" id="qgsFileInput" accept=".qgs,.qgz,.kml,.geojson,.json" style="display:none;" />
 
+    <!-- Mobile Top Floating Bar (Active in Mobile Mode) -->
+    <header class="mobile-topbar" id="mobileTopBar">
+      <div class="mobile-top-left">
+        <button class="mobile-icon-btn" id="btnMobileDrawerOpen" title="Open Layers & Tools">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="mobile-brand-box">
+          <span class="mobile-brand-title"><i class="fa-solid fa-earth-americas"></i> Part B.qgs</span>
+          <span class="mobile-scene-tag" id="mobileSceneTag">Oct 15 (Cleanest) ⭐</span>
+        </div>
+      </div>
+      <div class="mobile-top-right">
+        <button class="btn-mode-pill" id="btnMobileModeSwitch" title="Switch between Mobile and Desktop version">
+          <i class="fa-solid fa-desktop" id="mobileModeIcon"></i>
+          <span id="mobileModeText">Desktop</span>
+        </button>
+      </div>
+    </header>
+
     <!-- Main Workspace -->
     <main class="main-content">
-      <!-- Left Sidebar Panel -->
+      <!-- Left Sidebar Panel (Becomes slide-over drawer on mobile) -->
       <aside class="sidebar" id="sidebar">
         <!-- Sidebar Brand Header -->
         <div class="sidebar-brand">
@@ -36,6 +59,10 @@
               <span class="brand-sub" id="currentSceneName">S2 [2026-10-15] Cleanest ⭐</span>
             </div>
           </div>
+          <!-- Mobile Drawer Close Button -->
+          <button class="btn-close-sidebar" id="btnCloseSidebar" title="Close Panel">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
 
         <!-- Sidebar Navigation Tabs -->
@@ -66,14 +93,16 @@
               <div class="section-header">
                 <h3><i class="fa-solid fa-satellite-dish"></i> Sentinel-2 COG Rasters</h3>
                 <div class="sort-badge-wrap">
-                  <button class="btn-sort-date" id="btnToggleDateSort" title="Strictly sorted by acquisition date (click to toggle Newest/Oldest)">
+                  <button class="btn-sort-date" id="btnToggleDateSort"
+                    title="Strictly sorted by acquisition date (click to toggle Newest/Oldest)">
                     <i class="fa-solid fa-arrow-down-short-wide" id="sortDateIcon"></i>
                     <span id="sortDateLabel">Date: Newest First</span>
                   </button>
                   <span class="badge-count" id="s2LayerCount">5 scenes</span>
                 </div>
               </div>
-              <p class="section-desc">Client-side WebGL byte-range streaming directly from AWS S3 Sentinel-2 L2A Cloud-Optimized GeoTIFFs.</p>
+              <p class="section-desc">Client-side WebGL byte-range streaming directly from AWS S3 Sentinel-2 L2A
+                Cloud-Optimized GeoTIFFs.</p>
 
               <!-- Raster Layer List -->
               <div class="raster-layers-list" id="rasterLayerList">
@@ -228,7 +257,7 @@
               <div class="section-header">
                 <h3><i class="fa-solid fa-mountain-sun"></i> Part B OCP Lease Data</h3>
               </div>
-              
+
               <div class="metric-grid">
                 <div class="metric-card">
                   <span class="metric-val" id="valPitArea">118.42</span>
@@ -257,7 +286,11 @@
                 <div class="coords-table-wrap">
                   <table class="coords-table" id="coordsTable">
                     <thead>
-                      <tr><th>#</th><th>Longitude (°E)</th><th>Latitude (°N)</th></tr>
+                      <tr>
+                        <th>#</th>
+                        <th>Longitude (°E)</th>
+                        <th>Latitude (°N)</th>
+                      </tr>
                     </thead>
                     <tbody id="coordsTableBody">
                       <!-- Filled by JS -->
@@ -285,8 +318,10 @@
               </div>
               <div class="qgs-meta-card" id="qgsMetaCard">
                 <div class="meta-row"><strong>File:</strong> <code>Part B.qgs</code></div>
-                <div class="meta-row"><strong>QGIS Version:</strong> <span id="qgisVersion">3.44.15-Solothurn</span></div>
-                <div class="meta-row"><strong>Saved By:</strong> <span id="qgisUser">Arpan Halder (Administrator)</span></div>
+                <div class="meta-row"><strong>QGIS Version:</strong> <span id="qgisVersion">3.44.15-Solothurn</span>
+                </div>
+                <div class="meta-row"><strong>Saved By:</strong> <span id="qgisUser">Arpan Halder (Administrator)</span>
+                </div>
                 <div class="meta-row"><strong>Timestamp:</strong> <span id="qgisDate">2026-10-24 13:40:42</span></div>
                 <div class="meta-row"><strong>Project CRS:</strong> <code>EPSG:4326 (WGS 84)</code></div>
               </div>
@@ -299,6 +334,9 @@
           </div>
         </div>
       </aside>
+
+      <!-- Backdrop for mobile drawer -->
+      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
       <!-- Map Viewport -->
       <div class="map-viewport" id="mapViewport">
@@ -316,20 +354,25 @@
 
         <!-- Floating Map Tools (Top Right) -->
         <div class="map-floating-tools">
-          <button class="map-tool-btn" id="btnFitExtent" title="Zoom to Part B Extent"><i class="fa-solid fa-crosshairs"></i></button>
-          <button class="map-tool-btn" id="btnMeasure" title="Measure Distance & Area"><i class="fa-solid fa-ruler-combined"></i></button>
-          <button class="map-tool-btn" id="btnToggleSwipe" title="Toggle Split-Screen Swipe"><i class="fa-solid fa-arrows-split-up-and-left"></i></button>
+          <button class="map-tool-btn" id="btnFitExtent" title="Zoom to Part B Extent"><i
+              class="fa-solid fa-crosshairs"></i></button>
+          <button class="map-tool-btn" id="btnMeasure" title="Measure Distance & Area"><i
+              class="fa-solid fa-ruler-combined"></i></button>
+          <button class="map-tool-btn" id="btnToggleSwipe" title="Toggle Split-Screen Swipe"><i
+              class="fa-solid fa-arrows-split-up-and-left"></i></button>
           <div class="map-tool-sep"></div>
           <button class="map-tool-btn" id="btnZoomIn" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
           <button class="map-tool-btn" id="btnZoomOut" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
-          <button class="map-tool-btn" id="btnResetNorth" title="Reset North"><i class="fa-solid fa-compass"></i></button>
-          <button class="map-tool-btn" id="btnToggleFullscreen" title="Toggle Fullscreen"><i class="fa-solid fa-expand"></i></button>
+          <button class="map-tool-btn" id="btnResetNorth" title="Reset North"><i
+              class="fa-solid fa-compass"></i></button>
+          <button class="map-tool-btn" id="btnToggleFullscreen" title="Toggle Fullscreen"><i
+              class="fa-solid fa-expand"></i></button>
         </div>
 
         <!-- Measurement Prompt / Tooltip Overlay -->
         <div id="measureTooltip" class="measure-tooltip" style="display:none;"></div>
 
-        <!-- Map Legend Floating Card -->
+        <!--         <!-- Map Legend Floating Card -->
         <div class="map-legend-widget" id="mapLegend">
           <div class="legend-header">
             <span><i class="fa-solid fa-list-check"></i> Active Layer Legend</span>
@@ -341,7 +384,8 @@
               <span>Part B OCP Mining Boundary</span>
             </div>
             <div class="legend-entry">
-              <span class="legend-color-box" style="background: linear-gradient(45deg, #10b981, #0284c7, #f59e0b);"></span>
+              <span class="legend-color-box"
+                style="background: linear-gradient(45deg, #10b981, #0284c7, #f59e0b);"></span>
               <span>Sentinel-2 True Color (TCI)</span>
             </div>
             <div class="legend-entry">
@@ -349,7 +393,7 @@
               <span>Heavy Traffic Overlay</span>
             </div>
           </div>
-        </div>
+        </div> -->
 
         <!-- Drop Overlay (when dragging a file onto map) -->
         <div id="dropZoneOverlay" class="drop-zone-overlay" style="display:none;">
@@ -365,12 +409,39 @@
       </div>
     </main>
 
+    <!-- Mobile Bottom Navigation Bar (Visible in Mobile Mode) -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+      <button class="mobile-nav-btn active" data-action="map" title="Full Map View">
+        <i class="fa-solid fa-map-location-dot"></i>
+        <span>Map</span>
+      </button>
+      <button class="mobile-nav-btn" data-action="tab-layers" title="Manage Layers">
+        <i class="fa-solid fa-layer-group"></i>
+        <span>Layers</span>
+      </button>
+      <button class="mobile-nav-btn" data-action="tab-raster-fx" title="Image Filters">
+        <i class="fa-solid fa-sliders"></i>
+        <span>Filters</span>
+      </button>
+      <button class="mobile-nav-btn" data-action="tab-pit-info" title="Mining Pit Analytics">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Pit Data</span>
+      </button>
+      <button class="mobile-nav-btn" id="btnMobileBottomNavMode" data-action="mode-toggle"
+        title="Switch between Mobile and Desktop version">
+        <i class="fa-solid fa-desktop" id="mobileBottomModeIcon"></i>
+        <span id="mobileBottomModeText">Desktop</span>
+      </button>
+    </nav>
+
     <!-- Bottom Status Bar -->
     <footer class="app-statusbar">
       <div class="status-left">
-        <span class="status-item"><i class="fa-solid fa-microchip"></i> Engine: <strong class="glow-text">Client-Side WebAssembly & WebGL</strong></span>
+        <span class="status-item"><i class="fa-solid fa-microchip"></i> Engine: <strong class="glow-text">Client-Side
+            WebAssembly & WebGL</strong></span>
         <span class="status-sep">|</span>
-        <span class="status-item"><i class="fa-solid fa-cloud"></i> COG Source: <strong>AWS S3 Sentinel-2 (TCI)</strong></span>
+        <span class="status-item"><i class="fa-solid fa-cloud"></i> COG Source: <strong>AWS S3 Sentinel-2
+            (TCI)</strong></span>
       </div>
       <div class="status-center">
         <span class="status-item" id="mouseCoords">Lat: 23.6885° N | Lon: 87.2862° E</span>
@@ -380,7 +451,11 @@
       <div class="status-right">
         <span class="status-item" id="zoomLevel">Zoom: 14.5</span>
         <span class="status-sep">|</span>
-        <span class="status-item"><i class="fa-solid fa-bolt"></i> Zero Server Latency</span>
+        <!-- Manual View Mode Switcher -->
+        <button class="status-mode-btn" id="btnStatusModeToggle" title="Toggle Auto, Mobile, or Desktop view mode">
+          <i class="fa-solid fa-mobile-screen" id="statusModeIcon"></i>
+          <span id="statusModeLabel">View: Auto</span>
+        </button>
       </div>
     </footer>
   </div>
@@ -388,15 +463,16 @@
   <!-- Third-party GIS Libraries (Direct WebAssembly/WebGL Client-Side Stack) -->
   <!-- Proj4js for Coordinate System Reprojection (WGS84, Pseudo-Mercator, UTM Zone 45N) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.15.0/proj4.js"></script>
-  
+
   <!-- geotiff.js for Cloud-Optimized GeoTIFF byte-range decoding -->
   <script src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
   <script>if (typeof GeoTIFF !== 'undefined') { window.GeoTIFF = GeoTIFF; globalThis.GeoTIFF = GeoTIFF; }</script>
-  
+
   <!-- OpenLayers v10 -->
   <script src="https://cdn.jsdelivr.net/npm/ol@v10.4.0/dist/ol.js"></script>
 
   <!-- Application Logic -->
   <script src="app.js"></script>
 </body>
+
 </html>

@@ -1335,3 +1335,354 @@ input[type="range"]::-webkit-slider-thumb:hover {
   color: var(--accent-blue) !important;
   text-decoration: none !important;
 }
+
+/* ==========================================================================
+   MOBILE WEBGIS & ADAPTIVE VIEW MODE STYLES
+   Supports Automatic Device Detection & Manual Desktop/Mobile Switching
+   ========================================================================== */
+
+/* Elements hidden by default in standard Desktop mode */
+.mobile-topbar,
+.mobile-bottom-nav,
+.btn-close-sidebar,
+.sidebar-backdrop {
+  display: none;
+}
+
+/* Status Bar View Mode Toggle Button */
+.status-mode-btn {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: var(--accent-blue);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.status-mode-btn:hover {
+  background: rgba(56, 189, 248, 0.25);
+  color: #fff;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 8px var(--accent-blue-glow);
+}
+
+/* --------------------------------------------------------------------------
+   SHARED MOBILE LAYOUT DEFINITIONS
+   Applied when:
+   1. Explicitly forced via '#app-container.is-mobile'
+   2. OR Auto-detected via viewport <= 850px without '#app-container.is-desktop'
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 850px) {
+  #app-container:not(.is-desktop) .mobile-topbar {
+    display: flex;
+  }
+  #app-container:not(.is-desktop) .mobile-bottom-nav {
+    display: flex;
+  }
+  #app-container:not(.is-desktop) .btn-close-sidebar {
+    display: flex;
+  }
+  #app-container:not(.is-desktop) .sidebar-backdrop {
+    display: block;
+  }
+  #app-container:not(.is-desktop) .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(88vw, 360px);
+    height: 100vh;
+    z-index: 1300;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: none;
+  }
+  #app-container:not(.is-desktop) .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 8px 0 35px rgba(0, 0, 0, 0.85);
+  }
+  #app-container:not(.is-desktop) .map-viewport {
+    width: 100vw;
+    height: 100%;
+  }
+  #app-container:not(.is-desktop) .map-floating-tools {
+    top: 12px;
+    right: 12px;
+  }
+  #app-container:not(.is-desktop) .map-tool-btn {
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+  }
+  #app-container:not(.is-desktop) .map-legend-widget {
+    bottom: 60px;
+    right: 10px;
+    min-width: 180px;
+    max-width: 230px;
+    padding: 8px 12px;
+  }
+  #app-container:not(.is-desktop) .app-statusbar {
+    height: 26px;
+    font-size: 10px;
+    padding: 0 10px;
+  }
+  #app-container:not(.is-desktop) .status-left {
+    display: none;
+  }
+  #app-container:not(.is-desktop) .status-center {
+    font-size: 10px;
+  }
+}
+
+/* Forced Mobile Mode (Active even on wide screens when user chooses Mobile) */
+#app-container.is-mobile .mobile-topbar {
+  display: flex !important;
+}
+#app-container.is-mobile .mobile-bottom-nav {
+  display: flex !important;
+}
+#app-container.is-mobile .btn-close-sidebar {
+  display: flex !important;
+}
+#app-container.is-mobile .sidebar-backdrop {
+  display: block !important;
+}
+#app-container.is-mobile .sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: min(88vw, 360px) !important;
+  height: 100vh !important;
+  z-index: 1300 !important;
+  transform: translateX(-100%) !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: none !important;
+}
+#app-container.is-mobile .sidebar.open {
+  transform: translateX(0) !important;
+  box-shadow: 8px 0 35px rgba(0, 0, 0, 0.85) !important;
+}
+#app-container.is-mobile .map-viewport {
+  width: 100vw !important;
+  height: 100% !important;
+}
+#app-container.is-mobile .map-floating-tools {
+  top: 12px !important;
+  right: 12px !important;
+}
+#app-container.is-mobile .map-tool-btn {
+  width: 42px !important;
+  height: 42px !important;
+  font-size: 16px !important;
+}
+#app-container.is-mobile .map-legend-widget {
+  bottom: 60px !important;
+  right: 10px !important;
+  min-width: 180px !important;
+  max-width: 230px !important;
+  padding: 8px 12px !important;
+}
+#app-container.is-mobile .app-statusbar {
+  height: 26px !important;
+  font-size: 10px !important;
+  padding: 0 10px !important;
+}
+#app-container.is-mobile .status-left {
+  display: none !important;
+}
+
+/* Mobile Top Floating Bar Details */
+.mobile-topbar {
+  height: 48px;
+  background: rgba(16, 22, 34, 0.95);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-color);
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  z-index: 1050;
+  box-shadow: var(--shadow-md);
+  flex-shrink: 0;
+}
+
+.mobile-top-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.mobile-icon-btn:hover {
+  background: rgba(56, 189, 248, 0.2);
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+.mobile-brand-box {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.mobile-brand-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mobile-brand-title i {
+  color: var(--accent-cyan);
+}
+
+.mobile-scene-tag {
+  font-size: 10px;
+  color: var(--accent-cyan);
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-top-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-mode-pill {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: var(--accent-blue);
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.btn-mode-pill:hover {
+  background: rgba(56, 189, 248, 0.3);
+  color: #fff;
+  box-shadow: 0 0 10px var(--accent-blue-glow);
+}
+
+/* Mobile Drawer Close Button */
+.btn-close-sidebar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn-close-sidebar:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fff;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Sidebar Backdrop */
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.sidebar-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Mobile Bottom Navigation Bar */
+.mobile-bottom-nav {
+  height: 52px;
+  background: rgba(14, 18, 28, 0.98);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border-color);
+  align-items: center;
+  justify-content: space-around;
+  z-index: 1050;
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-nav-btn {
+  flex: 1;
+  height: 100%;
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-btn i {
+  font-size: 15px;
+}
+
+.mobile-nav-btn.active,
+.mobile-nav-btn:hover {
+  color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.08);
+}
+
+.mobile-nav-btn.active i {
+  transform: translateY(-1px);
+  filter: drop-shadow(0 0 6px var(--accent-cyan));
+}
+
