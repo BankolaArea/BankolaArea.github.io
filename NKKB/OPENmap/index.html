@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Part B.qgs • Client-Side QGIS WebGIS & Raster Viewer</title>
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  
+  <!-- OpenLayers v10 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.4.0/ol.css" />
+  
+  <!-- Custom Modern GIS UI Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app-container">
+    <!-- Header / Navbar -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="brand-logo">
+          <i class="fa-solid fa-earth-americas logo-icon"></i>
+          <div>
+            <h1 class="brand-title">Part B.qgs <span class="badge-qgis">QGIS WebClient</span></h1>
+            <p class="brand-sub">Client-Side WebGL Cloud-Optimized GeoTIFF & Vector Engine</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="active-scene-pill" id="activeScenePill">
+          <i class="fa-solid fa-satellite"></i>
+          <span class="scene-label">Active Scene:</span>
+          <span class="scene-name" id="currentSceneName">S2 [2026-10-15] Cleanest ⭐</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Quick Action Buttons -->
+        <button class="nav-btn" id="btnToggleSwipe" title="Toggle Split-Screen Swipe Comparison">
+          <i class="fa-solid fa-arrows-split-up-and-left"></i>
+          <span>Swipe Compare</span>
+        </button>
+        <button class="nav-btn" id="btnFitExtent" title="Zoom to Part B OCP Extent">
+          <i class="fa-solid fa-crosshairs"></i>
+          <span>Fit Extent</span>
+        </button>
+        <button class="nav-btn" id="btnMeasure" title="Measure Distance & Area">
+          <i class="fa-solid fa-ruler-combined"></i>
+          <span>Measure</span>
+        </button>
+        <button class="nav-btn" id="btnExportMap" title="Export High-Res Snapshot">
+          <i class="fa-solid fa-camera"></i>
+          <span>Export</span>
+        </button>
+        <button class="nav-btn nav-btn-primary" id="btnUploadQgs" title="Load / Drag another .qgs file">
+          <i class="fa-solid fa-folder-open"></i>
+          <span>Load Project</span>
+        </button>
+        <input type="file" id="qgsFileInput" accept=".qgs,.qgz,.kml,.geojson,.json" style="display:none;" />
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+      <!-- Left Sidebar Panel -->
+      <aside class="sidebar" id="sidebar">
+        <!-- Sidebar Navigation Tabs -->
+        <nav class="sidebar-tabs">
+          <button class="tab-btn active" data-tab="tab-layers" title="Project Layers">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Layers</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-raster-fx" title="Raster Processing & Analytics">
+            <i class="fa-solid fa-sliders"></i>
+            <span>Raster FX</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-pit-info" title="Part B OCP Mining Analytics">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Pit Analytics</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-qgis-xml" title="QGIS Project Tree">
+            <i class="fa-solid fa-code"></i>
+            <span>QGS Info</span>
+          </button>
+        </nav>
+
+        <!-- Sidebar Body / Tab Panes -->
+        <div class="sidebar-body">
+          <!-- TAB 1: LAYERS -->
+          <div class="tab-pane active" id="tab-layers">
+            <div class="panel-section">
+              <div class="section-header">
+                <h3><i class="fa-solid fa-satellite-dish"></i> Sentinel-2 COG Rasters</h3>
+                <div class="sort-badge-wrap">
+                  <button class="btn-sort-date" id="btnToggleDateSort" title="Strictly sorted by acquisition date (click to toggle Newest/Oldest)">
+                    <i class="fa-solid fa-arrow-down-short-wide" id="sortDateIcon"></i>
+                    <span id="sortDateLabel">Date: Newest First</span>
+                  </button>
+                  <span class="badge-count" id="s2LayerCount">5 scenes</span>
+                </div>
+              </div>
+              <p class="section-desc">Client-side WebGL byte-range streaming directly from AWS S3 Sentinel-2 L2A Cloud-Optimized GeoTIFFs.</p>
+
+              <!-- Raster Layer List -->
+              <div class="raster-layers-list" id="rasterLayerList">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Vector Boundaries Section -->
+            <div class="panel-section">
+              <div class="section-header">
+                <h3><i class="fa-solid fa-draw-polygon"></i> Vector Layers</h3>
+                <span class="badge-count">1 Boundary</span>
+              </div>
+              <div class="layer-item vector-layer-card" id="kmlLayerCard">
+                <div class="layer-item-header">
+                  <label class="switch">
+                    <input type="checkbox" id="chkKmlBoundary" checked />
+                    <span class="slider round"></span>
+                  </label>
+                  <div class="layer-info">
+                    <div class="layer-name-row">
+                      <span class="layer-name">Part-B-OCP Lease Boundary</span>
+                      <span class="badge-poly">Polygon</span>
+                    </div>
+                    <span class="layer-source">Part B OCP.kml (Raniganj Coalfield)</span>
+                  </div>
+                </div>
+                <div class="vector-controls">
+                  <div class="control-row">
+                    <label>Border Color:</label>
+                    <input type="color" id="kmlBorderColor" value="#ff9800" />
+                  </div>
+                  <div class="control-row">
+                    <label>Fill Opacity:</label>
+                    <input type="range" id="kmlOpacity" min="0" max="1" step="0.05" value="0.25" />
+                    <span id="kmlOpacityVal">25%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Base Maps Section -->
+            <div class="panel-section">
+              <div class="section-header">
+                <h3><i class="fa-solid fa-map"></i> Base Map</h3>
+              </div>
+              <div class="basemap-grid">
+                <button class="basemap-btn active" data-base="google-earth">
+                  <div class="base-preview base-google-earth"></div>
+                  <span>Google Earth</span>
+                </button>
+                <button class="basemap-btn" data-base="google-traffic">
+                  <div class="base-preview base-google-traffic"></div>
+                  <span>Google Traffic</span>
+                </button>
+                <button class="basemap-btn" data-base="esri-sat">
+                  <div class="base-preview base-esri"></div>
+                  <span>Esri Satellite</span>
+                </button>
+                <button class="basemap-btn" data-base="carto-dark">
+                  <div class="base-preview base-dark"></div>
+                  <span>Carto Dark</span>
+                </button>
+                <button class="basemap-btn" data-base="osm">
+                  <div class="base-preview base-osm"></div>
+                  <span>OpenStreetMap</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: RASTER PROCESSING -->
+          <div class="tab-pane" id="tab-raster-fx">
+            <div class="panel-section">
+              <div class="section-header">
+                <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Real-Time GPU Filters</h3>
+                <button class="btn-text-sm" id="btnResetFilters">Reset</button>
+              </div>
+              <p class="section-desc">Client-side dynamic image enhancement applied on WebGL canvas.</p>
+
+              <div class="filter-slider-group">
+                <div class="slider-header">
+                  <span>Brightness</span>
+                  <span id="lblBrightness">100%</span>
+                </div>
+                <input type="range" id="rngBrightness" min="30" max="250" value="100" />
+              </div>
+
+              <div class="filter-slider-group">
+                <div class="slider-header">
+                  <span>Contrast</span>
+                  <span id="lblContrast">115%</span>
+                </div>
+                <input type="range" id="rngContrast" min="50" max="250" value="115" />
+              </div>
+
+              <div class="filter-slider-group">
+                <div class="slider-header">
+                  <span>Saturation</span>
+                  <span id="lblSaturation">120%</span>
+                </div>
+                <input type="range" id="rngSaturation" min="0" max="300" value="120" />
+              </div>
+
+              <div class="filter-slider-group">
+                <div class="slider-header">
+                  <span>Exposure / Gamma</span>
+                  <span id="lblGamma">1.0x</span>
+                </div>
+                <input type="range" id="rngGamma" min="50" max="200" value="100" />
+              </div>
+
+              <div class="filter-presets">
+                <label class="preset-label">Enhancement Presets:</label>
+                <div class="preset-buttons">
+                  <button class="btn-preset active" data-preset="natural">Natural True Color</button>
+                  <button class="btn-preset" data-preset="high-contrast">High Contrast Mine Pit</button>
+                  <button class="btn-preset" data-preset="vegetation">Vegetation Boost</button>
+                  <button class="btn-preset" data-preset="grayscale">Structural Mono</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Swipe Comparison Settings -->
+            <div class="panel-section">
+              <div class="section-header">
+                <h3><i class="fa-solid fa-clone"></i> Split-Screen Swipe Setup</h3>
+              </div>
+              <div class="swipe-config-box">
+                <div class="swipe-row">
+                  <label>Left Layer (Before):</label>
+                  <select id="swipeLeftSelect" class="form-select">
+                    <!-- Options populated via JS -->
+                  </select>
+                </div>
+                <div class="swipe-row">
+                  <label>Right Layer (After):</label>
+                  <select id="swipeRightSelect" class="form-select">
+                    <!-- Options populated via JS -->
+                  </select>
+                </div>
+                <button class="btn-primary-block" id="btnActivateSwipe">
+                  <i class="fa-solid fa-arrows-left-right"></i> Launch Multi-Date Swipe
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: PIT ANALYTICS -->
+          <div class="tab-pane" id="tab-pit-info">
+            <div class="panel-section">
+              <div class="section-header">
+                <h3><i class="fa-solid fa-mountain-sun"></i> Part B OCP Lease Data</h3>
+              </div>
+              
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-val" id="valPitArea">118.42</span>
+                  <span class="metric-unit">Hectares</span>
+                  <span class="metric-label">Total Surface Area</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-val" id="valPitSqKm">1.184</span>
+                  <span class="metric-unit">km²</span>
+                  <span class="metric-label">Area (Square Km)</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-val" id="valPerimeter">4.42</span>
+                  <span class="metric-unit">km</span>
+                  <span class="metric-label">Boundary Perimeter</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-val">UTM 45N</span>
+                  <span class="metric-unit">EPSG:32645</span>
+                  <span class="metric-label">Projected CRS</span>
+                </div>
+              </div>
+
+              <div class="data-table-box">
+                <h4 class="box-title">Pit Polygon Coordinates (WGS 84)</h4>
+                <div class="coords-table-wrap">
+                  <table class="coords-table" id="coordsTable">
+                    <thead>
+                      <tr><th>#</th><th>Longitude (°E)</th><th>Latitude (°N)</th></tr>
+                    </thead>
+                    <tbody id="coordsTableBody">
+                      <!-- Filled by JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="action-buttons-stack">
+                <button class="btn-secondary-block" id="btnZoomToPit">
+                  <i class="fa-solid fa-magnifying-glass-location"></i> Center on Mining Pit
+                </button>
+                <button class="btn-secondary-block" id="btnDownloadGeoJSON">
+                  <i class="fa-solid fa-download"></i> Export Boundary (GeoJSON)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: QGS XML -->
+          <div class="tab-pane" id="tab-qgis-xml">
+            <div class="panel-section">
+              <div class="section-header">
+                <h3><i class="fa-solid fa-file-code"></i> QGIS Project Metadata</h3>
+              </div>
+              <div class="qgs-meta-card" id="qgsMetaCard">
+                <div class="meta-row"><strong>File:</strong> <code>Part B.qgs</code></div>
+                <div class="meta-row"><strong>QGIS Version:</strong> <span id="qgisVersion">3.44.15-Solothurn</span></div>
+                <div class="meta-row"><strong>Saved By:</strong> <span id="qgisUser">Arpan Halder (Administrator)</span></div>
+                <div class="meta-row"><strong>Timestamp:</strong> <span id="qgisDate">2026-10-24 13:40:42</span></div>
+                <div class="meta-row"><strong>Project CRS:</strong> <code>EPSG:4326 (WGS 84)</code></div>
+              </div>
+
+              <div class="xml-tree-box">
+                <h4 class="box-title">XML Layer Structure</h4>
+                <pre class="xml-preview" id="xmlPreview">Parsing Part B.qgs...</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Map Viewport -->
+      <div class="map-viewport" id="mapViewport">
+        <!-- The OpenLayers Map Canvas -->
+        <div id="map" class="ol-map"></div>
+
+        <!-- Split Screen Curtain Divider (Visible during Swipe mode) -->
+        <div id="swipeDivider" class="swipe-divider" style="display: none;">
+          <div class="swipe-handle">
+            <i class="fa-solid fa-arrows-left-right"></i>
+          </div>
+          <div class="swipe-label-left" id="lblSwipeLeft">Oct 15 (Cleanest)</div>
+          <div class="swipe-label-right" id="lblSwipeRight">Sep 15 (Baseline)</div>
+        </div>
+
+        <!-- Floating Map Tools (Top Right) -->
+        <div class="map-floating-tools">
+          <button class="map-tool-btn" id="btnZoomIn" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
+          <button class="map-tool-btn" id="btnZoomOut" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
+          <button class="map-tool-btn" id="btnResetNorth" title="Reset North"><i class="fa-solid fa-compass"></i></button>
+          <button class="map-tool-btn" id="btnToggleFullscreen" title="Toggle Fullscreen"><i class="fa-solid fa-expand"></i></button>
+        </div>
+
+        <!-- Measurement Prompt / Tooltip Overlay -->
+        <div id="measureTooltip" class="measure-tooltip" style="display:none;"></div>
+
+        <!-- Map Legend Floating Card -->
+        <div class="map-legend-widget" id="mapLegend">
+          <div class="legend-header">
+            <span><i class="fa-solid fa-list-check"></i> Active Layer Legend</span>
+            <button class="btn-close-legend" id="btnCloseLegend"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="legend-body">
+            <div class="legend-entry">
+              <span class="legend-color-box" style="background:#ff9800; border: 2px solid #fff;"></span>
+              <span>Part B OCP Mining Boundary</span>
+            </div>
+            <div class="legend-entry">
+              <span class="legend-color-box" style="background: linear-gradient(45deg, #10b981, #0284c7, #f59e0b);"></span>
+              <span>Sentinel-2 True Color (TCI)</span>
+            </div>
+            <div class="legend-entry">
+              <span class="legend-color-box" style="background: rgba(239, 68, 68, 0.8);"></span>
+              <span>Heavy Traffic Overlay</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Drop Overlay (when dragging a file onto map) -->
+        <div id="dropZoneOverlay" class="drop-zone-overlay" style="display:none;">
+          <div class="drop-zone-modal">
+            <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+            <h2>Drop your QGIS Project or Spatial File</h2>
+            <p>Supports .qgs, .qgz, .kml, .geojson, or Cloud-Optimized GeoTIFF (.tif)</p>
+          </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toastNotification" class="toast-notification"></div>
+      </div>
+    </main>
+
+    <!-- Bottom Status Bar -->
+    <footer class="app-statusbar">
+      <div class="status-left">
+        <span class="status-item"><i class="fa-solid fa-microchip"></i> Engine: <strong class="glow-text">Client-Side WebAssembly & WebGL</strong></span>
+        <span class="status-sep">|</span>
+        <span class="status-item"><i class="fa-solid fa-cloud"></i> COG Source: <strong>AWS S3 Sentinel-2 (TCI)</strong></span>
+      </div>
+      <div class="status-center">
+        <span class="status-item" id="mouseCoords">Lat: 23.6885° N | Lon: 87.2862° E</span>
+        <span class="status-sep">|</span>
+        <span class="status-item" id="utmCoords">UTM 45N: 631,042m E, 2,620,510m N</span>
+      </div>
+      <div class="status-right">
+        <span class="status-item" id="zoomLevel">Zoom: 14.5</span>
+        <span class="status-sep">|</span>
+        <span class="status-item"><i class="fa-solid fa-bolt"></i> Zero Server Latency</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Third-party GIS Libraries (Direct WebAssembly/WebGL Client-Side Stack) -->
+  <!-- Proj4js for Coordinate System Reprojection (WGS84, Pseudo-Mercator, UTM Zone 45N) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.15.0/proj4.js"></script>
+  
+  <!-- geotiff.js for Cloud-Optimized GeoTIFF byte-range decoding -->
+  <script src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
+  <script>if (typeof GeoTIFF !== 'undefined') { window.GeoTIFF = GeoTIFF; globalThis.GeoTIFF = GeoTIFF; }</script>
+  
+  <!-- OpenLayers v10 -->
+  <script src="https://cdn.jsdelivr.net/npm/ol@v10.4.0/dist/ol.js"></script>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
