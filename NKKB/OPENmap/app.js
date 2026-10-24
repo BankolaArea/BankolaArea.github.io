@@ -171,7 +171,7 @@ const state = {
   // =========================================================================
   boundaryVisible: true,     // true = boundary visible on map load, false = hidden by default
   boundaryColor: "#ff9800",  // Border & point color hex (e.g. #ff9800 orange, #00e5ff cyan, #10b981 emerald, #ef4444 red)
-  boundaryOpacity: 0.25,     // Polygon fill opacity: 0.0 (transparent) to 1.0 (completely solid)
+  boundaryOpacity: 0.15,     // Polygon fill opacity: 0.0 (transparent) to 1.0 (completely solid)
 
   // =========================================================================
   // 🎛️ 5. DEFAULT GPU RASTER IMAGE ENHANCEMENT FILTERS (WebGL)
