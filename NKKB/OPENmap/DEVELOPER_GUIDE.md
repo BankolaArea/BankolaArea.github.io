@@ -151,9 +151,10 @@ Comment out or remove the HTML block:
 
 ---
 
-## 5. Default Satellite Raster Scene
+## 5. Dynamic Satellite Raster Scenes (Fetched from Part B.qgs)
 
-The Sentinel-2 Cloud-Optimized GeoTIFFs (COGs) are listed in `SENTINEL_LAYERS_CONFIG` in [`app.js`](file:///c:/WEBMASTER/BankolaArea.github.io/NKKB/OPENmap/app.js).
+The Sentinel-2 Cloud-Optimized GeoTIFFs (COGs) are **dynamically fetched and parsed directly from `Part B.qgs`** at runtime!
+Whenever you add or remove rasters in your QGIS project and save `Part B.qgs`, simply refresh the browser or click **"Synchronize from Part B.qgs"** in the Project Info tab. The website automatically reads your QGIS layers, updates the layer list, adjusts the date stepper count, and adds them to the map.
 
 ### Automatic Latest Scene Selection (Default):
 By default, `state.activeRasterId` is set to `"latest"`:
@@ -165,7 +166,7 @@ const state = {
   ...
 };
 ```
-When set to `"latest"`, the engine compares the dates of all available Sentinel-2 scenes and activates the newest one automatically. The scene badges in the sidebar and mobile header update dynamically without manual changes!
+When set to `"latest"`, the engine compares the dates of all available Sentinel-2 scenes in `Part B.qgs` and activates the newest one automatically. The scene badges in the sidebar and mobile header update dynamically without manual changes!
 
 ### Default Raster Opacity / Visibility:
 By default, `state.defaultRasterOpacity` is set to `1.0` (100% visibility).

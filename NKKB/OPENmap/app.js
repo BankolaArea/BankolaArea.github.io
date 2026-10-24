@@ -47,11 +47,12 @@ const PART_B_OCP_POLYGON = [
 ];
 
 /**
+/**
  * 🛰️ SENTINEL-2 CLOUD-OPTIMIZED GEOTIFFS (COGs)
- * Directly streamed from AWS S3 using client-side HTTP range requests.
- * To add a new scene, paste another entry with its unique id, name, date, and COG URL.
+ * Dynamically populated directly from "Part B.qgs" on startup.
+ * The array below serves as initial default/fallback if offline or file:/// restricted.
  */
-const SENTINEL_LAYERS_CONFIG = [
+let SENTINEL_LAYERS_CONFIG = [
   {
     id: "s2_20261020",
     name: "S2 [2026-10-20] (14.1% cloud) - TCI",
@@ -94,28 +95,6 @@ const SENTINEL_LAYERS_CONFIG = [
     clean: false,
     fileOrderIndex: 3,
     url: "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/Q/WG/2026/9/S2A_45QWG_20260927_0_L2A/TCI.tif",
-    defaultChecked: false
-  },
-  {
-    id: "s2_20260915",
-    name: "S2 [2026-09-15] (28.5% cloud) - TCI",
-    shortName: "2026-09-15 (28.5% cloud)",
-    date: "2026-09-15",
-    cloud: "28.5%",
-    clean: false,
-    fileOrderIndex: 4,
-    url: "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/Q/WG/2026/9/S2C_45QWG_20260915_0_L2A/TCI.tif",
-    defaultChecked: false
-  },
-  {
-    id: "s2_truecolor_20261005",
-    name: "Sentinel-2 True Color (2026-10-05, Clean 5% clouds)",
-    shortName: "2026-10-05 True Color",
-    date: "2026-10-05",
-    cloud: "5.0%",
-    clean: true,
-    fileOrderIndex: 5,
-    url: "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/Q/WG/2026/10/S2C_45QWG_20261005_0_L2A/TCI.tif",
     defaultChecked: false
   }
 ];
@@ -299,7 +278,6 @@ function initWebGisMap() {
   setupMeasureTool();
   setupDragAndDrop();
   setupMobileAndAdaptiveView();
-  loadAndParseQgsProject();
   populatePitAnalyticsTable();
 
   // Apply default raster image filters
@@ -561,6 +539,14 @@ function setupSidebarUI() {
   const btnExportMap = document.getElementById("btnExportMap");
   if (btnExportMap) btnExportMap.addEventListener("click", exportMapSnapshot);
   document.getElementById("btnDownloadGeoJSON").addEventListener("click", exportGeoJson);
+
+  // Synchronize / Reload layers from Part B.qgs
+  const btnReloadQgs = document.getElementById("btnReloadQgs");
+  if (btnReloadQgs) {
+    btnReloadQgs.addEventListener("click", () => {
+      loadAndParseQgsProject(true);
+    });
+  }
 
   // Close Legend
   const btnCloseLegend = document.getElementById("btnCloseLegend");
@@ -1295,28 +1281,146 @@ function toggleFullscreen() {
 }
 
 // ---------------------------------------------------------------------------
-// 13. QGIS PROJECT (.QGS) CLIENT-SIDE XML PARSER
+// 13. QGIS PROJECT (.QGS) CLIENT-SIDE XML PARSER & DYNAMIC RASTER ENGINE
 // ---------------------------------------------------------------------------
 
-function loadAndParseQgsProject() {
-  const xmlPreview = document.getElementById("xmlPreview");
+let isQgsProjectLoaded = false;
 
-  fetch("Part B.qgs")
-    .then(res => {
-      if (!res.ok) throw new Error("Local file fetch policy or server error");
-      return res.text();
-    })
-    .then(xmlText => {
-      parseQgsXml(xmlText);
-    })
-    .catch(err => {
-      // In file:/// mode, browsers restrict fetch; use embedded fallback metadata
-      console.log("Fetch local file note:", err.message);
-      renderFallbackQgsMetadata();
-    });
+/**
+ * Extracts Sentinel-2 and COG raster layers dynamically from Part B.qgs XML.
+ */
+function extractRastersFromQgsXml(xmlDoc) {
+  const parsed = [];
+  const treeLayers = xmlDoc.querySelectorAll("layer-tree-layer");
+  const mapLayers = xmlDoc.querySelectorAll("projectlayers > maplayer, maplayer");
+
+  // Build lookup map by id
+  const mapLayerById = new Map();
+  mapLayers.forEach(ml => {
+    const idEl = ml.querySelector("id");
+    if (idEl && idEl.textContent) {
+      mapLayerById.set(idEl.textContent.trim(), ml);
+    }
+  });
+
+  const seenIds = new Set();
+
+  treeLayers.forEach(tl => {
+    const layerId = tl.getAttribute("id") || "";
+    const provider = (tl.getAttribute("providerKey") || "").toLowerCase();
+    let source = tl.getAttribute("source") || "";
+    let name = tl.getAttribute("name") || "";
+    const isChecked = tl.getAttribute("checked") === "Qt::Checked";
+
+    const ml = mapLayerById.get(layerId);
+    if (ml) {
+      if (!source) {
+        const ds = ml.querySelector("datasource");
+        if (ds) source = ds.textContent.trim();
+      }
+      if (!name) {
+        const ln = ml.querySelector("layername");
+        if (ln) name = ln.textContent.trim();
+      }
+    }
+
+    const isGdal = provider === "gdal";
+    const isGeoTiff = source.includes(".tif") || source.includes("/vsicurl/") || source.includes("sentinel-s2");
+    const isXyz = source.includes("type=xyz") || source.includes("mt1.google.com");
+
+    if ((isGdal || isGeoTiff) && !isXyz && source) {
+      const cleanUrl = source.replace(/^\/vsicurl\//i, "").trim();
+
+      // Extract date from URL filename or name
+      let dateStr = "";
+      const urlDateMatch = cleanUrl.match(/_(\d{4})(\d{2})(\d{2})_/);
+      if (urlDateMatch) {
+        dateStr = `${urlDateMatch[1]}-${urlDateMatch[2]}-${urlDateMatch[3]}`;
+      } else {
+        const nameDateMatch = name.match(/(\d{4})[-_](\d{2})[-_](\d{2})/);
+        if (nameDateMatch) {
+          dateStr = `${nameDateMatch[1]}-${nameDateMatch[2]}-${nameDateMatch[3]}`;
+        }
+      }
+
+      // Extract cloud coverage
+      let cloudStr = "N/A";
+      const cloudMatch = name.match(/(\d+(\.\d+)?)\s*%\s*cloud/i) || name.match(/cloud\s*(\d+(\.\d+)?)\s*%/i);
+      if (cloudMatch) {
+        cloudStr = `${cloudMatch[1]}%`;
+      }
+
+      const isClean = /clean|cleanest/i.test(name) || (cloudMatch && parseFloat(cloudMatch[1]) < 10);
+      const shortName = dateStr ? `${dateStr} (${cloudStr} cloud)` : name;
+
+      let uniqueId = dateStr ? `s2_${dateStr.replace(/-/g, "")}` : layerId;
+      if (seenIds.has(uniqueId)) {
+        let counter = 2;
+        while (seenIds.has(`${uniqueId}_${counter}`)) counter++;
+        uniqueId = `${uniqueId}_${counter}`;
+      }
+      seenIds.add(uniqueId);
+
+      parsed.push({
+        id: uniqueId,
+        name: name || `Sentinel-2 (${dateStr})`,
+        shortName: shortName,
+        date: dateStr,
+        cloud: cloudStr,
+        clean: isClean,
+        fileOrderIndex: parsed.length,
+        url: cleanUrl,
+        defaultChecked: isChecked
+      });
+    }
+  });
+
+  return parsed;
 }
 
-function parseQgsXml(xmlText) {
+/**
+ * Rebuilds and synchronizes raster layers on live OpenLayers map canvas.
+ */
+function rebuildRasterLayersOnMap() {
+  if (!state.map) return;
+
+  // 1. Remove existing raster layers from state.map
+  Object.values(state.rasterLayers).forEach(layer => {
+    state.map.removeLayer(layer);
+  });
+  state.rasterLayers = {};
+
+  // 2. Refresh active raster ID
+  const exists = SENTINEL_LAYERS_CONFIG.some(c => c.id === state.activeRasterId);
+  if (!exists || state.activeRasterId === "latest") {
+    state.activeRasterId = getLatestRasterId();
+  }
+
+  // 3. Re-instantiate OpenLayers WebGLTile layers
+  initSentinelCogLayers();
+
+  // 4. Insert before vector boundary layer
+  const layersColl = state.map.getLayers();
+  const vectorIdx = layersColl.getArray().indexOf(state.vectorLayer);
+
+  Object.values(state.rasterLayers).forEach(layer => {
+    if (vectorIdx >= 0) {
+      layersColl.insertAt(vectorIdx, layer);
+    } else {
+      layersColl.push(layer);
+    }
+  });
+
+  // 5. Re-render UI list & Date Stepper
+  renderRasterLayersList();
+  updateDateStepperUI(state.activeRasterId, false);
+  applyRasterFilters();
+}
+
+/**
+ * Parses QGIS project XML string and applies its layers and metadata to the application.
+ */
+function applyQgsXml(xmlText, isLiveReload = false) {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlText, "text/xml");
 
@@ -1325,21 +1429,68 @@ function parseQgsXml(xmlText) {
   const saveUser = qgisNode ? qgisNode.getAttribute("saveUserFull") || qgisNode.getAttribute("saveUser") : "Administrator";
   const saveDateTime = qgisNode ? qgisNode.getAttribute("saveDateTime") : "2026-10-24";
 
-  document.getElementById("qgisVersion").textContent = version;
-  document.getElementById("qgisUser").textContent = saveUser;
-  document.getElementById("qgisDate").textContent = saveDateTime;
+  QGIS_PROJECT_INFO.version = version;
+  QGIS_PROJECT_INFO.user = saveUser;
+  QGIS_PROJECT_INFO.saveDateTime = saveDateTime;
 
-  // Extract layer list
-  const layers = xmlDoc.querySelectorAll("layer-tree-layer");
-  let treeSummary = `--- QGIS Layer Tree (${layers.length} Layers) ---\n`;
-  layers.forEach((l, idx) => {
-    const name = l.getAttribute("name");
-    const provider = l.getAttribute("providerKey");
-    const source = l.getAttribute("source");
-    treeSummary += `[${idx + 1}] ${name}\n    Provider: ${provider}\n    Source: ${source ? source.substring(0, 80) : "N/A"}...\n\n`;
-  });
+  const qgisVerEl = document.getElementById("qgisVersion");
+  const qgisUserEl = document.getElementById("qgisUser");
+  const qgisDateEl = document.getElementById("qgisDate");
+  if (qgisVerEl) qgisVerEl.textContent = version;
+  if (qgisUserEl) qgisUserEl.textContent = saveUser;
+  if (qgisDateEl) qgisDateEl.textContent = saveDateTime;
 
-  document.getElementById("xmlPreview").textContent = treeSummary;
+  // Dynamically extract rasters from the QGS XML
+  const dynamicRasters = extractRastersFromQgsXml(xmlDoc);
+  if (dynamicRasters && dynamicRasters.length > 0) {
+    SENTINEL_LAYERS_CONFIG = dynamicRasters;
+    console.log(`[QGS Parser] Dynamically loaded ${dynamicRasters.length} raster layers from Part B.qgs:`, dynamicRasters.map(r => r.name));
+  } else {
+    console.warn("[QGS Parser] No GDAL/COG raster layers found in QGS XML; retaining current configuration.");
+  }
+
+  // Update XML Preview box in Project Info tab
+  const xmlPreview = document.getElementById("xmlPreview");
+  if (xmlPreview) {
+    const allTreeLayers = xmlDoc.querySelectorAll("layer-tree-layer");
+    let summary = `--- QGIS Project (Version ${version}) ---\n`;
+    summary += `Saved By: ${saveUser} | ${saveDateTime}\n`;
+    summary += `Total Layers in Tree: ${allTreeLayers.length}\n`;
+    summary += `Sentinel-2 Rasters Loaded: ${dynamicRasters.length}\n\n`;
+    summary += `Layers List:\n`;
+    allTreeLayers.forEach((tl, idx) => {
+      const name = tl.getAttribute("name");
+      const provider = tl.getAttribute("providerKey");
+      const src = tl.getAttribute("source");
+      summary += `[${idx + 1}] ${name} (${provider})\n    ${src ? src.substring(0, 75) + "..." : ""}\n`;
+    });
+    xmlPreview.textContent = summary;
+  }
+
+  // If map is already running and this is a reload, rebuild the map layers
+  if (isLiveReload && state.map) {
+    rebuildRasterLayersOnMap();
+  }
+}
+
+/**
+ * Loads Part B.qgs via HTTP fetch (handles encoded and unencoded URLs).
+ */
+async function loadAndParseQgsProject(isLiveReload = false) {
+  try {
+    let res = await fetch("Part%20B.qgs");
+    if (!res.ok) res = await fetch("Part B.qgs");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const xmlText = await res.text();
+    applyQgsXml(xmlText, isLiveReload);
+    isQgsProjectLoaded = true;
+    if (isLiveReload) {
+      showToast(`Synchronized ${SENTINEL_LAYERS_CONFIG.length} raster layers from Part B.qgs!`);
+    }
+  } catch (err) {
+    console.warn("Could not fetch Part B.qgs directly (running via file:/// or network issue), using embedded fallback:", err.message);
+    renderFallbackQgsMetadata();
+  }
 }
 
 function renderFallbackQgsMetadata() {
@@ -1350,16 +1501,12 @@ function renderFallbackQgsMetadata() {
   let summary = `--- Extracted from Part B.qgs (v3.44.15) ---\n`;
   summary += `Project CRS: EPSG:4326 (WGS 84)\n`;
   summary += `Extent: [87.2757, 23.6746] to [87.2940, 23.6915]\n\n`;
-  summary += `Layers in Project:\n`;
-  summary += `1. Part-B-OCP — Part B OCP.kml (Polygon Boundary)\n`;
-  summary += `2. Google Traffic (XYZ Tiles)\n`;
-  summary += `3. Google Earth (XYZ Satellite)\n`;
-  summary += `4. S2 [2026-10-15] Cleanest (COG Sentinel-2 L2A)\n`;
-  summary += `5. S2 [2026-10-20] (COG Sentinel-2 L2A)\n`;
-  summary += `6. S2 [2026-10-05] (COG Sentinel-2 L2A)\n`;
-  summary += `7. S2 [2026-09-27] (COG Sentinel-2 L2A)\n`;
-  summary += `8. S2 [2026-09-15] (COG Sentinel-2 L2A)\n`;
-  document.getElementById("xmlPreview").textContent = summary;
+  summary += `Active Raster Layers in Project (${SENTINEL_LAYERS_CONFIG.length} scenes):\n`;
+  SENTINEL_LAYERS_CONFIG.forEach((cfg, idx) => {
+    summary += `${idx + 1}. ${cfg.name} (COG Sentinel-2 L2A)\n`;
+  });
+  const xmlPreview = document.getElementById("xmlPreview");
+  if (xmlPreview) xmlPreview.textContent = summary;
 }
 
 // ---------------------------------------------------------------------------
@@ -1410,8 +1557,8 @@ function processSpatialFile(file) {
 
   if (name.endsWith(".qgs")) {
     reader.onload = (e) => {
-      parseQgsXml(e.target.result);
-      showToast(`QGIS project ${file.name} metadata loaded!`);
+      applyQgsXml(e.target.result, true);
+      showToast(`QGIS project ${file.name} synchronized with ${SENTINEL_LAYERS_CONFIG.length} raster layers!`);
     };
     reader.readAsText(file);
   } else if (name.endsWith(".geojson") || name.endsWith(".json")) {
@@ -1714,6 +1861,9 @@ function setupMobileAndAdaptiveView() {
 // 18. BOOTSTRAP ON DOM LOAD
 // ---------------------------------------------------------------------------
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  // 1. Dynamically parse Part B.qgs first so all raster layers are extracted directly from QGIS
+  await loadAndParseQgsProject(false);
+  // 2. Initialize the OpenLayers Map Engine and UI with the live project layers
   initWebGisMap();
 });
