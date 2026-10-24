@@ -234,6 +234,39 @@ body {
   transition: width 0.3s ease;
 }
 
+.sidebar-brand {
+  padding: 12px 16px;
+  background: rgba(16, 22, 34, 0.98);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-brand .brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-brand .brand-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-brand .brand-sub {
+  font-size: 11px;
+  color: var(--accent-blue);
+  font-weight: 500;
+  display: block;
+  margin-top: 2px;
+}
+
 .sidebar-tabs {
   display: flex;
   background: rgba(0, 0, 0, 0.3);
@@ -1093,6 +1126,19 @@ input[type="range"]::-webkit-slider-thumb:hover {
   color: var(--accent-cyan);
   border-color: var(--accent-cyan);
   transform: scale(1.05);
+}
+
+.map-tool-btn.active {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  box-shadow: 0 0 12px var(--accent-blue-glow);
+}
+
+.map-tool-sep {
+  height: 1px;
+  background: var(--border-color);
+  margin: 3px 4px;
 }
 
 /* Measurement Tooltip */

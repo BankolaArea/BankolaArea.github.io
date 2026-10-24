@@ -450,7 +450,8 @@ function setupSidebarUI() {
   });
 
   document.getElementById("btnToggleFullscreen").addEventListener("click", toggleFullscreen);
-  document.getElementById("btnExportMap").addEventListener("click", exportMapSnapshot);
+  const btnExportMap = document.getElementById("btnExportMap");
+  if (btnExportMap) btnExportMap.addEventListener("click", exportMapSnapshot);
   document.getElementById("btnDownloadGeoJSON").addEventListener("click", exportGeoJson);
 
   // Close Legend
@@ -1207,10 +1208,11 @@ function setupDragAndDrop() {
   const dropOverlay = document.getElementById("dropZoneOverlay");
   const fileInput = document.getElementById("qgsFileInput");
   const btnUploadQgs = document.getElementById("btnUploadQgs");
-
-  btnUploadQgs.addEventListener("click", () => {
-    fileInput.click();
-  });
+  if (btnUploadQgs && fileInput) {
+    btnUploadQgs.addEventListener("click", () => {
+      fileInput.click();
+    });
+  }
 
   fileInput.addEventListener("change", (e) => {
     if (e.target.files && e.target.files[0]) {

@@ -21,56 +21,23 @@
 </head>
 <body>
   <div id="app-container">
-    <!-- Header / Navbar -->
-    <header class="app-header">
-      <div class="header-left">
-        <div class="brand-logo">
-          <i class="fa-solid fa-earth-americas logo-icon"></i>
-          <div>
-            <h1 class="brand-title">Part B.qgs <span class="badge-qgis">QGIS WebClient</span></h1>
-            <p class="brand-sub">Client-Side WebGL Cloud-Optimized GeoTIFF & Vector Engine</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="header-center">
-        <div class="active-scene-pill" id="activeScenePill">
-          <i class="fa-solid fa-satellite"></i>
-          <span class="scene-label">Active Scene:</span>
-          <span class="scene-name" id="currentSceneName">S2 [2026-10-15] Cleanest ⭐</span>
-        </div>
-      </div>
-
-      <div class="header-right">
-        <!-- Quick Action Buttons -->
-        <button class="nav-btn" id="btnToggleSwipe" title="Toggle Split-Screen Swipe Comparison">
-          <i class="fa-solid fa-arrows-split-up-and-left"></i>
-          <span>Swipe Compare</span>
-        </button>
-        <button class="nav-btn" id="btnFitExtent" title="Zoom to Part B OCP Extent">
-          <i class="fa-solid fa-crosshairs"></i>
-          <span>Fit Extent</span>
-        </button>
-        <button class="nav-btn" id="btnMeasure" title="Measure Distance & Area">
-          <i class="fa-solid fa-ruler-combined"></i>
-          <span>Measure</span>
-        </button>
-        <button class="nav-btn" id="btnExportMap" title="Export High-Res Snapshot">
-          <i class="fa-solid fa-camera"></i>
-          <span>Export</span>
-        </button>
-        <button class="nav-btn nav-btn-primary" id="btnUploadQgs" title="Load / Drag another .qgs file">
-          <i class="fa-solid fa-folder-open"></i>
-          <span>Load Project</span>
-        </button>
-        <input type="file" id="qgsFileInput" accept=".qgs,.qgz,.kml,.geojson,.json" style="display:none;" />
-      </div>
-    </header>
+    <input type="file" id="qgsFileInput" accept=".qgs,.qgz,.kml,.geojson,.json" style="display:none;" />
 
     <!-- Main Workspace -->
     <main class="main-content">
       <!-- Left Sidebar Panel -->
       <aside class="sidebar" id="sidebar">
+        <!-- Sidebar Brand Header -->
+        <div class="sidebar-brand">
+          <div class="brand-logo">
+            <i class="fa-solid fa-earth-americas logo-icon"></i>
+            <div>
+              <h1 class="brand-title">Part B.qgs <span class="badge-qgis">WebGIS</span></h1>
+              <span class="brand-sub" id="currentSceneName">S2 [2026-10-15] Cleanest ⭐</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Sidebar Navigation Tabs -->
         <nav class="sidebar-tabs">
           <button class="tab-btn active" data-tab="tab-layers" title="Project Layers">
@@ -349,6 +316,10 @@
 
         <!-- Floating Map Tools (Top Right) -->
         <div class="map-floating-tools">
+          <button class="map-tool-btn" id="btnFitExtent" title="Zoom to Part B Extent"><i class="fa-solid fa-crosshairs"></i></button>
+          <button class="map-tool-btn" id="btnMeasure" title="Measure Distance & Area"><i class="fa-solid fa-ruler-combined"></i></button>
+          <button class="map-tool-btn" id="btnToggleSwipe" title="Toggle Split-Screen Swipe"><i class="fa-solid fa-arrows-split-up-and-left"></i></button>
+          <div class="map-tool-sep"></div>
           <button class="map-tool-btn" id="btnZoomIn" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
           <button class="map-tool-btn" id="btnZoomOut" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
           <button class="map-tool-btn" id="btnResetNorth" title="Reset North"><i class="fa-solid fa-compass"></i></button>
