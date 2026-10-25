@@ -125,7 +125,6 @@ const state = {
   //   "google-earth"   : Google Earth Satellite (High-res photographic)
   //   "google-traffic" : Google Traffic & Hybrid Roads
   //   "esri-sat"       : Esri World Imagery Satellite
-  //   "carto-dark"     : CartoDB Dark Matter (Sleek dark theme)
   // =========================================================================
   activeBaseKey: "osm",
 
@@ -216,15 +215,6 @@ function initWebGisMap() {
     visible: state.activeBaseKey === "esri-sat"
   });
 
-  state.baseLayers["carto-dark"] = new ol.layer.Tile({
-    title: "CartoDB Dark Matter",
-    source: new ol.source.XYZ({
-      url: "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
-      maxZoom: 19
-    }),
-    visible: state.activeBaseKey === "carto-dark"
-  });
-
   state.baseLayers["osm"] = new ol.layer.Tile({
     title: "OpenStreetMap",
     source: new ol.source.OSM(),
@@ -250,7 +240,6 @@ function initWebGisMap() {
       state.baseLayers["google-earth"],
       state.baseLayers["google-traffic"],
       state.baseLayers["esri-sat"],
-      state.baseLayers["carto-dark"],
       state.baseLayers["osm"],
       ...Object.values(state.rasterLayers),
       state.vectorLayer

@@ -23,19 +23,18 @@ All application settings are client-side and can be modified directly in two fil
 
 ## 1. Changing the Default Base Map
 
-The application includes 5 pre-configured basemaps:
+The application includes 4 pre-configured basemaps:
 - `"osm"` : OpenStreetMap Standard
 - `"google-earth"` : Google Earth Satellite (High-res photographic)
 - `"google-traffic"` : Google Traffic & Hybrid Roads
 - `"esri-sat"` : Esri World Imagery Satellite
-- `"carto-dark"` : CartoDB Dark Matter (Sleek dark theme)
 
 ### Super-Easy Step:
 Open [`app.js`](file:///c:/WEBMASTER/BankolaArea.github.io/NKKB/OPENmap/app.js) and simply change `activeBaseKey` inside `const state = { ... }`:
 
 ```javascript
 const state = {
-  // Change to: "osm", "google-earth", "esri-sat", "carto-dark", or "google-traffic"
+  // Change to: "osm", "google-earth", "esri-sat", or "google-traffic"
   activeBaseKey: "osm", 
   ...
 };

@@ -706,7 +706,6 @@ input:checked + .slider:before {
 .base-google-earth { background: linear-gradient(135deg, #1b3a24, #0f241a); }
 .base-google-traffic { background: linear-gradient(135deg, #2563eb, #dc2626); }
 .base-esri { background: linear-gradient(135deg, #1e293b, #334155); }
-.base-dark { background: #111; }
 .base-osm { background: linear-gradient(135deg, #a7f3d0, #bfdbfe); }
 
 /* ==========================================================================
