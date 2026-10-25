@@ -517,8 +517,10 @@ function setupSidebarUI() {
   });
 
   // Navigation Header Buttons
-  document.getElementById("btnFitExtent").addEventListener("click", fitToPartBExtent);
-  document.getElementById("btnZoomToPit").addEventListener("click", fitToPartBExtent);
+  const btnFitExtent = document.getElementById("btnFitExtent");
+  if (btnFitExtent) btnFitExtent.addEventListener("click", fitToPartBExtent);
+  const btnZoomToPit = document.getElementById("btnZoomToPit");
+  if (btnZoomToPit) btnZoomToPit.addEventListener("click", fitToPartBExtent);
 
   document.getElementById("btnZoomIn").addEventListener("click", () => {
     const view = state.map.getView();
@@ -538,7 +540,8 @@ function setupSidebarUI() {
   document.getElementById("btnToggleFullscreen").addEventListener("click", toggleFullscreen);
   const btnExportMap = document.getElementById("btnExportMap");
   if (btnExportMap) btnExportMap.addEventListener("click", exportMapSnapshot);
-  document.getElementById("btnDownloadGeoJSON").addEventListener("click", exportGeoJson);
+  const btnDownloadGeoJSON = document.getElementById("btnDownloadGeoJSON");
+  if (btnDownloadGeoJSON) btnDownloadGeoJSON.addEventListener("click", exportGeoJson);
 
   // Synchronize / Reload layers from Part B.qgs
   const btnReloadQgs = document.getElementById("btnReloadQgs");
@@ -1617,6 +1620,7 @@ function processSpatialFile(file) {
 
 function populatePitAnalyticsTable() {
   const tbody = document.getElementById("coordsTableBody");
+  if (!tbody) return;
   tbody.innerHTML = "";
 
   PART_B_OCP_POLYGON.forEach((pt, idx) => {

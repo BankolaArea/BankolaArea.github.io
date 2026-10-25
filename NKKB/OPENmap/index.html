@@ -84,10 +84,6 @@
             <i class="fa-solid fa-sliders"></i>
             <span>Raster FX</span>
           </button>
-          <button class="tab-btn" data-tab="tab-pit-info" title="Part B OCP Mining Analytics">
-            <i class="fa-solid fa-chart-pie"></i>
-            <span>Pit Analytics</span>
-          </button>
           <button class="tab-btn" data-tab="tab-qgis-xml" title="QGIS Project Tree">
             <i class="fa-solid fa-code"></i>
             <span>QGS Info</span>
@@ -268,64 +264,6 @@
             </div>
           </div>
 
-          <!-- TAB 3: PIT ANALYTICS -->
-          <div class="tab-pane" id="tab-pit-info">
-            <div class="panel-section">
-              <div class="section-header">
-                <h3><i class="fa-solid fa-mountain-sun"></i> Part B OCP Lease Data</h3>
-              </div>
-
-              <div class="metric-grid">
-                <div class="metric-card">
-                  <span class="metric-val" id="valPitArea">118.42</span>
-                  <span class="metric-unit">Hectares</span>
-                  <span class="metric-label">Total Surface Area</span>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-val" id="valPitSqKm">1.184</span>
-                  <span class="metric-unit">km²</span>
-                  <span class="metric-label">Area (Square Km)</span>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-val" id="valPerimeter">4.42</span>
-                  <span class="metric-unit">km</span>
-                  <span class="metric-label">Boundary Perimeter</span>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-val">UTM 45N</span>
-                  <span class="metric-unit">EPSG:32645</span>
-                  <span class="metric-label">Projected CRS</span>
-                </div>
-              </div>
-
-              <div class="data-table-box">
-                <h4 class="box-title">Pit Polygon Coordinates (WGS 84)</h4>
-                <div class="coords-table-wrap">
-                  <table class="coords-table" id="coordsTable">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Longitude (°E)</th>
-                        <th>Latitude (°N)</th>
-                      </tr>
-                    </thead>
-                    <tbody id="coordsTableBody">
-                      <!-- Filled by JS -->
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div class="action-buttons-stack">
-                <button class="btn-secondary-block" id="btnZoomToPit">
-                  <i class="fa-solid fa-magnifying-glass-location"></i> Center on Mining Pit
-                </button>
-                <button class="btn-secondary-block" id="btnDownloadGeoJSON">
-                  <i class="fa-solid fa-download"></i> Export Boundary (GeoJSON)
-                </button>
-              </div>
-            </div>
-          </div>
 
           <!-- TAB 4: QGS XML -->
           <div class="tab-pane" id="tab-qgis-xml">
@@ -411,7 +349,7 @@
         <!-- Measurement Prompt / Tooltip Overlay -->
         <div id="measureTooltip" class="measure-tooltip" style="display:none;"></div>
 
-        <!--         <!-- Map Legend Floating Card -->
+        <!--         <!-- Map Legend Floating Card 
         <div class="map-legend-widget" id="mapLegend">
           <div class="legend-header">
             <span><i class="fa-solid fa-list-check"></i> Active Layer Legend</span>
@@ -462,9 +400,9 @@
         <i class="fa-solid fa-sliders"></i>
         <span>Filters</span>
       </button>
-      <button class="mobile-nav-btn" data-action="tab-pit-info" title="Mining Pit Analytics">
-        <i class="fa-solid fa-chart-pie"></i>
-        <span>Pit Data</span>
+      <button class="mobile-nav-btn" data-action="tab-qgis-xml" title="QGIS Project Tree">
+        <i class="fa-solid fa-code"></i>
+        <span>QGS Info</span>
       </button>
       <button class="mobile-nav-btn" id="btnMobileBottomNavMode" data-action="mode-toggle"
         title="Switch between Mobile and Desktop version">
