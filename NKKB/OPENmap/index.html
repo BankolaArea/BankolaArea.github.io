@@ -2,6 +2,15 @@
 <html lang="en">
 
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BGFS4MG4EY"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-BGFS4MG4EY');
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Part B.qgs • Client-Side QGIS WebGIS & Raster Viewer</title>
@@ -252,7 +261,8 @@
                 </div>
                 <div class="keyboard-hint-box">
                   <i class="fa-regular fa-keyboard"></i>
-                  <span>Tip: Press <kbd>▲</kbd> / <kbd>▼</kbd> arrow keys on your keyboard anywhere on the map to switch dates</span>
+                  <span>Tip: Press <kbd>▲</kbd> / <kbd>▼</kbd> arrow keys on your keyboard anywhere on the map to switch
+                    dates</span>
                 </div>
               </div>
             </div>
@@ -361,7 +371,8 @@
             <span class="banner-title" id="bannerDateTitle">Loading scene date...</span>
             <span class="banner-sub" id="bannerDateSub">Scene 1 of 6 • Use ▲ / ▼ arrow keys</span>
           </div>
-          <button class="banner-close" id="btnCloseDateBanner" title="Close Notification"><i class="fa-solid fa-xmark"></i></button>
+          <button class="banner-close" id="btnCloseDateBanner" title="Close Notification"><i
+              class="fa-solid fa-xmark"></i></button>
         </div>
 
         <!-- Floating On-Map Date Stepper Controls (Up/Down Buttons on Map) -->
@@ -369,7 +380,8 @@
           <button class="map-stepper-btn" id="btnDateNewer" title="Newer Satellite Date (Up Arrow Key)">
             <i class="fa-solid fa-chevron-up"></i>
           </button>
-          <div class="map-stepper-display" id="mapStepperDisplay" title="Current satellite date (Use Up/Down arrows to compare)">
+          <div class="map-stepper-display" id="mapStepperDisplay"
+            title="Current satellite date (Use Up/Down arrows to compare)">
             <span class="stepper-label-tag"><i class="fa-solid fa-satellite"></i> DATE</span>
             <span class="stepper-date-text" id="stepperDateText">2026-10-20</span>
             <span class="stepper-idx-text" id="stepperIdxText">1 / 6</span>
