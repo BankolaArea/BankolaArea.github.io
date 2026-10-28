@@ -176,6 +176,7 @@ const state = {
   // Runtime objects (managed internally by OpenLayers)
   rasterLayers: {},
   vectorLayer: null,
+  customKmlLayers: {},
   drawInteraction: null,
   measureActive: false
 };
@@ -268,6 +269,7 @@ function initWebGisMap() {
   setupDragAndDrop();
   setupMobileAndAdaptiveView();
   populatePitAnalyticsTable();
+  initCustomKmlManager();
 
   // Apply default raster image filters
   applyRasterFilters();
@@ -403,6 +405,547 @@ function createVectorStyle(borderColor, fillOpacity) {
   });
 }
 
+/**
+ * Fits the map view to the extent of a vector layer or source.
+ */
+function zoomToVectorLayer(layerOrSource) {
+  if (!state.map) return;
+  const source = layerOrSource.getSource ? layerOrSource.getSource() : layerOrSource;
+  if (!source) return;
+  const extent = source.getExtent();
+  if (extent && !ol.extent.isEmpty(extent) && isFinite(extent[0])) {
+    state.map.getView().fit(extent, {
+      duration: 650,
+      padding: [50, 50, 50, 50],
+      maxZoom: 18
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 6B. PERSISTENT CUSTOM KML MANAGER (IndexedDB)
+// ---------------------------------------------------------------------------
+
+const KML_DB_NAME = "OpenMap_KML_Storage";
+const KML_DB_VERSION = 1;
+const KML_STORE_NAME = "custom_kmls";
+
+const KML_COLOR_PALETTE = [
+  "#00e5ff", // Bright Cyan
+  "#a855f7", // Vibrant Purple
+  "#10b981", // Emerald Green
+  "#ec4899", // Neon Pink
+  "#38bdf8", // Sky Blue
+  "#eab308", // Vivid Amber
+  "#f97316", // Warm Orange
+  "#14b8a6"  // Deep Teal
+];
+
+let kmlColorCycleIdx = 0;
+function getNextKmlColor() {
+  const color = KML_COLOR_PALETTE[kmlColorCycleIdx % KML_COLOR_PALETTE.length];
+  kmlColorCycleIdx++;
+  return color;
+}
+
+/**
+ * Opens or initializes the IndexedDB database.
+ */
+function openKmlDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) {
+      reject(new Error("IndexedDB is not supported in this browser."));
+      return;
+    }
+    const request = indexedDB.open(KML_DB_NAME, KML_DB_VERSION);
+
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(KML_STORE_NAME)) {
+        db.createObjectStore(KML_STORE_NAME, { keyPath: "id" });
+      }
+    };
+
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/**
+ * Retrieves all stored KML records from IndexedDB.
+ */
+async function dbGetAllCustomKmls() {
+  try {
+    const db = await openKmlDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(KML_STORE_NAME, "readonly");
+      const store = tx.objectStore(KML_STORE_NAME);
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn("Could not retrieve custom KMLs from IndexedDB:", err);
+    return [];
+  }
+}
+
+/**
+ * Saves a new custom KML record to IndexedDB.
+ */
+async function dbSaveCustomKml(record) {
+  try {
+    const db = await openKmlDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(KML_STORE_NAME, "readwrite");
+      const store = tx.objectStore(KML_STORE_NAME);
+      const req = store.put(record);
+      req.onsuccess = () => resolve(record);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.error("Failed to save KML record to IndexedDB:", err);
+    throw err;
+  }
+}
+
+/**
+ * Updates an existing custom KML record in IndexedDB (visibility, color, opacity).
+ */
+async function dbUpdateCustomKml(id, updates) {
+  try {
+    const db = await openKmlDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(KML_STORE_NAME, "readwrite");
+      const store = tx.objectStore(KML_STORE_NAME);
+      const getReq = store.get(id);
+      getReq.onsuccess = () => {
+        const item = getReq.result;
+        if (!item) {
+          resolve(null);
+          return;
+        }
+        Object.assign(item, updates);
+        const putReq = store.put(item);
+        putReq.onsuccess = () => resolve(item);
+        putReq.onerror = () => reject(putReq.error);
+      };
+      getReq.onerror = () => reject(getReq.error);
+    });
+  } catch (err) {
+    console.error("Failed to update KML record in IndexedDB:", err);
+  }
+}
+
+/**
+ * Deletes a single KML record from IndexedDB.
+ */
+async function dbDeleteCustomKml(id) {
+  try {
+    const db = await openKmlDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(KML_STORE_NAME, "readwrite");
+      const store = tx.objectStore(KML_STORE_NAME);
+      const req = store.delete(id);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.error("Failed to delete KML from IndexedDB:", err);
+  }
+}
+
+/**
+ * Clears all custom KML records from IndexedDB.
+ */
+async function dbClearAllCustomKmls() {
+  try {
+    const db = await openKmlDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(KML_STORE_NAME, "readwrite");
+      const store = tx.objectStore(KML_STORE_NAME);
+      const req = store.clear();
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.error("Failed to clear KML store in IndexedDB:", err);
+  }
+}
+
+/**
+ * Creates OpenLayers vector style for KML features (supports Polygon, LineString, Point).
+ */
+function createCustomKmlStyle(hexColor, fillOpacity) {
+  const hex = (hexColor || "#00e5ff").replace("#", "");
+  const r = parseInt(hex.substring(0, 2), 16) || 0;
+  const g = parseInt(hex.substring(2, 4), 16) || 229;
+  const b = parseInt(hex.substring(4, 6), 16) || 255;
+  const op = typeof fillOpacity === "number" ? fillOpacity : 0.2;
+
+  return new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      color: `rgb(${r}, ${g}, ${b})`,
+      width: 2.5
+    }),
+    fill: new ol.style.Fill({
+      color: `rgba(${r}, ${g}, ${b}, ${op})`
+    }),
+    image: new ol.style.Circle({
+      radius: 6,
+      fill: new ol.style.Fill({ color: `rgb(${r}, ${g}, ${b})` }),
+      stroke: new ol.style.Stroke({ color: "#ffffff", width: 2 })
+    })
+  });
+}
+
+/**
+ * Initializes the Custom KML Manager, restores saved KMLs from IndexedDB,
+ * and attaches UI event listeners.
+ */
+async function initCustomKmlManager() {
+  state.customKmlLayers = state.customKmlLayers || {};
+
+  // Setup Button Triggers
+  const btnLoadCustomKml = document.getElementById("btnLoadCustomKml");
+  const btnLoadKmlHeader = document.getElementById("btnLoadKmlHeader");
+  const btnClearAllKmlHeader = document.getElementById("btnClearAllKmlHeader");
+  const customKmlFileInput = document.getElementById("customKmlFileInput");
+
+  const openFilePicker = () => {
+    if (customKmlFileInput) customKmlFileInput.click();
+  };
+
+  if (btnLoadCustomKml) btnLoadCustomKml.addEventListener("click", openFilePicker);
+  if (btnLoadKmlHeader) btnLoadKmlHeader.addEventListener("click", openFilePicker);
+
+  if (customKmlFileInput) {
+    customKmlFileInput.addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+
+      let successCount = 0;
+      for (const file of files) {
+        const record = await processAndSaveKmlFile(file);
+        if (record) successCount++;
+      }
+
+      customKmlFileInput.value = "";
+      if (successCount > 0) {
+        showToast(`Loaded & persisted ${successCount} KML ${successCount === 1 ? "layer" : "layers"} in browser IndexedDB!`);
+      }
+    });
+  }
+
+  if (btnClearAllKmlHeader) {
+    btnClearAllKmlHeader.addEventListener("click", clearAllCustomKmlLayers);
+  }
+
+  // Restore existing KML layers from IndexedDB
+  await restoreCustomKmlsFromDB();
+}
+
+/**
+ * Reads a single KML file, validates features, saves to IndexedDB,
+ * and adds it to the OpenLayers map.
+ */
+async function processAndSaveKmlFile(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const kmlText = e.target.result;
+        const kmlFormat = new ol.format.KML({ extractStyles: false });
+        const features = kmlFormat.readFeatures(kmlText, {
+          dataProjection: "EPSG:4326",
+          featureProjection: "EPSG:3857"
+        });
+
+        if (!features || features.length === 0) {
+          showToast(`Warning: No valid vector geometries found in "${file.name}"`);
+          resolve(null);
+          return;
+        }
+
+        const id = "kml_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
+        const assignedColor = getNextKmlColor();
+        const cleanName = file.name.replace(/\.[^/.]+$/, "");
+
+        const record = {
+          id: id,
+          name: cleanName,
+          filename: file.name,
+          kmlText: kmlText,
+          color: assignedColor,
+          opacity: 0.20,
+          visible: true,
+          featureCount: features.length,
+          createdAt: Date.now()
+        };
+
+        // Persist to browser IndexedDB
+        await dbSaveCustomKml(record);
+
+        // Add to map and render UI card
+        addCustomKmlToMap(record, features, true);
+        renderCustomKmlCard(record);
+        updateVectorLayerCountBadge();
+
+        resolve(record);
+      } catch (err) {
+        console.error("Error parsing uploaded KML:", err);
+        showToast(`Error parsing KML: ${file.name}`);
+        resolve(null);
+      }
+    };
+    reader.onerror = () => {
+      showToast(`Error reading file: ${file.name}`);
+      resolve(null);
+    };
+    reader.readAsText(file);
+  });
+}
+
+/**
+ * Adds a parsed KML layer to the OpenLayers map instance and state.
+ */
+function addCustomKmlToMap(record, preParsedFeatures = null, zoomToLayer = false) {
+  let features = preParsedFeatures;
+  if (!features) {
+    try {
+      const kmlFormat = new ol.format.KML({ extractStyles: false });
+      features = kmlFormat.readFeatures(record.kmlText, {
+        dataProjection: "EPSG:4326",
+        featureProjection: "EPSG:3857"
+      });
+    } catch (err) {
+      console.error("Error re-parsing KML:", err);
+      features = [];
+    }
+  }
+
+  const source = new ol.source.Vector({ features: features });
+  const layer = new ol.layer.Vector({
+    source: source,
+    style: createCustomKmlStyle(record.color, record.opacity),
+    visible: record.visible !== false,
+    zIndex: 98 // Just below default Part-B at 99
+  });
+
+  state.customKmlLayers[record.id] = {
+    record: record,
+    layer: layer,
+    source: source
+  };
+
+  if (state.map) {
+    state.map.addLayer(layer);
+    if (zoomToLayer) {
+      zoomToVectorLayer(source);
+    }
+  }
+}
+
+/**
+ * Restores all custom KMLs saved in IndexedDB onto the map.
+ */
+async function restoreCustomKmlsFromDB() {
+  const records = await dbGetAllCustomKmls();
+  if (!records || !records.length) {
+    updateVectorLayerCountBadge();
+    return;
+  }
+
+  records.forEach((record) => {
+    addCustomKmlToMap(record, null, false);
+    renderCustomKmlCard(record);
+  });
+
+  updateVectorLayerCountBadge();
+  console.log(`[IndexedDB] Restored ${records.length} custom KML layer(s) into WebGIS map.`);
+}
+
+/**
+ * Renders an interactive card for a custom KML in the sidebar.
+ */
+function renderCustomKmlCard(record) {
+  const container = document.getElementById("customKmlLayersList");
+  if (!container) return;
+
+  // Check if card already exists
+  let card = container.querySelector(`.custom-kml-card[data-kml-id="${record.id}"]`);
+  if (card) card.remove();
+
+  card = document.createElement("div");
+  card.className = "layer-item vector-layer-card custom-kml-card";
+  card.setAttribute("data-kml-id", record.id);
+  card.style.borderLeftColor = record.color;
+
+  const featureText = record.featureCount
+    ? `${record.featureCount} ${record.featureCount === 1 ? "Feature" : "Features"}`
+    : "KML Vector";
+
+  card.innerHTML = `
+    <div class="layer-item-header">
+      <label class="switch">
+        <input type="checkbox" class="chk-custom-kml" data-id="${record.id}" ${record.visible !== false ? "checked" : ""} />
+        <span class="slider round"></span>
+      </label>
+      <div class="layer-info">
+        <div class="layer-name-row">
+          <span class="layer-name" title="${record.filename || record.name}">${record.name}</span>
+          <span class="badge-poly custom-badge">${featureText}</span>
+        </div>
+        <span class="layer-source"><i class="fa-solid fa-database"></i> Stored in IndexedDB</span>
+      </div>
+      <div class="layer-actions">
+        <button class="btn-kml-action btn-zoom-kml" data-id="${record.id}" title="Zoom to layer extent">
+          <i class="fa-solid fa-crosshairs"></i>
+        </button>
+        <button class="btn-kml-action btn-delete-kml" data-id="${record.id}" title="Delete this KML layer from map & IndexedDB">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+    </div>
+    <div class="vector-controls">
+      <div class="control-row">
+        <label>Layer Color:</label>
+        <input type="color" class="custom-kml-color" data-id="${record.id}" value="${record.color || "#00e5ff"}" />
+      </div>
+      <div class="control-row">
+        <label>Fill Opacity:</label>
+        <input type="range" class="custom-kml-opacity" data-id="${record.id}" min="0" max="1" step="0.05" value="${record.opacity !== undefined ? record.opacity : 0.2}" />
+        <span class="custom-kml-opacity-val">${Math.round((record.opacity !== undefined ? record.opacity : 0.2) * 100)}%</span>
+      </div>
+    </div>
+  `;
+
+  // Attach Card Event Listeners
+  const chk = card.querySelector(".chk-custom-kml");
+  const colorInput = card.querySelector(".custom-kml-color");
+  const opacityInput = card.querySelector(".custom-kml-opacity");
+  const opacityVal = card.querySelector(".custom-kml-opacity-val");
+  const btnZoom = card.querySelector(".btn-zoom-kml");
+  const btnDelete = card.querySelector(".btn-delete-kml");
+
+  // Visibility toggle
+  chk.addEventListener("change", async (e) => {
+    const isVisible = e.target.checked;
+    const item = state.customKmlLayers[record.id];
+    if (item && item.layer) {
+      item.layer.setVisible(isVisible);
+    }
+    record.visible = isVisible;
+    await dbUpdateCustomKml(record.id, { visible: isVisible });
+  });
+
+  // Dynamic Style Update
+  const updateStyle = async () => {
+    const newColor = colorInput.value;
+    const newOpacity = parseFloat(opacityInput.value);
+    opacityVal.textContent = `${Math.round(newOpacity * 100)}%`;
+    card.style.borderLeftColor = newColor;
+
+    const item = state.customKmlLayers[record.id];
+    if (item && item.layer) {
+      item.layer.setStyle(createCustomKmlStyle(newColor, newOpacity));
+    }
+
+    record.color = newColor;
+    record.opacity = newOpacity;
+    await dbUpdateCustomKml(record.id, { color: newColor, opacity: newOpacity });
+  };
+
+  colorInput.addEventListener("input", updateStyle);
+  opacityInput.addEventListener("input", updateStyle);
+
+  // Zoom Button
+  btnZoom.addEventListener("click", () => {
+    const item = state.customKmlLayers[record.id];
+    if (item && item.source) {
+      zoomToVectorLayer(item.source);
+      showToast(`Zoomed to "${record.name}"`);
+    }
+  });
+
+  // Delete Button
+  btnDelete.addEventListener("click", () => {
+    deleteSingleCustomKml(record.id, record.name);
+  });
+
+  container.appendChild(card);
+}
+
+/**
+ * Removes a single custom KML from the map and IndexedDB.
+ */
+async function deleteSingleCustomKml(id, name) {
+  const item = state.customKmlLayers[id];
+  if (item && item.layer && state.map) {
+    state.map.removeLayer(item.layer);
+  }
+  delete state.customKmlLayers[id];
+
+  await dbDeleteCustomKml(id);
+
+  const card = document.querySelector(`.custom-kml-card[data-kml-id="${id}"]`);
+  if (card) card.remove();
+
+  updateVectorLayerCountBadge();
+  showToast(`Deleted "${name || "KML layer"}" from map & IndexedDB`);
+}
+
+/**
+ * Clears all custom KML layers from map and IndexedDB,
+ * while strictly preserving the default Part-B-OCP boundary.
+ */
+async function clearAllCustomKmlLayers() {
+  const count = Object.keys(state.customKmlLayers).length;
+  if (count === 0) return;
+
+  const confirmed = confirm(
+    `Are you sure you want to delete all ${count} custom KML layer(s) from the map and browser storage?\n\nThe default Part-B-OCP boundary will remain untouched.`
+  );
+  if (!confirmed) return;
+
+  Object.values(state.customKmlLayers).forEach((item) => {
+    if (item.layer && state.map) {
+      state.map.removeLayer(item.layer);
+    }
+  });
+
+  state.customKmlLayers = {};
+  await dbClearAllCustomKmls();
+
+  const container = document.getElementById("customKmlLayersList");
+  if (container) container.innerHTML = "";
+
+  updateVectorLayerCountBadge();
+  showToast(`Cleared ${count} custom KML layer(s). Default Part-B boundary preserved.`);
+}
+
+/**
+ * Updates the total vector layer counter badge and toggle visibility for Clear All.
+ */
+function updateVectorLayerCountBadge() {
+  const countEl = document.getElementById("vectorLayerCount");
+  const clearAllBtn = document.getElementById("btnClearAllKmlHeader");
+  const customCount = Object.keys(state.customKmlLayers || {}).length;
+  const totalCount = 1 + customCount; // 1 default Part-B-OCP + custom
+
+  if (countEl) {
+    if (customCount === 0) {
+      countEl.textContent = "1 Boundary (Default)";
+    } else {
+      countEl.textContent = `${totalCount} Boundaries (${customCount} Custom)`;
+    }
+  }
+
+  if (clearAllBtn) {
+    clearAllBtn.style.display = customCount > 0 ? "inline-flex" : "none";
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 7. SIDEBAR & UI CONTROLS
 // ---------------------------------------------------------------------------
@@ -467,6 +1010,17 @@ function setupSidebarUI() {
     if (state.boundaryVisible !== undefined) chkKmlBoundary.checked = state.boundaryVisible;
     chkKmlBoundary.addEventListener("change", (e) => {
       state.vectorLayer.setVisible(e.target.checked);
+    });
+  }
+
+  // Zoom to Default Boundary Button
+  const btnZoomDefaultKml = document.getElementById("btnZoomDefaultKml");
+  if (btnZoomDefaultKml) {
+    btnZoomDefaultKml.addEventListener("click", () => {
+      if (state.vectorLayer) {
+        zoomToVectorLayer(state.vectorLayer);
+        showToast("Zoomed to Part-B-OCP default boundary");
+      }
     });
   }
 
@@ -1577,27 +2131,7 @@ function processSpatialFile(file) {
     };
     reader.readAsText(file);
   } else if (name.endsWith(".kml")) {
-    reader.onload = (e) => {
-      try {
-        const format = new ol.format.KML();
-        const features = format.readFeatures(e.target.result, {
-          featureProjection: "EPSG:3857"
-        });
-        const customVec = new ol.layer.Vector({
-          source: new ol.source.Vector({ features }),
-          style: new ol.style.Style({
-            stroke: new ol.style.Stroke({ color: "#eab308", width: 3 }),
-            fill: new ol.style.Fill({ color: "rgba(234, 179, 8, 0.2)" })
-          })
-        });
-        state.map.addLayer(customVec);
-        state.map.getView().fit(customVec.getSource().getExtent(), { duration: 600 });
-        showToast(`Added KML layer with ${features.length} features!`);
-      } catch (err) {
-        showToast("Error parsing KML file");
-      }
-    };
-    reader.readAsText(file);
+    processAndSaveKmlFile(file);
   } else {
     showToast(`File ${file.name} received`);
   }

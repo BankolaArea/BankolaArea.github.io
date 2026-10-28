@@ -118,34 +118,69 @@
             <!-- Vector Boundaries Section -->
             <div class="panel-section">
               <div class="section-header">
-                <h3><i class="fa-solid fa-draw-polygon"></i> Vector Layers</h3>
-                <span class="badge-count">1 Boundary</span>
+                <div class="section-title-wrap">
+                  <h3><i class="fa-solid fa-draw-polygon"></i> Vector Layers</h3>
+                  <span class="badge-count" id="vectorLayerCount">1 Boundary</span>
+                </div>
+                <div class="section-header-actions">
+                  <button class="btn-action-sm btn-load-kml-action" id="btnLoadKmlHeader" title="Load custom KML file(s)">
+                    <i class="fa-solid fa-file-import"></i> Load KML
+                  </button>
+                  <button class="btn-action-sm btn-clear-all-action" id="btnClearAllKmlHeader" title="Clear all custom KML layers from IndexedDB" style="display:none;">
+                    <i class="fa-solid fa-trash-can"></i> Clear All
+                  </button>
+                </div>
               </div>
-              <div class="layer-item vector-layer-card" id="kmlLayerCard">
-                <div class="layer-item-header">
-                  <label class="switch">
-                    <input type="checkbox" id="chkKmlBoundary" checked />
-                    <span class="slider round"></span>
-                  </label>
-                  <div class="layer-info">
-                    <div class="layer-name-row">
-                      <span class="layer-name">Part-B-OCP + Top Soil Dump</span>
-                      <span class="badge-poly">Polygon</span>
+              <p class="section-desc">Default mine boundary and persistent custom KML layers (stored in browser IndexedDB).</p>
+
+              <!-- Hidden file input for dedicated KML loading (supports multiple files) -->
+              <input type="file" id="customKmlFileInput" accept=".kml" multiple style="display:none;" />
+
+              <!-- Vector Layers List Container -->
+              <div class="vector-layers-list" id="vectorLayersContainer">
+                <!-- Default Permanent KML Card (Part-B-OCP.kml) -->
+                <div class="layer-item vector-layer-card default-vector-card" id="kmlLayerCard">
+                  <div class="layer-item-header">
+                    <label class="switch">
+                      <input type="checkbox" id="chkKmlBoundary" checked />
+                      <span class="slider round"></span>
+                    </label>
+                    <div class="layer-info">
+                      <div class="layer-name-row">
+                        <span class="layer-name">Part-B-OCP + Top Soil Dump</span>
+                        <span class="badge-poly default-badge">Default</span>
+                      </div>
+                      <span class="layer-source">Part-B-OCP.kml (Raniganj Coalfield)</span>
                     </div>
-                    <span class="layer-source">Part B OCP.kml (Raniganj Coalfield)</span>
+                    <div class="layer-actions">
+                      <button class="btn-kml-action" id="btnZoomDefaultKml" title="Zoom to default boundary">
+                        <i class="fa-solid fa-crosshairs"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="vector-controls">
+                    <div class="control-row">
+                      <label>Border Color:</label>
+                      <input type="color" id="kmlBorderColor" value="#ff9800" />
+                    </div>
+                    <div class="control-row">
+                      <label>Fill Opacity:</label>
+                      <input type="range" id="kmlOpacity" min="0" max="1" step="0.05" value="0.15" />
+                      <span id="kmlOpacityVal">15%</span>
+                    </div>
                   </div>
                 </div>
-                <div class="vector-controls">
-                  <div class="control-row">
-                    <label>Border Color:</label>
-                    <input type="color" id="kmlBorderColor" value="#ff9800" />
-                  </div>
-                  <div class="control-row">
-                    <label>Fill Opacity:</label>
-                    <input type="range" id="kmlOpacity" min="0" max="1" step="0.05" value="0.15" />
-                    <span id="kmlOpacityVal">15%</span>
-                  </div>
-                </div>
+
+                <!-- Custom User-Loaded KML Layers (Appended dynamically) -->
+                <div id="customKmlLayersList" class="custom-kml-layers-list"></div>
+              </div>
+
+              <!-- Dedicated Load KML Button Banner -->
+              <div class="load-kml-banner" id="loadKmlBanner">
+                <button class="btn-primary-block btn-load-kml-main" id="btnLoadCustomKml">
+                  <i class="fa-solid fa-plus"></i> Load Additional KML File(s)
+                </button>
+                <span class="kml-banner-sub"><i class="fa-solid fa-database"></i> Auto-persisted across sessions in IndexedDB</span>
               </div>
             </div>
 
