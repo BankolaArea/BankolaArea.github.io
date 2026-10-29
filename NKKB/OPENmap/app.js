@@ -22,29 +22,143 @@ const QGIS_PROJECT_INFO = {
   saveDateTime: "2026-10-24 13:40:42",
   crs: "EPSG:4326 (WGS 84)",
   projectedCrs: "EPSG:32645 (WGS 84 / UTM zone 45N)",
-  extent: [87.2757366, 23.6746642, 87.2940692, 23.6915430], // [xmin, ymin, xmax, ymax]
-  center: [87.2865, 23.6895], // Starting [Longitude, Latitude]
-  defaultZoom: 15             // Initial Zoom Level (e.g. 14 for overview, 15-16 for pit detail)
+  extent: [87.2601588, 23.6717530, 87.3109470, 23.6993018], // [xmin, ymin, xmax, ymax]
+  center: [87.28555, 23.68553], // Starting [Longitude, Latitude]
+  defaultZoom: 14             // Initial Zoom Level (14 for full OCP extent overview, 15-16 for pit detail)
 };
 
 /**
- * 📐 PART B OCP MINING LEASE BOUNDARY VERTICES (WGS84 Lon/Lat)
- * Extracted from Part-B-OCP.kml. Replace this array with any new polygon coordinates.
- * NOTE: The last point should match the first point to close the polygon ring.
+ * 📐 OCP EXTENT MINING LEASE BOUNDARY VERTICES (WGS84 Lon/Lat)
+ * Extracted from OCP Extent.kml. Replace this array with any new polygon coordinates.
+ * NOTE: The last point matches the first point to close the polygon ring.
  */
-const PART_B_OCP_POLYGON = [
-  [87.2845870925932, 23.68416998949326],
-  [87.28650444077128, 23.68426505813315],
-  [87.28873377130202, 23.68497986245143],
-  [87.29097437253427, 23.68627544080558],
-  [87.29190157515191, 23.68860687560328],
-  [87.29235903969432, 23.69056561100825],
-  [87.29139734932187, 23.69292773152466],
-  [87.28957998369646, 23.69494905299791],
-  [87.28479716397254, 23.69637769177361],
-  [87.27944107630566, 23.69349280760841],
-  [87.2845870925932, 23.68416998949326]
+const OCP_EXTENT_POLYGON = [
+  [87.2996472521606, 23.675541463942],
+  [87.3109470459894, 23.6846214804055],
+  [87.3104308946668, 23.6848330044444],
+  [87.3099588448812, 23.6850314613612],
+  [87.308645599111, 23.6855933476111],
+  [87.3080198064671, 23.6858599985713],
+  [87.3073027481423, 23.6861566630775],
+  [87.3064560394656, 23.6865190715418],
+  [87.3056946754299, 23.6868471788105],
+  [87.3044943377615, 23.68735128388],
+  [87.3042873055459, 23.6874378535638],
+  [87.303425692183, 23.6878057747202],
+  [87.3016906233778, 23.6885467213776],
+  [87.3015962950902, 23.6884934320203],
+  [87.3011077072282, 23.6882196349777],
+  [87.297195737552, 23.6860562095764],
+  [87.295908626026, 23.6853244507393],
+  [87.2941608984463, 23.6843591170948],
+  [87.2938538210771, 23.6841941446784],
+  [87.293590845245, 23.6843248158993],
+  [87.2924874901234, 23.6848793518931],
+  [87.2919501047274, 23.6851643784937],
+  [87.2918439343604, 23.685222363848],
+  [87.2917565479814, 23.6852917829341],
+  [87.2911995619023, 23.6857981339151],
+  [87.2907912143369, 23.6861760595869],
+  [87.2903787832959, 23.6865707275088],
+  [87.2903334567162, 23.6866111539178],
+  [87.2898511982415, 23.6869639662142],
+  [87.2894395838956, 23.6872698185407],
+  [87.2891292397459, 23.6878361966138],
+  [87.2886110466854, 23.6888141890329],
+  [87.2880152675876, 23.6899224443253],
+  [87.2875513847533, 23.6907865077736],
+  [87.2874141799713, 23.6907595568343],
+  [87.2871904055055, 23.6907211721631],
+  [87.2869070122952, 23.6906754372358],
+  [87.2868473935506, 23.6907824242979],
+  [87.2863884108872, 23.6916285204533],
+  [87.2861732117202, 23.6920299261101],
+  [87.2860335568529, 23.692132421349],
+  [87.2855047467557, 23.6924907463376],
+  [87.285286484982, 23.6926430599795],
+  [87.2850667939918, 23.692792923536],
+  [87.2844673397659, 23.69320821301],
+  [87.2830397566774, 23.6941947807279],
+  [87.2827718806745, 23.6943875207787],
+  [87.2821205663077, 23.6948318029298],
+  [87.281846973439, 23.6950155593342],
+  [87.2817175272607, 23.6951066208413],
+  [87.2809874018139, 23.6956092966943],
+  [87.2802703434891, 23.6961164643705],
+  [87.2800563693648, 23.6962561192378],
+  [87.279457731834, 23.6966677335837],
+  [87.2790534677443, 23.6969450015806],
+  [87.2784634055124, 23.6973564117527],
+  [87.2756441739211, 23.6993017795541],
+  [87.2755151360904, 23.6991776418942],
+  [87.2746298385687, 23.6982841774212],
+  [87.2741267543682, 23.6977508755008],
+  [87.273756791474, 23.6973768291309],
+  [87.2715721319993, 23.6951448013387],
+  [87.2714692284128, 23.695053331484],
+  [87.2711049823845, 23.6946776517239],
+  [87.2696104302953, 23.6931046969021],
+  [87.2690060758986, 23.692516676408],
+  [87.2688656043361, 23.6923631377234],
+  [87.2687725010912, 23.6922586007467],
+  [87.2686369296995, 23.6920772944277],
+  [87.2682596165491, 23.692229199722],
+  [87.267084392256, 23.6927159500199],
+  [87.2670231401212, 23.6925958958357],
+  [87.2659671533171, 23.6903638680434],
+  [87.2652435614313, 23.6887843796606],
+  [87.2648874823543, 23.688024853189],
+  [87.2639384826124, 23.6860304836798],
+  [87.2625403005486, 23.6831410163073],
+  [87.2612989239499, 23.6805880273287],
+  [87.2601588175474, 23.6782228782301],
+  [87.2604952959413, 23.677997470374],
+  [87.2613038241207, 23.6774388509046],
+  [87.261637035734, 23.6772036427069],
+  [87.2621776879106, 23.6768197959955],
+  [87.2623818616932, 23.6766858579941],
+  [87.2625917523418, 23.6765225189679],
+  [87.2628457445275, 23.6763363124781],
+  [87.2632246910682, 23.6760684364752],
+  [87.2634991006321, 23.6758822299854],
+  [87.2642006417494, 23.6753889461265],
+  [87.2649299505011, 23.6748785116698],
+  [87.2656110742402, 23.6744064618842],
+  [87.2668916522051, 23.6735031970696],
+  [87.2669831220598, 23.6734460284105],
+  [87.2672232304282, 23.6732843227746],
+  [87.2688770380679, 23.672124615689],
+  [87.2691016292289, 23.6719629100531],
+  [87.2693997229516, 23.6717530194045],
+  [87.2697966367851, 23.6718551062958],
+  [87.273587735582, 23.6728359571478],
+  [87.273769041901, 23.6728784252946],
+  [87.2739209471953, 23.672899659368],
+  [87.2744093308835, 23.673143034517],
+  [87.2773412664028, 23.6746081855815],
+  [87.2779194865553, 23.6749070959993],
+  [87.2837506897887, 23.6779631691785],
+  [87.2845951525539, 23.6784074513296],
+  [87.2863853482804, 23.6793417505592],
+  [87.2864359833785, 23.679072241166],
+  [87.2866899755641, 23.6776079067966],
+  [87.2869251837618, 23.6776699756266],
+  [87.288769281367, 23.6781967439859],
+  [87.2897885168901, 23.6784956544037],
+  [87.2902393326023, 23.6786116251123],
+  [87.2905970450695, 23.6790134391166],
+  [87.2921650997205, 23.6807824007698],
+  [87.2926028483106, 23.6806631632807],
+  [87.2927090186776, 23.6806321288657],
+  [87.2942746232432, 23.6799730558952],
+  [87.2943154579997, 23.6799314044436],
+  [87.2954057459992, 23.6790199726777],
+  [87.2996043756663, 23.6754967498837],
+  [87.2996472521606, 23.675541463942]
 ];
+
+// Backward-compatibility alias
+const PART_B_OCP_POLYGON = OCP_EXTENT_POLYGON;
 
 /**
 /**
@@ -147,7 +261,7 @@ const state = {
 
 
   // =========================================================================
-  // 📐 4. PART-B-OCP LEASEHOLD BOUNDARY DEFAULTS
+  // 📐 4. OCP EXTENT LEASEHOLD BOUNDARY DEFAULTS
   // =========================================================================
   boundaryVisible: true,     // true = boundary visible on map load, false = hidden by default
   boundaryColor: "#ff9800",  // Border & point color hex (e.g. #ff9800 orange, #00e5ff cyan, #10b981 emerald, #ef4444 red)
@@ -225,7 +339,7 @@ function initWebGisMap() {
   // INITIALIZE SENTINEL-2 COG RASTER LAYERS
   initSentinelCogLayers();
 
-  // INITIALIZE VECTOR BOUNDARY LAYER (Part-B-OCP.kml)
+  // INITIALIZE VECTOR BOUNDARY LAYER (OCP Extent.kml)
   initVectorBoundaryLayer();
 
   // ASSEMBLE MAP VIEW
@@ -350,17 +464,17 @@ function initSentinelCogLayers() {
 }
 
 // ---------------------------------------------------------------------------
-// 6. VECTOR BOUNDARY LAYER (PART B OCP)
+// 6. VECTOR BOUNDARY LAYER (OCP EXTENT)
 // ---------------------------------------------------------------------------
 
 function initVectorBoundaryLayer() {
-  const mercatorCoords = PART_B_OCP_POLYGON.map(pt => ol.proj.fromLonLat(pt));
+  const mercatorCoords = OCP_EXTENT_POLYGON.map(pt => ol.proj.fromLonLat(pt));
   const polygonGeometry = new ol.geom.Polygon([mercatorCoords]);
 
   const feature = new (ol.Feature || (ol.feature && ol.feature.Feature))({
     geometry: polygonGeometry,
-    name: "Part B OCP Mining Lease Boundary",
-    area_ha: 118.42,
+    name: "OCP Extent Mining Lease Boundary",
+    area_ha: 694.14,
     state: "West Bengal, India"
   });
 
@@ -729,7 +843,7 @@ function addCustomKmlToMap(record, preParsedFeatures = null, zoomToLayer = false
     source: source,
     style: createCustomKmlStyle(record.color, record.opacity),
     visible: record.visible !== false,
-    zIndex: 98 // Just below default Part-B at 99
+    zIndex: 98 // Just below default OCP Extent at 99
   });
 
   state.customKmlLayers[record.id] = {
@@ -897,14 +1011,14 @@ async function deleteSingleCustomKml(id, name) {
 
 /**
  * Clears all custom KML layers from map and IndexedDB,
- * while strictly preserving the default Part-B-OCP boundary.
+ * while strictly preserving the default OCP Extent boundary.
  */
 async function clearAllCustomKmlLayers() {
   const count = Object.keys(state.customKmlLayers).length;
   if (count === 0) return;
 
   const confirmed = confirm(
-    `Are you sure you want to delete all ${count} custom KML layer(s) from the map and browser storage?\n\nThe default Part-B-OCP boundary will remain untouched.`
+    `Are you sure you want to delete all ${count} custom KML layer(s) from the map and browser storage?\n\nThe default OCP Extent boundary will remain untouched.`
   );
   if (!confirmed) return;
 
@@ -921,7 +1035,7 @@ async function clearAllCustomKmlLayers() {
   if (container) container.innerHTML = "";
 
   updateVectorLayerCountBadge();
-  showToast(`Cleared ${count} custom KML layer(s). Default Part-B boundary preserved.`);
+  showToast(`Cleared ${count} custom KML layer(s). Default OCP Extent boundary preserved.`);
 }
 
 /**
@@ -931,7 +1045,7 @@ function updateVectorLayerCountBadge() {
   const countEl = document.getElementById("vectorLayerCount");
   const clearAllBtn = document.getElementById("btnClearAllKmlHeader");
   const customCount = Object.keys(state.customKmlLayers || {}).length;
-  const totalCount = 1 + customCount; // 1 default Part-B-OCP + custom
+  const totalCount = 1 + customCount; // 1 default OCP Extent + custom
 
   if (countEl) {
     if (customCount === 0) {
@@ -1019,7 +1133,7 @@ function setupSidebarUI() {
     btnZoomDefaultKml.addEventListener("click", () => {
       if (state.vectorLayer) {
         zoomToVectorLayer(state.vectorLayer);
-        showToast("Zoomed to Part-B-OCP default boundary");
+        showToast("Zoomed to OCP Extent default boundary");
       }
     });
   }
@@ -1320,9 +1434,14 @@ function switchActiveRasterScene(layerId, showBanner = true) {
   updateDateStepperUI(layerId, showBanner);
 }
 
-function fitToPartBExtent() {
+function fitToOcpExtent() {
+  if (state.vectorLayer) {
+    zoomToVectorLayer(state.vectorLayer);
+    showToast("Zoomed to OCP Extent boundary");
+    return;
+  }
   const mercatorExtent = ol.proj.transformExtent(
-    [87.2757366, 23.6746642, 87.2940692, 23.6963776],
+    QGIS_PROJECT_INFO.extent,
     "EPSG:4326",
     "EPSG:3857"
   );
@@ -1330,8 +1449,9 @@ function fitToPartBExtent() {
     padding: [60, 60, 60, 60],
     duration: 800
   });
-  showToast("Zoomed to Part B OCP boundary extent");
+  showToast("Zoomed to OCP Extent boundary");
 }
+const fitToPartBExtent = fitToOcpExtent;
 
 // ---------------------------------------------------------------------------
 // 8. REAL-TIME GPU RASTER PROCESSING FILTERS
@@ -1776,7 +1896,7 @@ function exportMapSnapshot() {
     mapContext.fillText("WGS 84 / UTM 45N • Client-Side WebGL Rendering", 26, size[1] - 14);
 
     const link = document.createElement("a");
-    link.download = `Part_B_OCP_MapSnapshot_${new Date().toISOString().slice(0, 10)}.png`;
+    link.download = `OCP_Extent_MapSnapshot_${new Date().toISOString().slice(0, 10)}.png`;
     link.href = mapCanvas.toDataURL("image/png");
     link.click();
     showToast("Snapshot downloaded!");
@@ -1788,21 +1908,21 @@ function exportMapSnapshot() {
 function exportGeoJson() {
   const geojson = {
     type: "FeatureCollection",
-    name: "Part-B-OCP-Boundary",
+    name: "OCP-Extent-Boundary",
     crs: { type: "name", properties: { name: "urn:ogc:def:crs:OGC:1.3:CRS84" } },
     features: [
       {
         type: "Feature",
         properties: {
-          Name: "Part B OCP",
-          Description: "Raniganj Coalfield Open Cast Project Lease Boundary",
-          Area_Hectares: 118.42,
-          Area_SqKm: 1.184,
-          Perimeter_km: 4.42
+          Name: "OCP Extent",
+          Description: "Raniganj Coalfield Open Cast Project Extent Boundary",
+          Area_Hectares: 694.14,
+          Area_SqKm: 6.94,
+          Perimeter_km: 14.07
         },
         geometry: {
           type: "Polygon",
-          coordinates: [PART_B_OCP_POLYGON]
+          coordinates: [OCP_EXTENT_POLYGON]
         }
       }
     ]
@@ -1812,10 +1932,10 @@ function exportGeoJson() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "Part_B_OCP_Boundary.geojson";
+  a.download = "OCP_Extent_Boundary.geojson";
   a.click();
   URL.revokeObjectURL(url);
-  showToast("Exported Part B OCP GeoJSON file");
+  showToast("Exported OCP Extent GeoJSON file");
 }
 
 function toggleFullscreen() {
@@ -2146,7 +2266,7 @@ function populatePitAnalyticsTable() {
   if (!tbody) return;
   tbody.innerHTML = "";
 
-  PART_B_OCP_POLYGON.forEach((pt, idx) => {
+  OCP_EXTENT_POLYGON.forEach((pt, idx) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${idx + 1}</td>

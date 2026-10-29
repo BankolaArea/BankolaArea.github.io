@@ -84,15 +84,15 @@ state.map = new ol.Map({
 
 ## 3. KML / Leasehold Boundary Defaults
 
-The boundary layer represents the Part-B-OCP mining leasehold boundary. You can customize all boundary defaults directly inside `const state = { ... }` in [`app.js`](file:///c:/WEBMASTER/BankolaArea.github.io/NKKB/OPENmap/app.js):
+The boundary layer represents the OCP Extent mining leasehold boundary (`OCP Extent.kml`). You can customize all boundary defaults directly inside `const state = { ... }` in [`app.js`](file:///c:/WEBMASTER/BankolaArea.github.io/NKKB/OPENmap/app.js):
 
 ```javascript
 const state = {
   ...
-  // 📐 PART-B-OCP LEASEHOLD BOUNDARY DEFAULTS
+  // 📐 OCP EXTENT LEASEHOLD BOUNDARY DEFAULTS
   boundaryVisible: true,     // true = visible on load, false = hidden by default
   boundaryColor: "#ff9800",  // Color hex: #ff9800 (Orange), #00e5ff (Cyan), #10b981 (Emerald), etc.
-  boundaryOpacity: 0.25,     // Fill opacity: 0.0 (transparent) to 1.0 (solid)
+  boundaryOpacity: 0.15,     // Fill opacity: 0.0 (transparent) to 1.0 (solid)
   ...
 };
 ```
@@ -100,13 +100,13 @@ const state = {
 > Changing these values in `state` automatically updates the map rendering **and** synchronizes the checkbox, color picker, and opacity slider in the sidebar!
 
 ### Updating or Replacing Boundary Polygon Coordinates
-The boundary coordinates are defined in `PART_B_OCP_POLYGON` in [`app.js`](file:///c:/WEBMASTER/BankolaArea.github.io/NKKB/OPENmap/app.js) in `[Longitude, Latitude]` format:
+The boundary coordinates are defined in `OCP_EXTENT_POLYGON` in [`app.js`](file:///c:/WEBMASTER/BankolaArea.github.io/NKKB/OPENmap/app.js) in `[Longitude, Latitude]` format:
 ```javascript
-const PART_B_OCP_POLYGON = [
-  [87.2845870925932, 23.68416998949326],
-  [87.28650444077128, 23.68426505813315],
+const OCP_EXTENT_POLYGON = [
+  [87.2996472521606, 23.675541463942],
+  [87.3109470459894, 23.6846214804055],
   ...
-  [87.2845870925932, 23.68416998949326] // Always close the polygon with the first point
+  [87.2996472521606, 23.675541463942] // Always close the polygon with the first point
 ];
 ```
 
