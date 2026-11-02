@@ -13,7 +13,7 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Part B.qgs • Client-Side QGIS WebGIS & Raster Viewer</title>
+  <title>Part B OCP Satellite Tracer</title>
 
   <!-- Modern Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -123,15 +123,18 @@
                   <span class="badge-count" id="vectorLayerCount">1 Boundary</span>
                 </div>
                 <div class="section-header-actions">
-                  <button class="btn-action-sm btn-load-kml-action" id="btnLoadKmlHeader" title="Load custom KML file(s)">
+                  <button class="btn-action-sm btn-load-kml-action" id="btnLoadKmlHeader"
+                    title="Load custom KML file(s)">
                     <i class="fa-solid fa-file-import"></i> Load KML
                   </button>
-                  <button class="btn-action-sm btn-clear-all-action" id="btnClearAllKmlHeader" title="Clear all custom KML layers from IndexedDB" style="display:none;">
+                  <button class="btn-action-sm btn-clear-all-action" id="btnClearAllKmlHeader"
+                    title="Clear all custom KML layers from IndexedDB" style="display:none;">
                     <i class="fa-solid fa-trash-can"></i> Clear All
                   </button>
                 </div>
               </div>
-              <p class="section-desc">Default mine boundary and persistent custom KML layers (stored in browser IndexedDB).</p>
+              <p class="section-desc">Default mine boundary and persistent custom KML layers (stored in browser
+                IndexedDB).</p>
 
               <!-- Hidden file input for dedicated KML loading (supports multiple files) -->
               <input type="file" id="customKmlFileInput" accept=".kml" multiple style="display:none;" />
@@ -180,7 +183,8 @@
                 <button class="btn-primary-block btn-load-kml-main" id="btnLoadCustomKml">
                   <i class="fa-solid fa-plus"></i> Load Additional KML File(s)
                 </button>
-                <span class="kml-banner-sub"><i class="fa-solid fa-database"></i> Auto-persisted across sessions in IndexedDB</span>
+                <span class="kml-banner-sub"><i class="fa-solid fa-database"></i> Auto-persisted across sessions in
+                  IndexedDB</span>
               </div>
             </div>
 
