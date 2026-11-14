@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4-Chamber Fuel Tanker Volume Calculator | NKKB Fuel Meter</title>
+  <meta name="description" content="Piecewise linear dipstick interpolation system for 20,000L fuel tankers (4 x 5,000L chambers).">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 21h18M5 21V7l8-4v18M13 3l6 4v14M9 9h.01M9 13h.01M9 17h.01M17 11h.01M17 15h.01"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Fuel Tanker Volume Calculator</h1>
+          <p class="subtitle">4-Chamber Dipstick Interpolation System &bull; 20,000 L (4 &times; 5,000 L)</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-sample" class="btn btn-secondary" title="Load default sample values">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Sample Dips
+        </button>
+        <button id="btn-clear" class="btn btn-outline" title="Clear all dip values">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 6L6 19M6 6l13 13"/></svg>
+          Reset
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    
+    <!-- Top KPI Cards Summary -->
+    <section class="kpi-grid">
+      <div class="kpi-card card-total">
+        <div class="kpi-label">Total Fuel Volume</div>
+        <div class="kpi-value" id="kpi-total-vol">0.0 <span class="unit">L</span></div>
+        <div class="kpi-sub" id="kpi-active-count">Across 0 active chambers</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">Total Capacity</div>
+        <div class="kpi-value">20,000 <span class="unit">L</span></div>
+        <div class="kpi-sub">4 &times; 5,000 L Chambers</div>
+      </div>
+
+      <div class="kpi-card card-ullage">
+        <div class="kpi-label">Available Ullage</div>
+        <div class="kpi-value" id="kpi-ullage">20,000.0 <span class="unit">L</span></div>
+        <div class="kpi-sub" id="kpi-ullage-text">Remaining room for fuel</div>
+      </div>
+
+      <div class="kpi-card card-fill">
+        <div class="kpi-label">Tanker Fill Ratio</div>
+        <div class="kpi-value" id="kpi-fill-ratio">0.0 <span class="unit">%</span></div>
+        <div class="kpi-progress-bar">
+          <div class="kpi-progress-fill" id="kpi-fill-bar" style="width: 0%;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visual Tanker Diagram -->
+    <section class="section-tanker-view">
+      <div class="section-header">
+        <h2>Tanker Chamber Level Visualization</h2>
+        <span class="badge" id="tanker-overall-status">Tanker Empty</span>
+      </div>
+      <div class="tanker-graphic">
+        <div class="tanker-assembly">
+          <!-- Truck Cab -->
+          <div class="tanker-cabin">
+            <div class="cabin-roof"></div>
+            <div class="cabin-windshield"></div>
+            <div class="cabin-door-line"></div>
+            <div class="cabin-grille"></div>
+            <div class="cabin-headlight"></div>
+            <div class="cab-wheel-wrap">
+              <div class="wheel wheel-steer"></div>
+            </div>
+          </div>
+
+          <!-- Tanker Trailer -->
+          <div class="tanker-trailer">
+            <!-- Top Manholes / Dip Hatches -->
+            <div class="tanker-hatches">
+              <div class="hatch-item"><span class="hatch-cap" title="Dip Port 1"></span></div>
+              <div class="hatch-item"><span class="hatch-cap" title="Dip Port 2"></span></div>
+              <div class="hatch-item"><span class="hatch-cap" title="Dip Port 3"></span></div>
+              <div class="hatch-item"><span class="hatch-cap" title="Dip Port 4"></span></div>
+            </div>
+
+            <!-- 4 Visual Compartments -->
+            <div class="tanker-body">
+              <div class="chamber-bay" id="bay-0">
+                <div class="bay-header">Chamber 1</div>
+                <div class="bay-tank">
+                  <div class="bay-liquid" id="liquid-0" style="height: 0%;">
+                    <span class="liquid-label" id="liquid-label-0">0 L</span>
+                  </div>
+                </div>
+                <div class="bay-dip-marker" id="marker-0">0.0 cm</div>
+              </div>
+
+              <div class="chamber-bay" id="bay-1">
+                <div class="bay-header">Chamber 2</div>
+                <div class="bay-tank">
+                  <div class="bay-liquid" id="liquid-1" style="height: 0%;">
+                    <span class="liquid-label" id="liquid-label-1">0 L</span>
+                  </div>
+                </div>
+                <div class="bay-dip-marker" id="marker-1">0.0 cm</div>
+              </div>
+
+              <div class="chamber-bay" id="bay-2">
+                <div class="bay-header">Chamber 3</div>
+                <div class="bay-tank">
+                  <div class="bay-liquid" id="liquid-2" style="height: 0%;">
+                    <span class="liquid-label" id="liquid-label-2">0 L</span>
+                  </div>
+                </div>
+                <div class="bay-dip-marker" id="marker-2">0.0 cm</div>
+              </div>
+
+              <div class="chamber-bay" id="bay-3">
+                <div class="bay-header">Chamber 4</div>
+                <div class="bay-tank">
+                  <div class="bay-liquid" id="liquid-3" style="height: 0%;">
+                    <span class="liquid-label" id="liquid-label-3">0 L</span>
+                  </div>
+                </div>
+                <div class="bay-dip-marker" id="marker-3">0.0 cm</div>
+              </div>
+            </div>
+
+            <!-- Rear Tandem Wheels -->
+            <div class="trailer-wheels-wrap">
+              <div class="wheel wheel-tandem-1"></div>
+              <div class="wheel wheel-tandem-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Chamber Inputs & Results Table -->
+    <section class="section-calculator">
+      <div class="section-header">
+        <h2>Chamber Measurements & Dynamic Calculations</h2>
+        <div class="btn-group-sm">
+          <button id="btn-full" class="btn-chip" title="Set all to max dip">100% Full</button>
+          <button id="btn-copy-report" class="btn-chip" title="Copy calculated summary to clipboard">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Summary
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="calc-table" id="calc-table">
+          <thead>
+            <tr>
+              <th style="width: 150px;">Chamber</th>
+              <th style="width: 140px;">Max Dip (cm)</th>
+              <th style="width: 200px;">Dip Reading (cm)</th>
+              <th style="width: 180px;">Calculated Volume</th>
+              <th style="width: 120px;">Capacity</th>
+              <th style="width: 120px;">Fill Level</th>
+              <th>Calibration Segment Reference</th>
+            </tr>
+          </thead>
+          <tbody id="chamber-rows">
+            <!-- Rendered by JS -->
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="2"><strong>TOTAL TANKER VOLUME</strong></td>
+              <td id="foot-avg-dip"><strong>Avg: 0.0 cm</strong></td>
+              <td id="foot-total-vol"><strong>0.0 L</strong></td>
+              <td><strong>20,000 L</strong></td>
+              <td id="foot-fill-pct"><strong>0.0%</strong></td>
+              <td>4 Chambers Combined</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Calibration Dataset Section (Collapsible) -->
+    <section class="section-calibration">
+      <div class="accordion-header" id="calibration-toggle">
+        <div class="accordion-title">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+            <polyline points="2 17 12 22 22 17"/>
+            <polyline points="2 12 12 17 22 12"/>
+          </svg>
+          <h3>Certified Calibration Dataset & Chart Reference (0 to 5,000 L)</h3>
+        </div>
+        <div class="accordion-toggle-icon" id="accordion-arrow">&#9660;</div>
+      </div>
+
+      <div class="accordion-body" id="calibration-body">
+        <p class="calib-desc">
+          Official dipstick height (cm) to volume (L) calibration dataset for each 5,000 L chamber. Active interpolation brackets are automatically highlighted in the table below.
+        </p>
+
+        <div class="calib-table-wrap">
+          <table class="calib-table" id="calib-table">
+            <thead>
+              <tr>
+                <th rowspan="2" style="vertical-align: middle;">Volume (Ltr)</th>
+                <th colspan="4" style="text-align: center; border-left: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">Dipstick Level (cm)</th>
+                <th colspan="4" style="text-align: center; border-left: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">Segment Rate (Ltr / cm)</th>
+              </tr>
+              <tr>
+                <th style="border-left: 1px solid var(--border-color);">1st Chamber</th>
+                <th>2nd Chamber</th>
+                <th>3rd Chamber</th>
+                <th>4th Chamber</th>
+                <th style="border-left: 1px solid var(--border-color);">Ch 1 Rate</th>
+                <th>Ch 2 Rate</th>
+                <th>Ch 3 Rate</th>
+                <th>Ch 4 Rate</th>
+              </tr>
+            </thead>
+            <tbody id="calib-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Calculation Logic & Operational Rules -->
+    <section class="section-info">
+      <h3>Formula & Technical Specifications</h3>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>1. Interpolation Formula</h4>
+          <div class="formula-box">
+            <code>V = V₁ + (h &minus; h₁) &times; (V₂ &minus; V₁) &frasl; (h₂ &minus; h₁)</code>
+          </div>
+          <p>Where [h₁, h₂] is the bounding dipstick interval (cm) from certified calibration data and [V₁, V₂] is the corresponding 200 L volume interval.</p>
+        </div>
+        <div class="info-card">
+          <h4>2. Tanker Floor Anchor</h4>
+          <p>For readings between 0.0 cm and the first 200 L calibration mark, interpolation is strictly anchored at <strong>(0.0 cm, 0 L)</strong> to reflect floor curvature accurately.</p>
+        </div>
+        <div class="info-card">
+          <h4>3. Range & Boundary Handling</h4>
+          <p>Readings below 0.0 cm are rejected as <em>Invalid Negative</em>. Readings exceeding certified maximum dipstick height are flagged as <em>Overflow Risk</em>.</p>
+        </div>
+        <div class="info-card">
+          <h4>4. Sensitivity & Capacity</h4>
+          <p>Average sensitivity is ~<strong>35.7 L/cm</strong> across all 4 chambers, with full tanker capacity verified at exactly <strong>20,000 Liters</strong>.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>NKKB Fuel Management System &bull; Certified Dipstick Piecewise Linear Interpolation Calculator</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
