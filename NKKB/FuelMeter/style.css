@@ -981,25 +981,405 @@ body {
   transform: translateX(-50%) translateY(0);
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .header-container {
+/* ============================================================
+   VIEW MODE TOGGLE BUTTON
+   ============================================================ */
+.btn-view-toggle {
+  background-color: rgba(2, 132, 199, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-view-toggle:hover {
+  background-color: rgba(2, 132, 199, 0.22);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.view-toggle-state {
+  font-size: 0.68rem;
+  font-weight: 700;
+  background-color: rgba(56, 189, 248, 0.15);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 9999px;
+  padding: 1px 6px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   MOBILE CHAMBER CARDS (hidden by default, shown in mobile mode)
+   ============================================================ */
+.mobile-chamber-cards {
+  display: none;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.mob-chamber-card {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.mob-chamber-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
+}
+
+.mob-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.mob-chamber-name {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.mob-card-maxdip {
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  font-family: monospace;
+}
+
+.mob-stepper {
+  justify-content: center;
+}
+
+.mob-stepper .btn-step {
+  width: 42px;
+  height: 46px;
+  font-size: 1.3rem;
+}
+
+.mob-stepper .dip-input-wrap {
+  width: auto;
+  flex: 1;
+  max-width: 150px;
+}
+
+.mob-stepper .dip-input {
+  font-size: 1.2rem;
+  text-align: center;
+  padding: 0.65rem 2.5rem 0.65rem 0.75rem;
+  width: 100%;
+}
+
+.mob-card-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.85rem;
+  border: 1px solid #1e293b;
+}
+
+.mob-vol {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #38bdf8;
+  font-family: monospace;
+}
+
+.mob-fill {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.mob-card-minibar {
+  height: 6px;
+  background-color: #0b1324;
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 1px solid #1e293b;
+}
+
+.mob-card-minibar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mob-segment-details {
+  font-size: 0.8rem;
+}
+
+.mob-segment-details summary {
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 0.77rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.mob-segment-details summary::-webkit-details-marker { display: none; }
+
+.mob-segment-details summary::before {
+  content: "▸";
+  font-size: 0.65rem;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.mob-segment-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.mob-segment-details summary:hover {
+  color: var(--text-muted);
+}
+
+.mob-segment-text {
+  display: block;
+  margin-top: 0.4rem;
+  font-family: monospace;
+  color: var(--text-muted);
+  line-height: 1.4;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-input);
+  border-radius: 4px;
+  font-size: 0.77rem;
+}
+
+/* ============================================================
+   MODE: MOBILE  (body.mode-mobile class-based overrides)
+   ============================================================ */
+
+body.mode-mobile .main-content {
+  padding: 1rem 0.75rem;
+  gap: 1rem;
+}
+
+/* Header */
+body.mode-mobile .header-container {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+body.mode-mobile .header-actions {
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+body.mode-mobile .brand h1 {
+  font-size: 1.05rem;
+}
+
+body.mode-mobile .brand .subtitle {
+  font-size: 0.72rem;
+}
+
+/* KPI Cards: 2×2 grid */
+body.mode-mobile .kpi-grid {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem;
+}
+
+body.mode-mobile .kpi-value {
+  font-size: 1.45rem;
+}
+
+body.mode-mobile .kpi-card {
+  padding: 0.85rem 0.9rem;
+  gap: 0.3rem;
+}
+
+body.mode-mobile .kpi-label {
+  font-size: 0.7rem;
+}
+
+body.mode-mobile .kpi-sub {
+  font-size: 0.74rem;
+}
+
+/* Tanker visualization: 2×2 simplified (no cab, no wheels, no hatches) */
+body.mode-mobile .tanker-graphic {
+  padding: 1rem 0.75rem;
+}
+
+body.mode-mobile .tanker-assembly {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+
+body.mode-mobile .tanker-cabin {
+  display: none;
+}
+
+body.mode-mobile .tanker-trailer {
+  width: 100%;
+}
+
+body.mode-mobile .tanker-hatches {
+  display: none;
+}
+
+body.mode-mobile .tanker-body {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  border-radius: 14px;
+}
+
+body.mode-mobile .bay-tank {
+  height: 100px;
+}
+
+body.mode-mobile .bay-header {
+  font-size: 0.72rem;
+}
+
+body.mode-mobile .trailer-wheels-wrap {
+  display: none;
+}
+
+body.mode-mobile .bay-dip-marker {
+  font-size: 0.72rem;
+}
+
+body.mode-mobile .liquid-label {
+  font-size: 0.7rem;
+}
+
+/* Calculator: hide table, show mobile chamber cards */
+body.mode-mobile .table-container {
+  display: none;
+}
+
+body.mode-mobile .mobile-chamber-cards {
+  display: flex;
+}
+
+body.mode-mobile .section-calculator {
+  padding: 1rem 0.9rem;
+}
+
+body.mode-mobile .btn-group-sm {
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* Calibration: smaller max-height, keeps horizontal scroll */
+body.mode-mobile .calib-table-wrap {
+  max-height: 300px;
+}
+
+body.mode-mobile .section-calibration .accordion-header {
+  padding: 1rem;
+}
+
+/* Info / Formula: single column */
+body.mode-mobile .info-grid {
+  grid-template-columns: 1fr;
+}
+
+body.mode-mobile .section-info {
+  padding: 1rem;
+}
+
+/* ============================================================
+   MODE: DESKTOP (body.mode-desktop — force desktop on any screen)
+   ============================================================ */
+body.mode-desktop .table-container {
+  display: block !important;
+}
+
+body.mode-desktop .mobile-chamber-cards {
+  display: none !important;
+}
+
+body.mode-desktop .tanker-cabin {
+  display: flex !important;
+}
+
+body.mode-desktop .tanker-hatches {
+  display: grid !important;
+}
+
+body.mode-desktop .trailer-wheels-wrap {
+  display: flex !important;
+}
+
+body.mode-desktop .tanker-assembly {
+  flex-direction: row !important;
+  align-items: flex-end !important;
+}
+
+body.mode-desktop .tanker-body {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+body.mode-desktop .kpi-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+}
+
+body.mode-desktop .info-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+}
+
+/* ============================================================
+   AUTO FALLBACK: media query for initial paint before JS loads
+   (body.mode-* class overrides this once JS initialises)
+   ============================================================ */
+@media (orientation: portrait), (max-width: 600px) {
+  body:not(.mode-desktop) .header-container {
     flex-direction: column;
     align-items: flex-start;
   }
-  
-  .header-actions {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
+
+  body:not(.mode-desktop) .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .kpi-value {
-    font-size: 1.8rem;
+  body:not(.mode-desktop) .kpi-value {
+    font-size: 1.5rem;
   }
 
-  .bay-tank {
-    height: 100px;
+  body:not(.mode-desktop) .tanker-cabin,
+  body:not(.mode-desktop) .tanker-hatches,
+  body:not(.mode-desktop) .trailer-wheels-wrap {
+    display: none;
+  }
+
+  body:not(.mode-desktop) .tanker-body {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

@@ -159,7 +159,10 @@ function calculateChamberVolume(chamberIndex, rawInput) {
 document.addEventListener('DOMContentLoaded', () => {
   renderChamberRows();
   renderCalibrationTable();
+  renderMobileChamberCards();
   setupEventListeners();
+  setupMobileCardListeners();
+  ViewModeController.init();
 
   // Check persistent browser storage for last entered values
   const restored = loadFromStorage();
@@ -405,6 +408,9 @@ function recalculateAll() {
 
   // Automatically save current inputs to persistent browser storage
   saveToStorage();
+
+  // Keep mobile chamber cards in sync after every recalculation
+  syncMobileCards();
 }
 
 /**
@@ -538,4 +544,249 @@ function showToast(msg) {
     toast.classList.remove('show');
   }, 2400);
 }
+
+/* ==========================================================================
+   MOBILE CHAMBER CARDS
+   ========================================================================== */
+
+/**
+ * Render the 4 mobile chamber cards (each replaces one table row on mobile).
+ * Inputs are separate from desktop table inputs; synced bi-directionally.
+ */
+function renderMobileChamberCards() {
+  const container = document.getElementById('mobile-chamber-cards');
+  if (!container) return;
+  container.innerHTML = '';
+
+  for (let i = 0; i < 4; i++) {
+    const card = document.createElement('div');
+    card.className = 'mob-chamber-card';
+    card.id = `mob-card-${i}`;
+    card.innerHTML = `
+      <div class="mob-card-header">
+        <span class="mob-chamber-name">${CHAMBER_NAMES[i]}</span>
+        <span id="mob-status-${i}" class="badge badge-empty">Pending Dip</span>
+      </div>
+      <div class="mob-card-maxdip">Max dipstick: ${MAX_DIPS[i].toFixed(1)} cm &nbsp;|&nbsp; Capacity: 5,000 L</div>
+      <div class="dip-stepper-wrap mob-stepper">
+        <button type="button" class="btn-step mob-step" data-action="dec" data-target="${i}" title="Decrease 0.1 cm (Shift for 1.0 cm)">&minus;</button>
+        <div class="dip-input-wrap">
+          <input
+            type="number"
+            id="mob-dip-input-${i}"
+            class="dip-input"
+            min="0"
+            max="${MAX_DIPS[i]}"
+            step="0.1"
+            placeholder="0.0"
+            data-chamber="${i}"
+          >
+          <span class="dip-unit">cm</span>
+        </div>
+        <button type="button" class="btn-step mob-step" data-action="inc" data-target="${i}" title="Increase 0.1 cm (Shift for 1.0 cm)">+</button>
+      </div>
+      <div class="mob-card-result">
+        <span class="mob-vol" id="mob-vol-${i}">— L</span>
+        <span class="mob-fill" id="mob-fill-${i}">0.0%</span>
+      </div>
+      <div class="mob-card-minibar">
+        <div class="mob-card-minibar-fill" id="mob-bar-${i}" style="width: 0%;"></div>
+      </div>
+      <details class="mob-segment-details">
+        <summary>Calibration Segment Reference</summary>
+        <span class="mob-segment-text" id="mob-seg-${i}">—</span>
+      </details>
+    `;
+    container.appendChild(card);
+  }
+}
+
+/**
+ * Wire up event listeners for the mobile card inputs and stepper buttons.
+ * Changes in mobile inputs are mirrored to the desktop inputs, then recalculated.
+ */
+function setupMobileCardListeners() {
+  for (let i = 0; i < 4; i++) {
+    const mobInput = document.getElementById(`mob-dip-input-${i}`);
+    if (!mobInput) continue;
+    mobInput.addEventListener('input', () => { syncToDesktop(i); recalculateAll(); });
+    mobInput.addEventListener('change', () => { syncToDesktop(i); recalculateAll(); });
+  }
+
+  document.querySelectorAll('.mob-step').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = Number(e.currentTarget.dataset.target);
+      const action = e.currentTarget.dataset.action;
+      const mobInput = document.getElementById(`mob-dip-input-${idx}`);
+      let current = parseFloat(mobInput.value);
+      if (isNaN(current)) current = 0.0;
+      const step = e.shiftKey ? 1.0 : 0.1;
+      let next = action === 'inc' ? current + step : current - step;
+      next = Math.max(0, Math.min(next, MAX_DIPS[idx]));
+      mobInput.value = (Math.round(next * 10) / 10).toFixed(1);
+      syncToDesktop(idx);
+      recalculateAll();
+    });
+  });
+}
+
+/** Push a mobile input value into the matching desktop input */
+function syncToDesktop(idx) {
+  const mob = document.getElementById(`mob-dip-input-${idx}`);
+  const desk = document.getElementById(`dip-input-${idx}`);
+  if (mob && desk) desk.value = mob.value;
+}
+
+/**
+ * Update every mobile card's displayed result and sync its input value.
+ * Called at the tail of recalculateAll() so mobile cards always match desktop.
+ */
+function syncMobileCards() {
+  for (let i = 0; i < 4; i++) {
+    const deskInput = document.getElementById(`dip-input-${i}`);
+    const mobInput  = document.getElementById(`mob-dip-input-${i}`);
+    if (!deskInput || !mobInput) continue;
+
+    // Sync value only when the mobile input isn't currently focused
+    if (mobInput !== document.activeElement) {
+      mobInput.value = deskInput.value;
+    }
+
+    const rawVal = deskInput.value.trim();
+    const result = calculateChamberVolume(i, rawVal === '' ? null : Number(rawVal));
+
+    const volEl    = document.getElementById(`mob-vol-${i}`);
+    const fillEl   = document.getElementById(`mob-fill-${i}`);
+    const barEl    = document.getElementById(`mob-bar-${i}`);
+    const segEl    = document.getElementById(`mob-seg-${i}`);
+    const statusEl = document.getElementById(`mob-status-${i}`);
+
+    if (result.isValid && result.volume !== null) {
+      const pct = (result.fillPct * 100).toFixed(1);
+      volEl.textContent  = `${result.volume.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} L`;
+      volEl.style.color  = '#38bdf8';
+      fillEl.textContent = `${pct}%`;
+      barEl.style.width  = `${Math.min(result.fillPct * 100, 100)}%`;
+      barEl.style.background = result.fillPct >= 1
+        ? '#10b981'
+        : 'linear-gradient(90deg, #0284c7, #38bdf8)';
+      segEl.textContent    = result.segment;
+      statusEl.textContent = result.statusText;
+      statusEl.className   = `badge ${result.statusClass}`;
+    } else {
+      const isError = result.segment.startsWith('Invalid') || result.segment.startsWith('Over');
+      volEl.textContent  = isError ? result.segment : '—';
+      volEl.style.color  = isError ? 'var(--status-error)' : '#38bdf8';
+      fillEl.textContent = '0.0%';
+      barEl.style.width  = '0%';
+      segEl.textContent    = result.segment;
+      statusEl.textContent = result.statusText;
+      statusEl.className   = `badge ${result.statusClass}`;
+    }
+  }
+}
+
+/* ==========================================================================
+   VIEW MODE CONTROLLER
+   Auto-detects portrait/landscape via aspect ratio.
+   3-way manual toggle: Auto → Lock Mobile → Lock Desktop → Auto
+   Preference persisted in localStorage under key 'nkkb_view_mode'.
+   ========================================================================== */
+
+const ViewModeController = {
+  LOCK_KEY: 'nkkb_view_mode', // stored value: 'mobile' | 'desktop' | (absent = auto)
+  currentLock: null,          // null = auto-detect, 'mobile' or 'desktop' = locked
+
+  init() {
+    // Restore saved lock preference
+    try {
+      const saved = localStorage.getItem(this.LOCK_KEY);
+      if (saved === 'mobile' || saved === 'desktop') this.currentLock = saved;
+    } catch (e) {}
+
+    this.applyMode();
+    this.updateToggleButton();
+
+    // Re-evaluate auto mode on resize (ignored when locked)
+    window.addEventListener('resize', () => {
+      if (!this.currentLock) {
+        this.applyMode();
+        this.updateToggleButton();
+      }
+    });
+
+    const btn = document.getElementById('btn-toggle-view');
+    if (btn) btn.addEventListener('click', () => this.cycle());
+  },
+
+  /** Returns 'mobile' when portrait (aspect < 1), 'desktop' otherwise */
+  getAutoDetected() {
+    return window.innerWidth / window.innerHeight < 1.0 ? 'mobile' : 'desktop';
+  },
+
+  /** The mode currently in effect (respects lock or falls back to auto) */
+  getEffectiveMode() {
+    return this.currentLock || this.getAutoDetected();
+  },
+
+  /** 3-way cycle: auto → lock-mobile → lock-desktop → auto */
+  cycle() {
+    if (!this.currentLock) {
+      this.currentLock = 'mobile';
+    } else if (this.currentLock === 'mobile') {
+      this.currentLock = 'desktop';
+    } else {
+      this.currentLock = null; // back to auto
+    }
+
+    try {
+      if (this.currentLock) {
+        localStorage.setItem(this.LOCK_KEY, this.currentLock);
+      } else {
+        localStorage.removeItem(this.LOCK_KEY);
+      }
+    } catch (e) {}
+
+    this.applyMode();
+    this.updateToggleButton();
+
+    const label = this.currentLock
+      ? `Switched to ${this.currentLock === 'mobile' ? 'Mobile' : 'Desktop'} view (locked).`
+      : `Auto view mode — ${this.getAutoDetected()} detected.`;
+    showToast(label);
+  },
+
+  /** Add/remove body classes to trigger the CSS mode rules */
+  applyMode() {
+    const mode = this.getEffectiveMode();
+    document.body.classList.toggle('mode-mobile',  mode === 'mobile');
+    document.body.classList.toggle('mode-desktop', mode === 'desktop');
+  },
+
+  /** Update the toggle button label to reflect current state */
+  updateToggleButton() {
+    const btn = document.getElementById('btn-toggle-view');
+    if (!btn) return;
+
+    const mode   = this.getEffectiveMode();
+    const isAuto = !this.currentLock;
+    const stateLabel = isAuto ? 'Auto' : 'Locked';
+
+    const mobileIcon  = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`;
+    const desktopIcon = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>`;
+
+    btn.innerHTML = `
+      ${mode === 'mobile' ? mobileIcon : desktopIcon}
+      ${mode === 'mobile' ? 'Mobile' : 'Desktop'}
+      <span class="view-toggle-state">${stateLabel}</span>
+    `;
+
+    const nextAction = !this.currentLock
+      ? 'click to lock Mobile'
+      : this.currentLock === 'mobile'
+        ? 'click to lock Desktop'
+        : 'click to return to Auto';
+    btn.title = `Layout: ${mode} (${isAuto ? 'auto-detected' : 'locked'}) — ${nextAction}`;
+  }
+};
 

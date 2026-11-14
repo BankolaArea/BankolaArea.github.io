@@ -6,8 +6,26 @@
   <title>4-Chamber Fuel Tanker Volume Calculator | NKKB Fuel Meter</title>
   <meta name="description" content="Piecewise linear dipstick interpolation system for 20,000L fuel tankers (4 x 5,000L chambers).">
   <link rel="stylesheet" href="style.css">
+
+  <!-- Google Tag Manager -->
+  <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-MKNL2DCQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+  </script>
+  <!-- End Google Tag Manager -->
 </head>
 <body>
+<script>
+/* NKKB Fuel Meter — Early view mode detection (prevents layout flash on load) */
+(function () {
+  var lock;
+  try { lock = localStorage.getItem('nkkb_view_mode'); } catch (e) {}
+  if (!lock) lock = window.innerWidth / window.innerHeight < 1.0 ? 'mobile' : 'desktop';
+  document.body.classList.add('mode-' + lock);
+})();
+</script>
 
   <header class="app-header">
     <div class="header-container">
@@ -30,6 +48,10 @@
         <button id="btn-clear" class="btn btn-outline" title="Clear all dip values">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 6L6 19M6 6l13 13"/></svg>
           Reset
+        </button>
+        <button id="btn-toggle-view" class="btn btn-view-toggle" title="Switch layout mode">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>
+          Desktop <span class="view-toggle-state">Auto</span>
         </button>
       </div>
     </div>
@@ -189,6 +211,11 @@
             </tr>
           </tfoot>
         </table>
+      </div>
+
+      <!-- Mobile Chamber Cards (shown only in mobile mode, hidden in desktop mode) -->
+      <div class="mobile-chamber-cards" id="mobile-chamber-cards">
+        <!-- Rendered by JS -->
       </div>
     </section>
 
